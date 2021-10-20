@@ -1,8 +1,8 @@
 # WebNN Delegate for TensorFlow Lite WebAssembly runtime
 
-| Status        | (Proposed)       |
+| Status        | Proposed       |
 :-------------- |:---------------------------------------------------- |
-| **RFC #**     | [NNN](https://github.com/tfjs-sig/pull/NNN) (update when you have community PR #)|
+| **RFC #**     | [2](https://github.com/tensorflow/sig-tfjs/pull/2) |
 | **Author(s)** | Ningxin Hu (ningxin.hu@intel.com), Chai Chaoweeraprasit (wchao@microsoft.com)  |
 | **Sponsor**   | Ping Yu (piyu@google.com)                            |
 | **Updated**   | 2021-10-20                                           |
