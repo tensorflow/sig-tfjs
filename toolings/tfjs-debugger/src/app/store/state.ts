@@ -15,11 +15,7 @@
  * =============================================================================
  */
 
-import {ActionReducerMap} from '@ngrx/store';
-
 import {Configuration} from '../data_model/configuration';
-
-import {configsReducer} from './reducers';
 
 export interface Configs {
   config1: Configuration;
@@ -34,9 +30,4 @@ export interface AppState {
 /** The initial app state. */
 export const initialState: AppState = {
   configs: {config1: {}, config2: {}},
-};
-
-/** Reducers for each app state field. */
-export const appReducers: ActionReducerMap<AppState> = {
-  configs: configsReducer,
 };

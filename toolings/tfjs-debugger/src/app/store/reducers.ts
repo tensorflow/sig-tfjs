@@ -15,17 +15,12 @@
  * =============================================================================
  */
 
-import {Action, createReducer} from '@ngrx/store';
+import {createReducer} from '@ngrx/store';
 
-import {Configs, initialState} from './state';
+import {initialState} from './state';
 
 /** Reducer for `configs`. */
-export function configsReducer(
-    state: Configs|undefined = initialState.configs, action: Action) {
-  return createReducer(
-      initialState.configs,
-
-      // TODO: add actions here.
-
-      )(state, action);
-}
+export const configsReducer = createReducer(
+    initialState.configs,
+    // TODO: add actions here.
+);

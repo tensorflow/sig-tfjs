@@ -22,7 +22,7 @@ import {routerReducer, StoreRouterConnectingModule} from '@ngrx/router-store';
 import {StoreModule} from '@ngrx/store';
 import {StoreDevtoolsModule} from '@ngrx/store-devtools';
 
-import {appReducers} from '../store/state';
+import {configsReducer} from '../store/reducers';
 
 import {AppComponent} from './app.component';
 
@@ -33,7 +33,7 @@ import {AppComponent} from './app.component';
     BrowserModule,
     StoreModule.forRoot({
       router: routerReducer,
-      ...appReducers,
+      configs: configsReducer,
     }),
     RouterModule.forRoot([
       {path: '', component: AppComponent},
