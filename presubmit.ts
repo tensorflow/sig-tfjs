@@ -15,6 +15,9 @@
  * =============================================================================
  */
 
+// TODO: change this to only run tests for packages with diffs (refer to tfjs
+// repo).
+
 import * as fs from 'fs';
 import {join} from 'path';
 import * as shell from 'shelljs';

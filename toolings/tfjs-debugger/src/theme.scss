@@ -36,13 +36,15 @@ $tfjs-debugger-typography: mat.define-typography-config(
 );
 
 // Set up theme.
-$tfjs-debugger-theme: mat.define-light-theme((
-  color: (
-    primary: $tfjs-debugger-primary,
-    accent: $tfjs-debugger-accent,
-  ),
-  typography: $tfjs-debugger-typography
-));
+$tfjs-debugger-theme: mat.define-light-theme(
+  (
+    color: (
+      accent: $tfjs-debugger-accent,
+      primary: $tfjs-debugger-primary,
+    ),
+    typography: $tfjs-debugger-typography,
+  )
+);
 @include mat.all-component-themes($tfjs-debugger-theme);
 
 // Export theme colors that can be used in components.

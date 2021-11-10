@@ -18,9 +18,9 @@
 @use 'variables' as var;
 
 body {
-  font-family: var.$font-face;
   height: 100%;
   margin: 0;
+  font-family: var.$font-face;
 }
 
 html {
