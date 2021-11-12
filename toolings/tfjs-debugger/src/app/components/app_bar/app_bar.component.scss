@@ -1,0 +1,29 @@
+@use '../../../variables' as var;
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  padding: 0 var.$spacing-3x;
+  overflow: hidden;
+  border-bottom: 1px solid var.$grey-200;
+
+  .app-title-container {
+    display: flex;
+    align-items: center;
+    height: 100%;
+
+    .icon {
+      width: 24px;
+      margin-right: var.$spacing-3x;
+    }
+
+    .title {
+      color: var.$grey-800;
+      font-weight: 700;
+      font-size: var.$font-size-large;
+      text-transform: uppercase;
+    }
+  }
+}

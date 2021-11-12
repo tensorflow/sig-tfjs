@@ -17,7 +17,13 @@
 
 .container {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
   height: 100%;
+  overflow: hidden;
+
+  .content {
+    display: flex;
+    flex-grow: 1;
+    overflow: hidden;
+  }
 }

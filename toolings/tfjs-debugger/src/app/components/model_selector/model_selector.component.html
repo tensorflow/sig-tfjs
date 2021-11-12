@@ -1,0 +1,29 @@
+<div class="container">
+  <!-- Drop down select -->
+  <mat-form-field appearance="outline" floatLabel="never">
+    <mat-select
+        [(value)]="selectedModelTypeId"
+        [class.same-as-config1-selected]="isSameAsConfig1Selected"
+        (selectionChange)="handleSelectionChange($event)">
+      <mat-option *ngFor="let option of modelTypes"
+          [value]="option.id"
+          [disabled]="option.disabled">
+        {{option.label}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <!-- Extra UI components for different model types -->
+  <div class="model-extra-components-container"
+       [ngSwitch]="selectedModelTypeId">
+
+    <!-- TFJS -->
+    <div *ngSwitchCase="ModelTypeId.TFJS">
+      <mat-form-field appearance="outline" floatLabel="never">
+        <input #tfjsModelUrlInput matInput placeholder="URL for model.json">
+      </mat-form-field>
+    </div>
+
+    <div *ngSwitchDefault></div>
+  </div>
+</div>

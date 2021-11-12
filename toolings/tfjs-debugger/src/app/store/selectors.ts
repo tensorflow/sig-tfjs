@@ -16,9 +16,21 @@
  */
 
 import {getSelectors, RouterReducerState} from '@ngrx/router-store';
-import {createFeatureSelector} from '@ngrx/store';
+import {createFeatureSelector, createSelector} from '@ngrx/store';
+
+import {ConfigIndex, UrlParamKey} from '../common/types';
+import {appendConfigIndexToKey} from '../common/utils';
 
 const selectRouter = createFeatureSelector<RouterReducerState>('router');
 const selectQueryParams = getSelectors(selectRouter).selectQueryParams;
 
-// TODO: placeholder.
+/** Selector to select the id of the currently selected model item from URL. */
+export const selectConfigValueFromUrl =
+    (configIndex: ConfigIndex, paramKey: UrlParamKey) =>
+        createSelector(selectQueryParams, (params) => {
+          if (!params) {
+            return '';
+          }
+          const key = appendConfigIndexToKey(paramKey, configIndex);
+          return params[key];
+        });

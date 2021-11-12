@@ -1,0 +1,23 @@
+@use '../../../variables' as var;
+
+.container {
+  width: 300px;
+  height: 100%;
+  overflow-y: auto;
+  font-size: var.$font-size-small;
+  background-color: #f3f6fb;
+  border-right: 1px solid var.$grey-200;
+
+  .config-header {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    height: var.$config-header-height;
+    padding: 0 var.$spacing-3x;
+    color: var.$grey-800;
+    font-weight: 500;
+    font-size: var.$font-size-normal;
+    background-color: #e7edf7;
+  }
+}

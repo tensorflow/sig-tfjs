@@ -15,27 +15,12 @@
  * =============================================================================
  */
 
-import {Configuration} from '../data_model/configuration';
-import {ModelTypeId} from '../data_model/model_type';
+import {ModelTypeId} from 'src/app/data_model/model_type';
 
-export interface Configs {
-  config1: Configuration;
-  config2: Configuration;
+/** An option in the model selector. */
+export interface ModelTypeOption {
+  /** This is a number not string. */
+  id: ModelTypeId;
+  label: string;
+  disabled?: boolean;
 }
-
-/** The main app state. */
-export interface AppState {
-  configs: Configs;
-}
-
-/** The initial app state. */
-export const initialState: AppState = {
-  configs: {
-    config1: {
-      modelType: ModelTypeId.TFJS,
-    },
-    config2: {
-      modelType: ModelTypeId.SAME_AS_CONFIG1,
-    }
-  },
-};

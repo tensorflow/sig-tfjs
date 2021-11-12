@@ -12,6 +12,9 @@
   ],
   "ignoreFiles": ["src/theme.scss", "node_modules/**/*.*"],
   "rules": {
-    "string-quotes": "single"
+    "string-quotes": "single",
+    "selector-pseudo-element-no-unknown": [true, {
+      "ignorePseudoElements": ["ng-deep"]
+    }]
   }
 }

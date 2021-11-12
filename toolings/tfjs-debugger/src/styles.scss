@@ -16,6 +16,7 @@
  */
 
 @use 'variables' as var;
+@use 'theme' as theme;
 
 body {
   height: 100%;
@@ -25,4 +26,37 @@ body {
 
 html {
   height: 100%;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Styles that are applied to all elements in the app.
+
+// Common styles for certain controls.
+mat-form-field.mat-form-field-type-mat-select,
+mat-form-field.mat-form-field-type-mat-input {
+  .mat-form-field-infix {
+    padding-top: 11px;
+    padding-bottom: 7px;
+    border-top-width: 0;
+  }
+
+  .mat-form-field-wrapper {
+    padding: 0;
+  }
+}
+
+// mat-select
+mat-form-field.mat-form-field-type-mat-select {
+  .mat-select-arrow-wrapper {
+    transform: none;
+  }
+}
+
+// mat-option
+mat-option.mat-selected {
+  background: theme.$primary-color !important;
+
+  .mat-option-text {
+    color: var.$grey-900;
+  }
 }

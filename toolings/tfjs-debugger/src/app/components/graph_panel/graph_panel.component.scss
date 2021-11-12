@@ -1,0 +1,13 @@
+@use '../../../variables' as var;
+
+:host {
+  flex-grow: 1;
+}
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  overflow: hidden;
+}

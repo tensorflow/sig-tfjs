@@ -15,4 +15,12 @@
  * =============================================================================
  */
 
-// TODO: placeholder.
+import {createAction, props} from '@ngrx/store';
+
+import {ModelTypeId} from '../data_model/model_type';
+
+/** Sets model type for the given config. */
+export const setModelType = createAction(
+    '[Conf] Set Model Type',
+    props<{configIndex: number, modelType: ModelTypeId}>(),
+);

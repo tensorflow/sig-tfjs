@@ -1,0 +1,11 @@
+@use '../../../variables' as var;
+
+.container {
+  mat-form-field {
+    width: 100%;
+  }
+
+  mat-select.same-as-config1-selected ::ng-deep .mat-select-value-text {
+    font-style: italic;
+  }
+}
