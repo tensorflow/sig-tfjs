@@ -1,0 +1,17 @@
+{
+  "extends": [
+    "stylelint-config-standard-scss",
+    "stylelint-config-rational-order"
+  ],
+  "plugins": ["stylelint-order", "stylelint-scss"],
+  "overrides": [
+    {
+      "files": ["**/*.scss"],
+      "customSyntax": "postcss-scss"
+    }
+  ],
+  "ignoreFiles": ["src/theme.scss", "node_modules/**/*.*"],
+  "rules": {
+    "string-quotes": "single"
+  }
+}
