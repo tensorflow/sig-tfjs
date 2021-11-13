@@ -29,7 +29,7 @@ export const selectConfigValueFromUrl =
     (configIndex: ConfigIndex, paramKey: UrlParamKey) =>
         createSelector(selectQueryParams, (params) => {
           if (!params) {
-            return '';
+            return undefined;
           }
           const key = appendConfigIndexToKey(paramKey, configIndex);
           return params[key];
