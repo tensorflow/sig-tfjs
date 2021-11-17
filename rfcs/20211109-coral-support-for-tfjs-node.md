@@ -3,7 +3,7 @@
 | Status        | Proposed       |
 :-------------- |:---------------------------------------------------- |
 | **RFC #**     | [NNN](https://github.com/tfjs-sig/pull/NNN) (update when you have community PR #)|
-| **Author(s)** | Matthew Soulanille (msoulanille@google.com) | Jason Mayes (jmayes@google.com)
+| **Author(s)** | Matthew Soulanille (msoulanille@google.com), Jason Mayes (jmayes@google.com) |
 | **Sponsor**   | A N Expert (whomever@tensorflow.org)                 |
 | **Updated**   | 2021-11-16                                          |
 
