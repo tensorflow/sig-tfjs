@@ -70,7 +70,12 @@ The demo has been tested on Linux X86 devices but has not been fully configured 
 
 ### Overview
 We propose:
-1. To extend `tfjs-tflite` or `tfjs-node` to support running TFLite models in Node, or to write a 
+1. To extend `tfjs-tflite` or `tfjs-node` to support running TFLite models in Node, or to write a new package that supports running tflite models in node.
+2. To provide a plugin system for TFLite Delegates and a Coral plugin that provides support for Coral accelerators.
+
+We exclude from the scope of this proposal:
+1. Coral support for web - This is of limited use for Coral devices, [which must be plugged in, unplugged, and plugged in again to work on the web](https://github.com/google-coral/webcoral#device-setup).
+2. Plugin support for web - This may be a future proposal.
 
 ### High Level Constraints and Tradeoffs
 1. Package size - Constrained more than usual for an npm package since a target platform is IoT devices.
@@ -86,7 +91,7 @@ Unlike the WASM bundle, which is distributed as a precompiled binary, support fo
 Coral support and support for other accelerators will be shipped as plugins separately from the main tflite package, likely in separate npm packages. At runtime, the main tflite library will [dynamically load](https://en.wikipedia.org/wiki/Dynamic_loading#Uses) plugins specified by the user. Each of these plugins implements the TFLitePlugin interface defined below (TODO). This approach, as opposed to a monolithic tflite entrypoint that includes all the accelerators / delegates, will allow us (and external contributors) to grow the list of supported delegates without impacting library size or requiring review from the TFJS team. TODO(mattsoulanile): Figure out if this is possible and implement it in the demo.
 
 
-### Accelerating Inference with Coral
+### Preparing the Model for Coral
 Coral is not a typical TFLite delegate. It does not directly support running any TFLite ops. Instead, [it relies on a (closed source) compiler](https://coral.ai/docs/edgetpu/compiler/#download) which replaces all the ops of a network with a single custom op that runs on the Edge TPU. Here's what this looks like for Mediapipe's face detection model: (TODO(mattsoulanille): Add pictures)
 
 <table>
@@ -104,18 +109,9 @@ Coral is not a typical TFLite delegate. It does not directly support running any
     </tr>
 </table>
 
+The compiler is a separate program, and it must be applied to the model before it is loaded into TFLite. It also requires that all the ops in the model be quantized to uint8, since Coral only has uint8 hardware. For optimal inference quality, this may require retraining the model after quantizing to uint8, and it's not something that can be easily done automatically to an arbitrary model. For these reasons, the proposal will likely _not_ attempt to automatically convert TFLite models to a format compatible with Coral.
 
-TODO: More of this section
-
-
-This is the meat of the document, where you explain your proposal. If you have
-multiple alternatives, be sure to use sub-sections for better separation of the
-idea, and list pros/cons to each approach. If there are alternatives that you
-have eliminated, you should also list those here, and explain why you believe
-your chosen approach is superior.
-
-Make sure you’ve thought through and addressed the following sections. If a section is not relevant to your specific proposal, please explain why, e.g. your RFC addresses a convention or process, not an API.
-
+### Connecting 
 
 ### Alternatives Considered
 * Make sure to discuss the relative merits of alternatives to your proposal.
