@@ -10,17 +10,17 @@
 
 ## Objective
 
-Enable the tfjs-node backend to run tflite models and support accelerating those models with a Coral accelerator in a standardized manner agnostic to the form factor of the Coral device.
+Enable TensorFlow.js to run tflite models in Node and support accelerating those models with a Coral accelerator in a standardized manner agnostic to the form factor of the Coral device.
 
 Currently the Coral device is available in multiple form factors:
 
-1. As a standalone USB dongle that can be plugged into an edge device such as a Raspberry Pi. This will be the primary device form factor to support.
+1. As a [standalone USB dongle](https://coral.ai/products/accelerator/) that can be plugged into an edge device such as a Raspberry Pi. This will be the primary device form factor to support.
 2. Directly integrated onboard with the developer kit such as the [Tinker Edge T](https://tinker-board.asus.com/product/tinker-edge-t.html).
 3. Via PCIe interface such as [this offering from Asus](https://iot.asus.com/products/AI-accelerator/AI-Accelerator-PCIe-Card/).
 
 If the Linux driver (libedgetpu.so) provides access to all form factors, then an interface to this driver from Node should be provided via TensorFlow.js APIs such that the user can specify the correct interface and send arbitary TFLite models to the Coral accelerator for ML inference.
 
-As TensorFlow.js models in the model.json format can not be executed on the Coral accelerators directly, we will only support the loading of TFLite models via our API to be deployed to Coral accelerators. Conversion of TensorFlow.js models to this format requiredby the Coral device is outside of scope of this proposal but could be investigated if large enough demand in the future.
+As TensorFlow.js models in the model.json format can not be executed on the Coral accelerators directly, we will only support the loading of TFLite models via our API to be deployed to Coral accelerators. Conversion of TensorFlow.js models to this format required by the Coral device is outside of scope of this proposal but could be investigated if large enough demand in the future.
 
 
 ## Motivation
@@ -55,7 +55,42 @@ TODO: REMOVE THESE NOTES LATER:
 How will users (or other contributors) benefit from this work? What would be the
 headline in the release notes or blog post?
 
+## Demo Repository
+[This demo](https://github.com/mattsoulanille/node-tflite) is forked from [an external project that adds tflite support to node](https://github.com/seanchas116/node-tflite). The demo adds Coral support thorugh an [argument to the existing Napi bindings](https://github.com/mattsoulanille/node-tflite/blob/master/index.cc#L126-L138) and [links](https://github.com/mattsoulanille/node-tflite/blob/master/binding.gyp#L17) the [libedgetpu library](https://github.com/google-coral/libedgetpu) that is required for interacting with Coral devices.
+
+The demo has been tested on Linux X86 devices but has not been fully configured for Windows or Mac. It has also only been tested with a USB Coral device, although it should work with a PCIe device as well since it relies on libedgetpu for Coral support. To run the demo yourself, follow these steps:
+1. [Install the Edge TPU runtime](https://coral.ai/docs/accelerator/get-started#1-install-the-edge-tpu-runtime).
+2. In the root of the repository, install dependencies and compile the Napi bindings with `npm install`.
+3. In the `examples/electron-mediapipe-face` repository, run `npm install` to install dependencies.
+4. Run `npm start` to start the demo. You should see a screen like this:
+
+
+
 ## Design Proposal
+
+### Overview
+We propose:
+1. To extend `tfjs-tflite` or `tfjs-node` to support running TFLite models in Node, or to write a 
+
+### High Level Constraints and Tradeoffs
+1. Package size - Constrained more than usual for an npm package since a target platform is IoT devices.
+2. Supported platforms vs Maintainability - TFLite does not ship precompiled binaries, and [Coral ships a limited set of precompiled binaries](https://github.com/google-coral/libedgetpu/releases/tag/release-grouper). We need to balance supported platforms with maintenance cost to the team. Ideally, we would let users compile TFLite and libedgetpu themselves for unsupported platforms.
+3. Where to implement the proposal - In tfjs-node? In tfjs-tflite? In a new package?
+4. Whether to use the [TFLite C api](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/c/c_api.h) or the [C++ api](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/BUILD#L343-L370). The demo uses the C api, but tfjs-tflite uses the C++ api. The APIs are nearly functionally equivalent. The C library is 2.9MB while the C++ library is 3.4MB.
+
+### Running TFLite Models in Node
+TFLite provides a C API and a C++ API for running models. The [C API aims to be more simple than the C++ API](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/c/c_api.h#L27-L31), and this is what the demo uses. The C++ API is what `tfjs-tflite` currently uses. As much as possible, we would like to provide the same interface for tflite in Node and on the web, so using the C++ API, while not strictly necessary, will likely make this easier. 
+
+Unlike the WASM bundle, which is distributed as a precompiled binary, support for Node will be provided by Napi bindings to a precompiled tflite library.  TODO: Explain node gyp process
+
+Coral support and support for other accelerators will be shipped as plugins separately from the main tflite package, likely in separate npm packages. At runtime, the main tflite library will [dynamically load](https://en.wikipedia.org/wiki/Dynamic_loading#Uses) plugins specified by the user. Each of these plugins implements the TFLitePlugin interface defined below (TODO). This approach, as opposed to a monolithic tflite entrypoint that includes all the accelerators / delegates, will allow us (and external contributors) to grow the list of supported delegates without impacting library size or requiring review from the TFJS team. TODO(mattsoulanile): Figure out if this is possible and implement it in the demo.
+
+
+### Accelerating Inference with Coral
+Coral is not a typical TFLite delegate. It does not directly support running any TFLite ops. Instead, [it relies on a (closed source) compiler](https://coral.ai/docs/edgetpu/compiler/#download) which replaces all the layers of a network with a single custom layer that runs on the Edge TPU. Here's what this looks like for Mediapipe's BlazeFace model: (TODO(mattsoulanille): Add pictures)
+
+TODO: More of this section
+
 
 This is the meat of the document, where you explain your proposal. If you have
 multiple alternatives, be sure to use sub-sections for better separation of the
@@ -78,11 +113,15 @@ Make sure you’ve thought through and addressed the following sections. If a se
 * Dependent projects: are there other projects of TensorFlow.js SIG that this affects? How have you identified these dependencies and are you sure they are complete? If there are dependencies, how are you managing those changes?
 
 ### Engineering Impact
+* Additional maintenance cost of maintaining binaries.
 * Do you expect changes to binary size / startup time / build time / test times?
 
 ### Platforms and Environments
-* Platforms: does this work on all platforms supported by TensorFlow.js? If not, why is that ok? Will it work on browser or node?
-* Execution environments (CPU/WebGL/WASM/WebGPU/node.js): what impact do you expect and how will you confirm?
+In order of priority, the platforms we plan to support are:
+1. Linux x86 and ARM64, especially Raspberry Pi.
+2. Windows x86 (use case is low power kiosk machines / [PC Sticks](https://www.amazon.com/Computer-Windows-Support-Bluetooh-AIOEXPC/dp/B08G1CCWN5/ref=asc_df_B08G1CCWN5/?tag=hyprod-20&linkCode=df0&hvadid=459623382939&hvpos=&hvnetw=g&hvrand=5388614202533491403&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=9031136&hvtargid=pla-980775817871&th=1)).
+3. Possibly ARM32 for lower end devices (TODO: Find example devices?)
+4. Possibly Mac x86 and ARM64, but less likely due to maintenance cost and available alternatives (tfjs-node), but we are open to community feedback on this.
 
 ### Best Practices
 * Does this proposal change best practices for some aspect of using/developing TensorFlow.js? How will these changes be communicated/enforced?
