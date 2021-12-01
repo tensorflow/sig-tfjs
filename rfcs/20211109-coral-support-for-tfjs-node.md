@@ -87,7 +87,23 @@ Coral support and support for other accelerators will be shipped as plugins sepa
 
 
 ### Accelerating Inference with Coral
-Coral is not a typical TFLite delegate. It does not directly support running any TFLite ops. Instead, [it relies on a (closed source) compiler](https://coral.ai/docs/edgetpu/compiler/#download) which replaces all the layers of a network with a single custom layer that runs on the Edge TPU. Here's what this looks like for Mediapipe's BlazeFace model: (TODO(mattsoulanille): Add pictures)
+Coral is not a typical TFLite delegate. It does not directly support running any TFLite ops. Instead, [it relies on a (closed source) compiler](https://coral.ai/docs/edgetpu/compiler/#download) which replaces all the ops of a network with a single custom op that runs on the Edge TPU. Here's what this looks like for Mediapipe's face detection model: (TODO(mattsoulanille): Add pictures)
+
+<table>
+    <tr>
+        <td>Coral</td>
+        <td>Native TFLite</td>
+    </tr>
+    <tr>
+        <td>
+            <img src="20211109-coral-support-for-tfjs-node/mediapipe-face-coral.png">
+        </td>
+        <td>
+            <img src="20211109-coral-support-for-tfjs-node/mediapipe-face.png">
+        </td>
+    </tr>
+</table>
+
 
 TODO: More of this section
 
