@@ -129,21 +129,21 @@ Coral is not a typical TFLite delegate. It does not directly support running any
 The compiler is a separate program, and it must be applied to the model before it is loaded into TFLite. It also requires that all the ops in the model be quantized to uint8, since Coral only has uint8 hardware. For optimal inference quality, this may require retraining the model after quantizing to uint8, and it's not something that can be easily done automatically to an arbitrary model. For these reasons, the proposal will likely _not_ attempt to automatically convert TFLite models to a format compatible with Coral.
 
 ### Connecting 
+TODO
 
 ### Alternatives Considered
 * Make sure to discuss the relative merits of alternatives to your proposal.
 
 ### Performance Implications
-* Do you expect any (speed / memory)? How will you confirm?
-* There should be end-to-end tests and benchmarks. If there are not (since this is still a design), how will you track that these will be created?
+* This adds a new backend (tflite-node, if we call it that) which we should benchmark.
+* Benchmarking the Coral delegate is more difficult since it requires new hardware.
 
 ### Dependencies
-* Dependencies: does this proposal add any new dependencies to SIG repo of TensorFlow.js?
-* Dependent projects: are there other projects of TensorFlow.js SIG that this affects? How have you identified these dependencies and are you sure they are complete? If there are dependencies, how are you managing those changes?
+* TFLite: Depending on whether we need to build TFLite DLLs from source, we may need to add the TensorFlow repository as Bazel external repository. This is how libedgetpu builds against TensorFlow.
+* [libedgetpu](https://github.com/google-coral/libedgetpu): Needed only for the Coral delegate plugin. We can depend on their precompiled binaries.
 
 ### Engineering Impact
-* Additional maintenance cost of maintaining binaries.
-* Do you expect changes to binary size / startup time / build time / test times?
+* Additional maintenance cost of maintaining TFLite binaries, if we end up having to do that.
 
 ### Platforms and Environments
 In order of priority, the platforms we plan to support are:
@@ -153,7 +153,7 @@ In order of priority, the platforms we plan to support are:
 4. Possibly Mac x86 and ARM64, but less likely due to maintenance cost and available alternatives (tfjs-node), but we are open to community feedback on this.
 
 ### Best Practices
-* Does this proposal change best practices for some aspect of using/developing TensorFlow.js? How will these changes be communicated/enforced?
+* N/A
 
 ### Tutorials and Examples
 * It is recommended to create end-to-end examples (ideally, a tutorial) which reflects how new feature will be used. Some things to consider related to the tutorial:
