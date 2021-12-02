@@ -170,4 +170,30 @@ above.
 
 ## Questions and Discussion Topics
 
+### Where should we implement this?
+1. `tfjs-tflite`
+  * Pros: Keeps tflite support in one place. Easier for users to use the same package for node and web.
+  * Cons: Does not have node-gyp or node-gn set up. Does not work in node currently. Platform differences may force API differences anyway (e.g. dynamically loading a delegate may not be possible on the web).
+2. `tfjs-node`
+  * Pros: Already works with node. Already has node-gyp set up. 
+  * Cons: Possibly confusing to have full Tensorflow and Tensorflow Lite support in the same package? 
+3. Another package, e.g. `tfjs-tflite-node`
+  * Pros: Clean slate. Does not affect existing codebase. Any weird requirements of node-gyp or the plugin system can be implemented without breaking anything else.
+  * Cons: Another package to maintain, publish, make users aware of etc. Further fragments our offerings.
+ 
 Seed this with open questions you require feedback on from the RFC process.
+
+### Building the native addon
+Generate Your Projects (GYP) is [very deprecated](https://en.wikipedia.org/wiki/GYP_(software)) but is still the main way native node modules are compiled. Almost all native modules build using [node-gyp](https://github.com/nodejs/node-gyp). The demo uses node-gyp.
+
+There was some discussion in the node community of switching to GN/Ninja for native addons. This resulted in the [node-gn](https://github.com/Shouqun/node-gn) project, which doesn't seem active anymore.
+
+We could instead try to use Bazel to build the native modules, but this would likely be a mistake with the current state of tooling (no community support, no ARM build).
+
+### Building / Sourcing libtensorflowlite and libedgetpu
+TFLite only distributes Android and iOS binaries, and it's currently excluded from the main TensorFlow (non-lite) build. If it were included in the main build, we could use that and build off of `tfjs-node`. Otherwise, we may need to build and host our own binaries. This is easy for Linux platforms, and we can cross-compile to ARM, but it may be more difficult for Window and MacOS.
+
+libedgetpu has precompiled binaries available for linux x86, ARM64, ARM32, Mac x86, and Windows x86, so we should just use those. Alternatively, we can require users to install libedgetpu, which might be necessary to get it to correctly detect and flash Coral USB devices.
+
+### Delegate Plugin System
+How do we make plugins as seamless to users as possible? 
