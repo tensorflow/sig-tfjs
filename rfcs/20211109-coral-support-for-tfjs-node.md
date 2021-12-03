@@ -59,45 +59,43 @@ headline in the release notes or blog post?
 
 ### Overview
 We propose:
-1. To extend `tfjs-tflite` or `tfjs-node` to support running TFLite models in Node, or to write a new package that supports running tflite models in node.
-2. To provide a plugin system for TFLite Delegates and a Coral plugin that provides support for Coral accelerators.
+1. To write a new package, `tfjs-tflite-node`, that implements the same interface as `tfjs-tflite` and supports running tflite models in node.
+2. To provide a plugin system for [TFLite Delegates](https://www.tensorflow.org/lite/performance/delegates) and a Coral plugin that provides support for Coral accelerators.
 
 We exclude from the scope of this proposal:
 1. Coral support for web - This is of limited use for Coral devices, [which must be plugged in, unplugged, and plugged in again to work on the web](https://github.com/google-coral/webcoral#device-setup).
-2. Plugin support for web - This may be a future proposal.
+2. Delegate plugin support for web - This may be a future proposal.
 
 ### High Level Constraints and Tradeoffs
 1. Package size - Constrained more than usual for an npm package since a target platform is IoT devices.
 2. Supported platforms vs Maintainability - TFLite does not ship precompiled binaries, and [Coral ships a limited set of precompiled binaries](https://github.com/google-coral/libedgetpu/releases/tag/release-grouper). We need to balance supported platforms with maintenance cost to the team. Ideally, we would let users compile TFLite and libedgetpu themselves for unsupported platforms.
-3. Where to implement the proposal - In tfjs-node? In tfjs-tflite? In a new package?
-4. Whether to use the [TFLite C api](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/c/c_api.h) or the [C++ api](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/BUILD#L343-L370). The demo uses the C api, but tfjs-tflite uses the C++ api. The APIs are nearly functionally equivalent. The C library is 2.9MB while the C++ library is 3.4MB.
-
-### Where to Implement
-
-#### In tfjs-node
-This section is TODO pending discussion. See question at the bottom of the doc.
+3. Where to implement the proposal - In tfjs-node? In tfjs-tflite? In a new package? See the discussion section at the bottom for details on this.
+4. Whether to use the [TFLite C api](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/c/c_api.h) or the [C++ api](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/BUILD#L343-L370). The [demo](#proof-of-concept-demo-repository) uses the C api, but tfjs-tflite uses the C++ api. The APIs are nearly functionally equivalent. The C library is 2.9MB while the C++ library is 3.4MB.
 
 ### Running TFLite Models in Node
 TFLite provides a C API and a C++ API for running models. The [C API aims to be more simple than the C++ API](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/c/c_api.h#L27-L31), and this is what the demo uses. The C++ API is what `tfjs-tflite` currently uses. As much as possible, we would like to provide the same interface for tflite in Node and on the web, so using the C++ API, while not strictly necessary, will likely make this easier. 
 
-Unlike the WASM bundle, which is distributed as a precompiled binary, support for Node will be provided by Napi bindings to a precompiled tflite library.  TODO: Explain node gyp process
+Unlike the WASM bundle, which is distributed as a precompiled binary, support for Node will be provided by Napi bindings to a precompiled tflite library. These Napi bindings will be compiled by node-gyp when installing the `tfjs-tflite-package`.
+
+We will try to make these bindings as similar as possible to the WASM bindings we use in `tfjs-tflite`, and we may be able to reuse some code from `tfjs-tflite`, but this will require more investigation. The degree of success we have with this should not affect our ability to match `tfjs-tflite`'s API.
 
 ### Plugin System for Delegates
-Coral support and support for other accelerators will be shipped as plugins separately from the main tflite package, likely in separate npm packages. At runtime, the main tflite library will [dynamically load](https://en.wikipedia.org/wiki/Dynamic_loading#Uses) plugins specified by the user. Each of these plugins implements the TFLiteDelegatePlugin interface defined below (TODO). This approach, as opposed to a monolithic tflite entrypoint that includes all the accelerators / delegates, will allow us (and external contributors) to grow the list of supported delegates without impacting library size or requiring review from the TFJS team. This is similar to how delegates are loaded in Python, which is done via the [`tf.lite.experimental.load_delegate`](https://www.tensorflow.org/lite/api_docs/python/tf/lite/experimental/load_delegate) function. This function is [used in the PyCoral library](https://github.com/google-coral/pycoral/blob/master/pycoral/utils/edgetpu.py#L52) to load the Coral accelerator as a delegate, and it uses [`ctypes.pydll.LoadLibrary`](https://github.com/tensorflow/tensorflow/blob/v2.7.0/tensorflow/lite/python/interpreter.py#L90) under the hood. Perhaps [`node-ffi`](https://github.com/node-ffi/node-ffi) can help with this?
+Coral and other accelerator delegates will be supported by plugins separately from the main tflite package, likely in separate npm packages. At runtime, the main tflite library will [dynamically load](https://en.wikipedia.org/wiki/Dynamic_loading#Uses) plugins specified by the user. Each of these plugins implements the TFLiteDelegatePlugin interface defined below. This approach, as opposed to a monolithic tflite entrypoint that includes all the accelerators / delegates, will allow us (and external contributors) to grow the list of supported delegates without impacting library size or requiring review from the TFJS team. This is similar to how delegates are loaded in Python, which is done via the [`tf.lite.experimental.load_delegate`](https://www.tensorflow.org/lite/api_docs/python/tf/lite/experimental/load_delegate) function. This function is [used in the PyCoral library](https://github.com/google-coral/pycoral/blob/master/pycoral/utils/edgetpu.py#L52) to load the Coral accelerator as a delegate, and it uses [`ctypes.pydll.LoadLibrary`](https://github.com/tensorflow/tensorflow/blob/v2.7.0/tensorflow/lite/python/interpreter.py#L90) under the hood. Perhaps [`node-ffi`](https://github.com/node-ffi/node-ffi) can achieve the same effect in Node?
 
-TODO(mattsoulanile): Figure out if this is possible and implement it in the demo.
-
+#### Package Format
+The NPM package format for a delegate plugin is likely simpler than the main TFLite package. A plugin might not even need to use node-gyp to compile bindings. Instead, it would provide precompiled binaries of its delegate for supported platforms (see esbuild's npm pakcage setup for how to download only the one compatible with the current platform). It would also provide a JavaScript entrypoint that declares the path to the dll, the type for the dll's options, and a function to serialize those options via an instance of the `TFLiteDelegatePlugin` interface.
 ```typescript
-interface TFLiteDelegate<SerializedOptions> {
+interface TFLiteDelegatePlugin<Options> {
   name: string; // Name of the delegate. We could remove this if we don't think it's needed.
   path(platform?: string): string; // Returns the path to the delegate dll based on the platform.
-  serializedOptions: SerializedOptions // https://github.com/tensorflow/tensorflow/blob/v2.7.0/tensorflow/lite/python/interpreter.py#L98-L104
+  serializeOptions(options: Options): Map<string, string> // https://github.com/tensorflow/tensorflow/blob/v2.7.0/tensorflow/lite/python/interpreter.py#L98-L104
 }
 ```
-#### Package Format
-The package format for a delegate plugin is likely simpler than the main TFLite package. A plugin might not even need to use node-gyp to compile bindings. Instead, it would provide precompiled binaries of its delegate for supported platforms (see esbuild's npm pakcage setup for how to download only the one compatible with the current platform). It would also provide a js entrypoint that just declares the path to the dll and the type for the dll's options (and a function to serialize those options). 
+Within `tfjs-tflite-node`, we will provide a `loadDelegate()` function that can load a delegate plugin with its corresponding options. In order for this to work for all delegates, delegates DLLs will need to implement the same interface as each other. This section is correct to the best of our knowledge, but there may be some inaccuracies. We will update it as we experiment with this.
 
-### Preparing the Model for Coral
+Given the complexity of this plugin system and of loading DLLs dynamically, the first version of `tfjs-tflite-node` will not include it, but it's important to consider its design from the start. We might also implement a version of the Coral delegate directly into `tfjs-tflite-node` before this plugin system is complete.
+ 
+### The Coral Delegate
 Coral is not a typical TFLite delegate. It does not directly support running any TFLite ops. Instead, [it relies on a (closed source) compiler](https://coral.ai/docs/edgetpu/compiler/#download) which replaces all the ops of a network with a single custom op that runs on the Edge TPU. Here's what this looks like for Mediapipe's face detection model: (TODO(mattsoulanille): Add pictures)
 
 <table>
@@ -117,14 +115,12 @@ Coral is not a typical TFLite delegate. It does not directly support running any
 
 The compiler is a separate program, and it must be applied to the model before it is loaded into TFLite. It also requires that all the ops in the model be quantized to uint8, since Coral only has uint8 hardware. For optimal inference quality, this may require retraining the model after quantizing to uint8, and it's not something that can be easily done automatically to an arbitrary model. For these reasons, the proposal will likely _not_ attempt to automatically convert TFLite models to a format compatible with Coral.
 
-### Connecting 
-TODO
-
 ### Alternatives Considered
 * Make sure to discuss the relative merits of alternatives to your proposal.
 
 ### Performance Implications
-* This adds a new backend (tflite-node, if we call it that) which we should benchmark.
+* There are no performance implications for existing packages.
+* This adds a new package, `tfjs-tflite-node`, which we should benchmark.
 * Benchmarking the Coral delegate is more difficult since it requires new hardware.
 
 ### Dependencies
