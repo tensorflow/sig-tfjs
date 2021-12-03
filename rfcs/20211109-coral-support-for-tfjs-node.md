@@ -107,7 +107,13 @@ Coral is not a typical TFLite delegate. It does not directly support running any
 The compiler is a separate program, and it must be applied to the model before it is loaded into TFLite. It also requires that all the ops in the model be quantized to uint8, since Coral only has uint8 hardware. For optimal inference quality, this may require retraining the model after quantizing to uint8, and it's not something that can be easily done automatically to an arbitrary model. For these reasons, the proposal will likely _not_ attempt to automatically convert TFLite models to a format compatible with Coral.
 
 ### Alternatives Considered
-* Make sure to discuss the relative merits of alternatives to your proposal.
+For alternative places we could implement the proposal, see the questions and discussion topics section at the bottom of the doc.
+
+#### Alternative: No Plugin System
+Instead of implementing the above plugin system, we could link all delegates in the `tfjs-tflite-node` package's Napi bindings. This would be a lot simpler to implement since there would be no runtime loading of DLLs, but it would make it more difficult for contributors to write new delegates, since they would need to be included in the `tfjs-tflite-node` package (and be merged into the tfjs repo).
+
+#### Alternative: Run TFLite in WASM in Node
+Instead of using native binaries, we could run TFLite in WASM in Node. This makes it a lot easier to support all platforms, since we wouldn't need a separate build for each of them. However, it would affect performance, and might make it more difficult to support delegates.
 
 ### Performance Implications
 * There are no performance implications for existing packages.
@@ -134,7 +140,7 @@ This change does not introduce any new best practices.
 
 ### Tutorials and Examples
 #### Coral Proof of Concept Demo Repository
-[This demo](https://github.com/mattsoulanille/node-tflite) is forked from [an external project that adds tflite support to node](https://github.com/seanchas116/node-tflite) and does reflect exactly how this proposal will be implemented in the tfjs repository. The original repository added support for running TFLite models in Node through Napi bindings, and the forked demo adds Coral support thorugh an [argument passed to the bindings](https://github.com/mattsoulanille/node-tflite/blob/master/index.cc#L126-L138). To communicate with the Coral accelerator, the demo [links](https://github.com/mattsoulanille/node-tflite/blob/master/binding.gyp#L17) the [libedgetpu library](https://github.com/google-coral/libedgetpu).
+[This demo](https://github.com/mattsoulanille/node-tflite) is forked from [an external project that adds tflite support to node](https://github.com/seanchas116/node-tflite) and does reflect exactly how this proposal will be implemented in the tfjs repository. The original repository added support for running TFLite models in Node through Napi bindings, and the forked demo adds Coral support through an [argument passed to the bindings](https://github.com/mattsoulanille/node-tflite/blob/master/index.cc#L126-L138). To communicate with the Coral accelerator, the demo [links](https://github.com/mattsoulanille/node-tflite/blob/master/binding.gyp#L17) the [libedgetpu library](https://github.com/google-coral/libedgetpu).
 
 The demo has been tested on Linux X86 devices but has not been fully configured for Windows or Mac. It has also only been tested with a USB Coral device, although it should work with a PCIe device as well since it relies on libedgetpu for Coral support. To run the demo yourself, follow these steps:
 1. [Install the Edge TPU runtime](https://coral.ai/docs/accelerator/get-started#1-install-the-edge-tpu-runtime).
