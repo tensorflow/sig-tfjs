@@ -4,8 +4,8 @@
 :-------------- |:---------------------------------------------------- |
 | **RFC #**     | [NNN](https://github.com/tfjs-sig/pull/NNN) (update when you have community PR #)|
 | **Author(s)** | Matthew Soulanille (msoulanille@google.com), Jason Mayes (jmayes@google.com) |
-| **Sponsor**   | A N Expert (whomever@tensorflow.org)                 |
-| **Updated**   | 2021-11-16                                          |
+| **Sponsor**   | Ping Yu (piyu@google.com)                 |
+| **Updated**   | 2021-12-03                                          |
 
 
 ## Objective
@@ -54,17 +54,6 @@ Furthermore the [JIT compiler of JavaScript has proven to be faster than Python 
 TODO: REMOVE THESE NOTES LATER:
 How will users (or other contributors) benefit from this work? What would be the
 headline in the release notes or blog post?
-
-## Demo Repository
-[This demo](https://github.com/mattsoulanille/node-tflite) is forked from [an external project that adds tflite support to node](https://github.com/seanchas116/node-tflite). The demo adds Coral support thorugh an [argument to the existing Napi bindings](https://github.com/mattsoulanille/node-tflite/blob/master/index.cc#L126-L138) and [links](https://github.com/mattsoulanille/node-tflite/blob/master/binding.gyp#L17) the [libedgetpu library](https://github.com/google-coral/libedgetpu) that is required for interacting with Coral devices.
-
-The demo has been tested on Linux X86 devices but has not been fully configured for Windows or Mac. It has also only been tested with a USB Coral device, although it should work with a PCIe device as well since it relies on libedgetpu for Coral support. To run the demo yourself, follow these steps:
-1. [Install the Edge TPU runtime](https://coral.ai/docs/accelerator/get-started#1-install-the-edge-tpu-runtime).
-2. In the root of the repository, install dependencies and compile the Napi bindings with `npm install`.
-3. In the `examples/electron-mediapipe-face` repository, run `npm install` to install dependencies.
-4. Run `npm start` to start the demo. You should see a screen like this:
-
-
 
 ## Design Proposal
 
@@ -156,12 +145,45 @@ In order of priority, the platforms we plan to support are:
 * N/A
 
 ### Tutorials and Examples
-* It is recommended to create end-to-end examples (ideally, a tutorial) which reflects how new feature will be used. Some things to consider related to the tutorial:
-    - It should show the usage of the new feature in an end to end example.
-    - This should be written as if it is documentation of the new feature, i.e., consumable by a user, not a TensorFlow.js developer. 
-    - The code does not need to work (since the feature is not implemented yet) but the expectation is that the code does work before the feature can be merged. 
+#### Proof of Concept Demo Repository
+[This demo](https://github.com/mattsoulanille/node-tflite) is forked from [an external project that adds tflite support to node](https://github.com/seanchas116/node-tflite) and does reflect exactly how this proposal will be implemented in the tfjs repository. The original repository added support for running TFLite models in Node through Napi bindings, and the forked demo adds Coral support thorugh an [argument passed to the bindings](https://github.com/mattsoulanille/node-tflite/blob/master/index.cc#L126-L138). To communicate with the Coral accelerator, the demo [links](https://github.com/mattsoulanille/node-tflite/blob/master/binding.gyp#L17) the [libedgetpu library](https://github.com/google-coral/libedgetpu).
+
+The demo has been tested on Linux X86 devices but has not been fully configured for Windows or Mac. It has also only been tested with a USB Coral device, although it should work with a PCIe device as well since it relies on libedgetpu for Coral support. To run the demo yourself, follow these steps:
+1. [Install the Edge TPU runtime](https://coral.ai/docs/accelerator/get-started#1-install-the-edge-tpu-runtime).
+2. In the root of the demo repository, install dependencies and compile the Napi bindings with `npm install`.
+3. In the `examples/electron-mediapipe-face` repository, run `npm install` to install dependencies.
+4. Run `npm start` to start the demo. You should see a screen like this: TODO
+
+#### Sample Use of tfjs-tflite-node
+The API should be consistent with `tfjs-tflite` wherever possible. Here is a sample of what loading and running a model might look like:
+```typescript
+// Adds the CPU backend.
+import '@tensorflow/tfjs-backend-cpu';
+// Import @tensorflow/tfjs-core
+import * as tf from '@tensorflow/tfjs-core';
+// Import @tensorflow/tfjs-node for JPEG decoding. 
+// We may want to factor some of these methods out of tfjs-node and into their own package (or tfjs-data)
+// so users don't need to import all of tfjs-node to use them.
+import * as tfnode from "@tensorflow/tfjs-node";
+// Import @tensorflow/tfjs-tflite-node.
+import * as tflite from '@tensorflow/tfjs-tflite-node';
+
+
+// Load the model from a file instead of a URL
+const tfliteModel = await tflite.loadTFLiteModel('./path/to/your/model.tflite');
+
+// Prepare input tensors.
+const img = tfnode.node.decodeJpeg(fs.readFileSync('img.jpg'));
+const input = tf.sub(tf.div(tf.expandDims(img), 127.5), 1);
+
+// Run inference and get output tensors.
+let outputTensor = tfliteModel.predict(input) as tf.Tensor;
+console.log(outputTensor.dataSync());
+```
 
 ### Compatibility
+This proposal adds a new package, `tfjs-tflite-node`, and does not change any existing packages. As the name indicates, it will only be compatible with node and with TFLite models. It does not use any existing TFJS backends and instead ties directly into the native TFLite binary for a given platform.
+
 * How will this proposal interact with other parts of the TensorFlow.js Ecosystem?
     - How will it work with TFJS models?
     - How will it work with TFJS-node?
@@ -169,13 +191,10 @@ In order of priority, the platforms we plan to support are:
     - How will it work with TFJS model types (graph/layers)?
 
 ### User Impact
-* What are the user-facing changes? How will this feature be rolled out?
-
-## Detailed Design
-
-This section is optional. Elaborate on details if they’re important to
-understanding the design, but would make it hard to read the proposal section
-above.
+This feature will be rolled out on npm in a new `tfjs-tflite-node` package. Users can import or require it in node in the usual way:
+```typescript
+import * as tflite from '@tensorflow/tfjs-tflite-node'
+```
 
 ## Questions and Discussion Topics
 
@@ -189,20 +208,25 @@ above.
 3. Another package, e.g. `tfjs-tflite-node`
   * Pros: Clean slate. Does not affect existing codebase. Any weird requirements of node-gyp or the plugin system can be implemented without breaking anything else.
   * Cons: Another package to maintain, publish, make users aware of etc. Further fragments our offerings.
- 
-Seed this with open questions you require feedback on from the RFC process.
+
+2021-12-02: We decided that implementing this proposal in another package, `tfjs-tflite-node`, that implements the same API as `tfjs-tflite` would be the cleanest solution.
 
 ### Building the native addon
-Generate Your Projects (GYP) is [very deprecated](https://en.wikipedia.org/wiki/GYP_(software)) but is still the main way native node modules are compiled. Almost all native modules build using [node-gyp](https://github.com/nodejs/node-gyp). The demo uses node-gyp.
+Generate Your Projects (GYP) is [deprecated](https://en.wikipedia.org/wiki/GYP_(software)) but is still the main way native node modules are compiled. Almost all native modules build using [node-gyp](https://github.com/nodejs/node-gyp). The demo uses node-gyp.
 
 There was some discussion in the node community of switching to GN/Ninja for native addons. This resulted in the [node-gn](https://github.com/Shouqun/node-gn) project, which doesn't seem active anymore.
 
 We could instead try to use Bazel to build the native modules, but this would likely be a mistake with the current state of tooling (no community support, no ARM build).
+
+2021-12-02: node-gyp is probably the right choice.
 
 ### Building / Sourcing libtensorflowlite and libedgetpu
 TFLite only distributes Android and iOS binaries, and it's currently excluded from the main TensorFlow (non-lite) build. If it were included in the main build, we could use that and build off of `tfjs-node`. Otherwise, we may need to build and host our own binaries. This is easy for Linux platforms, and we can cross-compile to ARM, but it may be more difficult for Window and MacOS.
 
 libedgetpu has precompiled binaries available for linux x86, ARM64, ARM32, Mac x86, and Windows x86, so we should just use those. Alternatively, we can require users to install libedgetpu, which might be necessary to get it to correctly detect and flash Coral USB devices.
 
+2021-12-02: We will use existing binaries for libedgetpu, and we will ask tflite if they can publish tflite binaries for additional platforms.
+
 ### Delegate Plugin System
-How do we make plugins as seamless to users as possible? 
+How do we make plugins as seamless to users as possible?
+Does dynamically loading DLLs with [dlopen](https://man7.org/linux/man-pages/man3/dlopen.3.html) / [LoadLibrary](https://docs.microsoft.com/en-us/cpp/build/loadlibrary-and-afxloadlibrary?view=msvc-170) work for this use case? How different from each othe are they?
