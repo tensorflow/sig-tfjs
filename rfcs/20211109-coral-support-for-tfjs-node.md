@@ -33,13 +33,6 @@ The TensorFlow.js team has received a number of requests (~20% of responses in o
 
 Furthrmore after speaking with potential users of such a system, the primary use case is to accelerate edge devices like the Raspberry Pi or Asus Tinker Edge T, as most laptops/desktops or current generation smart phones that execute TensorFlow.js in browser already have real time performance with many of our models and users are satisfied with performance on these higher end devices.
 
-
-TODO: REMOVE THESE NOTES LATER:
-Why this is a valuable problem to solve? What background information is needed
-to show how this design addresses the problem?
-Which users are affected by the problem? Why is it a problem? What data supports
-this? What related work exists?
-
 ## User Benefit
 
 By supporting Coral accelerators for edge devices in Node, this will address:
@@ -51,9 +44,7 @@ By supporting Coral accelerators for edge devices in Node, this will address:
 
 Furthermore the [JIT compiler of JavaScript has proven to be faster than Python for ML usecases](https://blog.tensorflow.org/2020/05/how-hugging-face-achieved-2x-performance-boost-question-answering.html) for pre/post processing acceleration. Given the low powered nature of these edge devices, using a language that can run faster for this part of the ML pipeline outside of the inference itself, could be the difference between runing in realtime vs not on such a device.
 
-TODO: REMOVE THESE NOTES LATER:
-How will users (or other contributors) benefit from this work? What would be the
-headline in the release notes or blog post?
+A headline for a blog post about this proposal could be __Running TFLite Models in Node with Coral Acceleration__
 
 ## Design Proposal
 
@@ -96,7 +87,7 @@ Within `tfjs-tflite-node`, we will provide a `loadDelegate()` function that can 
 Given the complexity of this plugin system and of loading DLLs dynamically, the first version of `tfjs-tflite-node` will not include it, but it's important to consider its design from the start. We might also implement a version of the Coral delegate directly into `tfjs-tflite-node` before this plugin system is complete.
  
 ### The Coral Delegate
-Coral is not a typical TFLite delegate. It does not directly support running any TFLite ops. Instead, [it relies on a (closed source) compiler](https://coral.ai/docs/edgetpu/compiler/#download) which replaces all the ops of a network with a single custom op that runs on the Edge TPU. Here's what this looks like for Mediapipe's face detection model: (TODO(mattsoulanille): Add pictures)
+Coral is not a typical TFLite delegate. It does not directly support running any TFLite ops. Instead, [it relies on a (closed source) compiler](https://coral.ai/docs/edgetpu/compiler/#download) which replaces all the ops of a network with a single custom op that runs on the Edge TPU. Here's what this looks like for Mediapipe's face detection model:
 
 <table>
     <tr>
@@ -132,23 +123,24 @@ The compiler is a separate program, and it must be applied to the model before i
 
 ### Platforms and Environments
 In order of priority, the platforms we plan to support are:
-1. Linux x86 and ARM64, especially Raspberry Pi.
+1. Linux x86 and ARM64 / ARM32, especially Raspberry Pi.
 2. Windows x86 (use case is low power kiosk machines / [PC Sticks](https://www.amazon.com/Computer-Windows-Support-Bluetooh-AIOEXPC/dp/B08G1CCWN5/ref=asc_df_B08G1CCWN5/?tag=hyprod-20&linkCode=df0&hvadid=459623382939&hvpos=&hvnetw=g&hvrand=5388614202533491403&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=9031136&hvtargid=pla-980775817871&th=1)).
-3. Possibly ARM32 for lower end devices (TODO: Find example devices?)
-4. Possibly Mac x86 and ARM64, but less likely due to maintenance cost and available alternatives (tfjs-node), but we are open to community feedback on this.
+4. Possibly Mac, x86 and ARM64, but less likely due to maintenance cost and available alternatives (tfjs-node), but we are open to community feedback on this.
 
+#### Building for an Unsupported Platform
+We also want to let users build `tfjs-tflite-node` for platforms that are not officially supported. We will support this with a similar approach to [how we support building TensorFlow from source in `tfjs-node`](https://github.com/tensorflow/tfjs/tree/master/tfjs-node#optional-build-optimal-tensorflow-from-source).
 ### Best Practices
-* N/A
+This change does not introduce any new best practices.
 
 ### Tutorials and Examples
-#### Proof of Concept Demo Repository
+#### Coral Proof of Concept Demo Repository
 [This demo](https://github.com/mattsoulanille/node-tflite) is forked from [an external project that adds tflite support to node](https://github.com/seanchas116/node-tflite) and does reflect exactly how this proposal will be implemented in the tfjs repository. The original repository added support for running TFLite models in Node through Napi bindings, and the forked demo adds Coral support thorugh an [argument passed to the bindings](https://github.com/mattsoulanille/node-tflite/blob/master/index.cc#L126-L138). To communicate with the Coral accelerator, the demo [links](https://github.com/mattsoulanille/node-tflite/blob/master/binding.gyp#L17) the [libedgetpu library](https://github.com/google-coral/libedgetpu).
 
 The demo has been tested on Linux X86 devices but has not been fully configured for Windows or Mac. It has also only been tested with a USB Coral device, although it should work with a PCIe device as well since it relies on libedgetpu for Coral support. To run the demo yourself, follow these steps:
 1. [Install the Edge TPU runtime](https://coral.ai/docs/accelerator/get-started#1-install-the-edge-tpu-runtime).
 2. In the root of the demo repository, install dependencies and compile the Napi bindings with `npm install`.
 3. In the `examples/electron-mediapipe-face` repository, run `npm install` to install dependencies.
-4. Run `npm start` to start the demo. You should see a screen like this: TODO
+4. Run `npm start` to start the demo. You should see an Electron window open with a webcam tracking your face. 
 
 #### Sample Use of tfjs-tflite-node
 The API should be consistent with `tfjs-tflite` wherever possible. Here is a sample of what loading and running a model might look like:
@@ -179,12 +171,6 @@ console.log(outputTensor.dataSync());
 
 ### Compatibility
 This proposal adds a new package, `tfjs-tflite-node`, and does not change any existing packages. As the name indicates, it will only be compatible with node and with TFLite models. It does not use any existing TFJS backends and instead ties directly into the native TFLite binary for a given platform.
-
-* How will this proposal interact with other parts of the TensorFlow.js Ecosystem?
-    - How will it work with TFJS models?
-    - How will it work with TFJS-node?
-    - Will this work on various TFJS backends?
-    - How will it work with TFJS model types (graph/layers)?
 
 ### User Impact
 This feature will be rolled out on npm in a new `tfjs-tflite-node` package. Users can import or require it in node in the usual way:
