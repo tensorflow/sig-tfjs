@@ -15,27 +15,11 @@
  * =============================================================================
  */
 
-import {Configuration} from '../data_model/configuration';
-import {ModelTypeId} from '../data_model/model_type';
-
-export interface Configs {
-  config1: Configuration;
-  config2: Configuration;
+/** URL parameter keys. */
+export enum UrlParamKey {
+  SELECTED_MODEL_TYPE_ID = 'mid',
+  TFJS_MODEL_URL = 'tfjsmu',
 }
 
-/** The main app state. */
-export interface AppState {
-  configs: Configs;
-}
-
-/** The initial app state. */
-export const initialState: AppState = {
-  configs: {
-    config1: {
-      modelType: ModelTypeId.TFJS,
-    },
-    config2: {
-      modelType: ModelTypeId.SAME_AS_CONFIG1,
-    }
-  },
-};
+/** Valid config index. */
+export type ConfigIndex = 0|1;

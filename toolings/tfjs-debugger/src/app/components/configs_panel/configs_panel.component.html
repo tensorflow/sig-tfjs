@@ -15,18 +15,20 @@ limitations under the License.
 -->
 
 <div class="container">
-  <!-- The app bar at the top -->
-  <app-bar></app-bar>
+  <!--
+    Configuration 1.
 
-  <!-- Content under app bar -->
-  <div class="content">
-    <!-- The config panel at the left -->
-    <configs-panel></configs-panel>
-
-    <!-- The model graph panel at the center -->
-    <graph-panel></graph-panel>
-
-    <!-- The info graph panel at the right -->
-    <info-panel></info-panel>
+    Leave the header outside config-section for better supporting sticky
+    header when scrolling.
+  -->
+  <div class="config-header">
+    Configuration 1
   </div>
+  <config-section [configIndex]="0"></config-section>
+
+  <!-- Configuration 2 -->
+  <div class="config-header">
+    Configuration 2
+  </div>
+  <config-section [configIndex]="1"></config-section>
 </div>

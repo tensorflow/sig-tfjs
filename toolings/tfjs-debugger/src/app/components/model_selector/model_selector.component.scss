@@ -15,27 +15,21 @@
  * =============================================================================
  */
 
-import {Configuration} from '../data_model/configuration';
-import {ModelTypeId} from '../data_model/model_type';
+@use '../../../variables' as var;
 
-export interface Configs {
-  config1: Configuration;
-  config2: Configuration;
+.container {
+  .title {
+    margin-top: var.$spacing-1x;
+    color: var.$grey-700;
+    font-size: var.$font-size-smaller;
+    line-height: 11px;
+  }
+
+  mat-form-field {
+    width: 100%;
+  }
+
+  mat-select.same-as-config1-selected ::ng-deep .mat-select-value-text {
+    font-style: italic;
+  }
 }
-
-/** The main app state. */
-export interface AppState {
-  configs: Configs;
-}
-
-/** The initial app state. */
-export const initialState: AppState = {
-  configs: {
-    config1: {
-      modelType: ModelTypeId.TFJS,
-    },
-    config2: {
-      modelType: ModelTypeId.SAME_AS_CONFIG1,
-    }
-  },
-};

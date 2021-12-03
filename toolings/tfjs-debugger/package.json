@@ -56,5 +56,13 @@
     "test-ci": "ng test --karma-config karma-ci.conf.js",
     "deploy-firebase": "./scripts/deploy-to-firebase.sh",
     "deploy-firebase-dev": "./scripts/deploy-to-firebase.sh --dev"
+  },
+  "resolutions": {
+    "set-value": "^4.0.1",
+    "trim-newlines": "^3.0.1",
+    "glob-parent": "^5.1.2",
+    "trim": "^0.0.3",
+    "yargs-parser": "^13.1.2",
+    "ansi-regex": "^5.0.1"
   }
 }

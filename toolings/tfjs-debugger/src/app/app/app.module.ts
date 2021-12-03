@@ -17,11 +17,16 @@
 
 import {NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {RouterModule} from '@angular/router';
 import {routerReducer, StoreRouterConnectingModule} from '@ngrx/router-store';
 import {StoreModule} from '@ngrx/store';
 import {StoreDevtoolsModule} from '@ngrx/store-devtools';
 
+import {AppBarModule} from '../components/app_bar/app_bar.module';
+import {ConfigsPanelModule} from '../components/configs_panel/configs_panel.module';
+import {GraphPaneModule} from '../components/graph_panel/graph_panel.module';
+import {InfoPanelModule} from '../components/info_panel/info_panel.module';
 import {configsReducer} from '../store/reducers';
 
 import {AppComponent} from './app.component';
@@ -30,7 +35,12 @@ import {AppComponent} from './app.component';
 @NgModule({
   declarations: [AppComponent],
   imports: [
+    AppBarModule,
     BrowserModule,
+    BrowserAnimationsModule,
+    ConfigsPanelModule,
+    InfoPanelModule,
+    GraphPaneModule,
     StoreModule.forRoot({
       router: routerReducer,
       configs: configsReducer,

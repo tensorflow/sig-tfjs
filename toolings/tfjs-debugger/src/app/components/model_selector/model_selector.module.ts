@@ -15,27 +15,29 @@
  * =============================================================================
  */
 
-import {Configuration} from '../data_model/configuration';
-import {ModelTypeId} from '../data_model/model_type';
+import {CommonModule} from '@angular/common';
+import {NgModule} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
 
-export interface Configs {
-  config1: Configuration;
-  config2: Configuration;
+import {ModelSelector} from './model_selector.component';
+
+@NgModule({
+  declarations: [
+    ModelSelector,
+  ],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+  ],
+  exports: [
+    ModelSelector,
+  ],
+})
+export class ModelSelectorModule {
 }
-
-/** The main app state. */
-export interface AppState {
-  configs: Configs;
-}
-
-/** The initial app state. */
-export const initialState: AppState = {
-  configs: {
-    config1: {
-      modelType: ModelTypeId.TFJS,
-    },
-    config2: {
-      modelType: ModelTypeId.SAME_AS_CONFIG1,
-    }
-  },
-};

@@ -15,27 +15,16 @@
  * =============================================================================
  */
 
-import {Configuration} from '../data_model/configuration';
-import {ModelTypeId} from '../data_model/model_type';
+import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
 
-export interface Configs {
-  config1: Configuration;
-  config2: Configuration;
+@Component({
+  selector: 'graph-panel',
+  templateUrl: './graph_panel.component.html',
+  styleUrls: ['./graph_panel.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class GraphPanel implements OnInit {
+  constructor() {}
+
+  ngOnInit() {}
 }
-
-/** The main app state. */
-export interface AppState {
-  configs: Configs;
-}
-
-/** The initial app state. */
-export const initialState: AppState = {
-  configs: {
-    config1: {
-      modelType: ModelTypeId.TFJS,
-    },
-    config2: {
-      modelType: ModelTypeId.SAME_AS_CONFIG1,
-    }
-  },
-};

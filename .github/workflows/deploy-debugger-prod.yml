@@ -3,7 +3,7 @@ name: Deploy TFJS Debugger Site to Live
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - 'toolings/tfjs-debugger/**'
 

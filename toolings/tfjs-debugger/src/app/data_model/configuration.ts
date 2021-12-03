@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {ModelTypeId} from './model_type';
+
 export interface Configuration {
-  // TODO: placeholder.
+  modelType: ModelTypeId;
 }

@@ -15,27 +15,24 @@
  * =============================================================================
  */
 
-import {Configuration} from '../data_model/configuration';
-import {ModelTypeId} from '../data_model/model_type';
+import {ChangeDetectionStrategy, Component, Input, OnInit} from '@angular/core';
+import {ConfigIndex} from 'src/app/common/types';
 
-export interface Configs {
-  config1: Configuration;
-  config2: Configuration;
-}
+/** A single configuration in the configs panel. */
+@Component({
+  selector: 'config-section',
+  templateUrl: './config_section.component.html',
+  styleUrls: ['./config_section.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ConfigSection implements OnInit {
+  @Input() configIndex!: ConfigIndex;
 
-/** The main app state. */
-export interface AppState {
-  configs: Configs;
-}
+  constructor() {}
 
-/** The initial app state. */
-export const initialState: AppState = {
-  configs: {
-    config1: {
-      modelType: ModelTypeId.TFJS,
-    },
-    config2: {
-      modelType: ModelTypeId.SAME_AS_CONFIG1,
+  ngOnInit() {
+    if (this.configIndex == null) {
+      throw new Error('configIndex not set');
     }
-  },
-};
+  }
+}

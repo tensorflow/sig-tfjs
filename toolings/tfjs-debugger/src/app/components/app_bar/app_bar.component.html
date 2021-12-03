@@ -15,18 +15,14 @@ limitations under the License.
 -->
 
 <div class="container">
-  <!-- The app bar at the top -->
-  <app-bar></app-bar>
+  <!-- App icon and title -->
+  <div class="app-title-container">
+    <img class="icon" src="../../../favicon.svg">
+    <div class="title">TFJS Debugger</div>
+  </div>
 
-  <!-- Content under app bar -->
-  <div class="content">
-    <!-- The config panel at the left -->
-    <configs-panel></configs-panel>
-
-    <!-- The model graph panel at the center -->
-    <graph-panel></graph-panel>
-
-    <!-- The info graph panel at the right -->
-    <info-panel></info-panel>
+  <!-- Action buttons -->
+  <div class="btns-container">
+    <button mat-flat-button color="primary">Run</button>
   </div>
 </div>

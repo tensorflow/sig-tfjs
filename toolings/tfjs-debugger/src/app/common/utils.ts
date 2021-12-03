@@ -15,27 +15,14 @@
  * =============================================================================
  */
 
-import {Configuration} from '../data_model/configuration';
-import {ModelTypeId} from '../data_model/model_type';
+import {UrlParamKey} from './types';
 
-export interface Configs {
-  config1: Configuration;
-  config2: Configuration;
+const CONFIG_INDEX_SEP = '__';
+
+/**
+ * A helper function to append config index (0 or 1) to the given url parameter
+ * key.
+ */
+export function appendConfigIndexToKey(paramKey: UrlParamKey, index: number) {
+  return `${paramKey}${CONFIG_INDEX_SEP}${index}`;
 }
-
-/** The main app state. */
-export interface AppState {
-  configs: Configs;
-}
-
-/** The initial app state. */
-export const initialState: AppState = {
-  configs: {
-    config1: {
-      modelType: ModelTypeId.TFJS,
-    },
-    config2: {
-      modelType: ModelTypeId.SAME_AS_CONFIG1,
-    }
-  },
-};

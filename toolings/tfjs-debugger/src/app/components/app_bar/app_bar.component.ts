@@ -15,27 +15,20 @@
  * =============================================================================
  */
 
-import {Configuration} from '../data_model/configuration';
-import {ModelTypeId} from '../data_model/model_type';
+import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
 
-export interface Configs {
-  config1: Configuration;
-  config2: Configuration;
+/**
+ * The app bar located at the top of the screen that shows the app title and a
+ * set of action buttons.
+ */
+@Component({
+  selector: 'app-bar',
+  templateUrl: './app_bar.component.html',
+  styleUrls: ['./app_bar.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class AppBar implements OnInit {
+  constructor() {}
+
+  ngOnInit() {}
 }
-
-/** The main app state. */
-export interface AppState {
-  configs: Configs;
-}
-
-/** The initial app state. */
-export const initialState: AppState = {
-  configs: {
-    config1: {
-      modelType: ModelTypeId.TFJS,
-    },
-    config2: {
-      modelType: ModelTypeId.SAME_AS_CONFIG1,
-    }
-  },
-};

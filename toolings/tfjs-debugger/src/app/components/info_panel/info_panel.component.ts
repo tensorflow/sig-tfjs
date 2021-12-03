@@ -15,27 +15,20 @@
  * =============================================================================
  */
 
-import {Configuration} from '../data_model/configuration';
-import {ModelTypeId} from '../data_model/model_type';
+import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
 
-export interface Configs {
-  config1: Configuration;
-  config2: Configuration;
+/**
+ * The info panel located at the right side of the screen. It shows the summary
+ * of the run and the detailed data for the selected node in the model graph.
+ */
+@Component({
+  selector: 'info-panel',
+  templateUrl: './info_panel.component.html',
+  styleUrls: ['./info_panel.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class InfoPanel implements OnInit {
+  constructor() {}
+
+  ngOnInit() {}
 }
-
-/** The main app state. */
-export interface AppState {
-  configs: Configs;
-}
-
-/** The initial app state. */
-export const initialState: AppState = {
-  configs: {
-    config1: {
-      modelType: ModelTypeId.TFJS,
-    },
-    config2: {
-      modelType: ModelTypeId.SAME_AS_CONFIG1,
-    }
-  },
-};
