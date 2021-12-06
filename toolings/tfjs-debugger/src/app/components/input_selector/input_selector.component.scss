@@ -18,15 +18,11 @@
 @use '../../../variables' as var;
 
 .container {
-  box-sizing: border-box;
-  min-height: calc(50% - var.$config-header-height);
-  padding: var.$spacing-3x var.$spacing-3x;
+  mat-form-field {
+    width: 100%;
+  }
 
-  .section {
-    margin-bottom: var.$spacing-5x;
-
-    .title {
-      font-weight: 500;
-    }
+  mat-select.same-as-config1-selected ::ng-deep .mat-select-value-text {
+    font-style: italic;
   }
 }

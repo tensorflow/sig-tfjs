@@ -24,7 +24,7 @@ import {By} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {Router} from '@angular/router';
 import {RouterTestingModule} from '@angular/router/testing';
-import {routerReducer, RouterReducerState, SerializedRouterStateSnapshot, StoreRouterConnectingModule} from '@ngrx/router-store';
+import {routerReducer, RouterReducerState, StoreRouterConnectingModule} from '@ngrx/router-store';
 import {createFeatureSelector, Store, StoreModule} from '@ngrx/store';
 import {UrlParamKey} from 'src/app/common/types';
 import {appendConfigIndexToKey} from 'src/app/common/utils';

@@ -15,13 +15,17 @@ limitations under the License.
 -->
 
 <div class="container">
-  <!-- Model selector -->
-  <div class="section">
-    <div class="title">Model</div>
-    <model-selector [configIndex]="configIndex"></model-selector>
-  </div>
-  <div class="section">
-    <div class="title">Input</div>
-    <input-selector [configIndex]="configIndex"></input-selector>
-  </div>
+  <!-- Drop down select -->
+  <mat-form-field appearance="outline" floatLabel="never">
+    <mat-select
+        [(value)]="selectedInputTypeId"
+        [class.same-as-config1-selected]="isSameAsConfig1Selected"
+        (selectionChange)="handleSelectionChange($event)">
+      <mat-option *ngFor="let option of inputTypes"
+          [value]="option.id"
+          [disabled]="option.disabled">
+        {{option.label}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
 </div>

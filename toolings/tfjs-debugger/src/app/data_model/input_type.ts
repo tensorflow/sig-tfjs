@@ -15,18 +15,10 @@
  * =============================================================================
  */
 
-@use '../../../variables' as var;
-
-.container {
-  box-sizing: border-box;
-  min-height: calc(50% - var.$config-header-height);
-  padding: var.$spacing-3x var.$spacing-3x;
-
-  .section {
-    margin-bottom: var.$spacing-5x;
-
-    .title {
-      font-weight: 500;
-    }
-  }
+/** Input type ids. */
+export enum InputTypeId {
+  RANDOM,
+  CONST,
+  IMAGE,
+  SAME_AS_CONFIG1,
 }

@@ -15,18 +15,12 @@
  * =============================================================================
  */
 
-@use '../../../variables' as var;
+import {InputTypeId} from 'src/app/data_model/input_type';
 
-.container {
-  box-sizing: border-box;
-  min-height: calc(50% - var.$config-header-height);
-  padding: var.$spacing-3x var.$spacing-3x;
-
-  .section {
-    margin-bottom: var.$spacing-5x;
-
-    .title {
-      font-weight: 500;
-    }
-  }
+/** An option in the input selector. */
+export interface InputTypeOption {
+  /** This is a number not string. */
+  id: InputTypeId;
+  label: string;
+  disabled?: boolean;
 }
