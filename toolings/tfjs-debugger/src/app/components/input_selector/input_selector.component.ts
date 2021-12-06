@@ -41,7 +41,7 @@ import {InputTypeOption} from './types';
 export class InputSelector implements OnInit, OnDestroy {
   @Input() configIndex: ConfigIndex = 0;
 
-  /** All supported model types.  */
+  /** All supported input types.  */
   readonly inputTypes: InputTypeOption[] = [
     {
       id: InputTypeId.RANDOM,
@@ -73,7 +73,7 @@ export class InputSelector implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    // Add "Same as configuration 1" option when the model selector is used in
+    // Add "Same as configuration 1" option when the input selector is used in
     // the configuration 2.
     if (this.configIndex === 1) {
       this.inputTypes.unshift({
@@ -107,10 +107,10 @@ export class InputSelector implements OnInit, OnDestroy {
   handleSelectionChange(event: MatSelectChange) {
     const inputTypeId = event.value as InputTypeId;
 
-    // TODO: add logic as needed to handle selection change (e.g. show certain
-    // UI elements when an item is selected).
+    // TODO: add other logic as needed to handle selection change (e.g. show
+    // certain UI elements when an item is selected).
 
-    // Update url with selected model type id.
+    // Update url with selected input type id.
     this.urlService.updateUrlParameters({
       [appendConfigIndexToKey(
           UrlParamKey.SELECTED_INPUT_TYPE_ID, this.configIndex)]:

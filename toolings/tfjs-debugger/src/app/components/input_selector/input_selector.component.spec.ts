@@ -33,7 +33,7 @@ import {AppState} from 'src/app/store/state';
 import {InputSelector} from './input_selector.component';
 import {InputSelectorModule} from './input_selector.module';
 
-describe('ModelSelector', () => {
+describe('InputSelector', () => {
   let store: Store<AppState>;
   let router: Router;
   let fixture: ComponentFixture<InputSelector>;
