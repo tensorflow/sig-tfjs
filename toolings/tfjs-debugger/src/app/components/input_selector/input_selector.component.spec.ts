@@ -74,19 +74,20 @@ describe('InputSelector', () => {
        expect(selectEle.textContent)
            .toBe(fixture.componentInstance.inputTypes[0].label);
 
-       // After updating the url with inputTypeId = CONST, verify that the
-       // input type selector has the correct one selected.
+       // After updating the url with inputTypeId = CUSTOM_VALUE, verify that
+       // the input type selector has the correct one selected.
        router.navigate([], {
          queryParams: {
            [appendConfigIndexToKey(
                UrlParamKey.SELECTED_INPUT_TYPE_ID,
-               fixture.componentInstance.configIndex)]: `${InputTypeId.CONST}`,
+               fixture.componentInstance.configIndex)]:
+               `${InputTypeId.CUSTOM_VALUE}`,
          }
        });
        detectChanges();
 
        const inputType = fixture.componentInstance.inputTypes.find(
-           inputType => inputType.id === InputTypeId.CONST)!;
+           inputType => inputType.id === InputTypeId.CUSTOM_VALUE)!;
        expect(selectEle.textContent).toBe(inputType.label);
      }));
 

@@ -50,8 +50,8 @@ export class InputSelector implements OnInit, OnDestroy {
     // TODO: the following types are disabled for now. Will enable them as they
     // are implemented.
     {
-      id: InputTypeId.CONST,
-      label: 'Constant',
+      id: InputTypeId.CUSTOM_VALUE,
+      label: 'Custom value',
       disabled: true,
     },
     {
