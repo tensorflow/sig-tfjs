@@ -18,6 +18,7 @@
 import {CommonModule} from '@angular/common';
 import {NgModule} from '@angular/core';
 
+import {InputSelectorModule} from '../input_selector/input_selector.module';
 import {ModelSelectorModule} from '../model_selector/model_selector.module';
 
 import {ConfigSection} from './config_section.component';
@@ -29,6 +30,7 @@ import {ConfigSection} from './config_section.component';
   imports: [
     CommonModule,
     ModelSelectorModule,
+    InputSelectorModule,
   ],
   exports: [
     ConfigSection,

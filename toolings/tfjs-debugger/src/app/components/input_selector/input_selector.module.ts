@@ -15,18 +15,27 @@
  * =============================================================================
  */
 
-@use '../../../variables' as var;
+import {CommonModule} from '@angular/common';
+import {NgModule} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatSelectModule} from '@angular/material/select';
 
-.container {
-  box-sizing: border-box;
-  min-height: calc(50% - var.$config-header-height);
-  padding: var.$spacing-3x var.$spacing-3x;
+import {InputSelector} from './input_selector.component';
 
-  .section {
-    margin-bottom: var.$spacing-5x;
-
-    .title {
-      font-weight: 500;
-    }
-  }
+@NgModule({
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatFormFieldModule,
+    MatSelectModule,
+  ],
+  declarations: [
+    InputSelector,
+  ],
+  exports: [
+    InputSelector,
+  ],
+})
+export class InputSelectorModule {
 }

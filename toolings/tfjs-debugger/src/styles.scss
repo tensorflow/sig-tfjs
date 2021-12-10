@@ -34,12 +34,6 @@ html {
 // Common styles for certain controls.
 mat-form-field.mat-form-field-type-mat-select,
 mat-form-field.mat-form-field-type-mat-input {
-  .mat-form-field-infix {
-    padding-top: 11px;
-    padding-bottom: 7px;
-    border-top-width: 0;
-  }
-
   .mat-form-field-wrapper {
     padding: 0;
   }
@@ -47,8 +41,36 @@ mat-form-field.mat-form-field-type-mat-input {
 
 // mat-select
 mat-form-field.mat-form-field-type-mat-select {
+  .mat-form-field-infix {
+    padding-top: 11px;
+    padding-bottom: 7px;
+    border-top-width: 0;
+  }
+
   .mat-select-arrow-wrapper {
     transform: none;
+  }
+}
+
+// mat-input
+mat-form-field.mat-form-field-type-mat-input {
+  .mat-form-field-infix {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    border-top-width: 0;
+  }
+
+  .mat-form-field-label {
+    color: var.$grey-400;
+  }
+
+  input {
+    color: var.$grey-800;
+  }
+
+  .mat-form-field-underline {
+    bottom: 0;
+    background-color: var.$grey-300;
   }
 }
 

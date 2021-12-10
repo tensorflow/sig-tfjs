@@ -20,9 +20,14 @@
 .container {
   .title {
     margin-top: var.$spacing-1x;
-    color: var.$grey-700;
+    color: var.$grey-600;
     font-size: var.$font-size-smaller;
     line-height: 11px;
+  }
+
+  .model-extra-components-container {
+    margin-top: var.$spacing-2x;
+    margin-left: 10px;
   }
 
   mat-form-field {

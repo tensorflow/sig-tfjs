@@ -19,6 +19,7 @@
 export enum UrlParamKey {
   SELECTED_MODEL_TYPE_ID = 'mid',
   TFJS_MODEL_URL = 'tfjsmu',
+  SELECTED_INPUT_TYPE_ID = 'iid',
 }
 
 /** Valid config index. */
