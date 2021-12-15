@@ -28,7 +28,6 @@ import {AppState} from 'src/app/store/state';
 import {ErrorPanel} from './error_panel.component';
 import {ErrorPanelModule} from './error_panel.module';
 
-
 describe('ErrorPanel', () => {
   let store: Store<AppState>;
   let router: Router;
