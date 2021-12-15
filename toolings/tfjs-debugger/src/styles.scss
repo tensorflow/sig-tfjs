@@ -52,6 +52,10 @@ mat-form-field.mat-form-field-type-mat-select {
   }
 }
 
+mat-select.same-as-config1-selected .mat-select-value-text {
+  font-style: italic;
+}
+
 // mat-input
 mat-form-field.mat-form-field-type-mat-input {
   .mat-form-field-infix {
@@ -81,4 +85,10 @@ mat-option.mat-selected {
   .mat-option-text {
     color: var.$grey-900;
   }
+}
+
+.extra-components-container {
+  margin-top: var.$spacing-2x;
+  padding-left: 10px;
+  border-left: 1px solid var.$grey-300;
 }

@@ -15,12 +15,50 @@
  * =============================================================================
  */
 
-import {createReducer} from '@ngrx/store';
+import {createReducer, on} from '@ngrx/store';
 
+import {clearErrorMessage, fetchTfjsReleasesFail, fetchTfjsReleasesSuccess, setErrorMessage} from './actions';
 import {initialState} from './state';
 
-/** Reducer for `configs`. */
-export const configsReducer = createReducer(
-    initialState.configs,
-    // TODO: add actions here.
+/** Reducer for the app state. */
+export const mainReducer = createReducer(
+    initialState,
+
+    on(fetchTfjsReleasesSuccess,
+       (state, {releases}) => {
+         return {
+           ...state,
+           tfjsReleases: [...releases],
+         };
+       }),
+
+    on(fetchTfjsReleasesFail,
+       (state, {error}) => {
+         return {
+           ...state,
+           errorMessage: {
+             title: 'Network error',
+             content: `Failed to load TFJS releases: ${error.message}`,
+           },
+         };
+       }),
+
+    on(setErrorMessage,
+       (state, {title, content}) => {
+         return {
+           ...state,
+           errorMessage: {
+             title,
+             content,
+           },
+         };
+       }),
+
+    on(clearErrorMessage,
+       (state) => {
+         return {
+           ...state,
+           errorMessage: undefined,
+         };
+       }),
 );

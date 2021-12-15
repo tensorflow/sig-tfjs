@@ -16,7 +16,9 @@
  */
 
 import {Configuration} from '../data_model/configuration';
+import {ErrorMessage} from '../data_model/misc';
 import {ModelTypeId} from '../data_model/model_type';
+import {TfjsRelease} from '../data_model/tfjs_release';
 
 export interface Configs {
   config1: Configuration;
@@ -26,6 +28,15 @@ export interface Configs {
 /** The main app state. */
 export interface AppState {
   configs: Configs;
+  tfjsReleases: TfjsRelease[];
+
+  /**
+   * The current error message occurred in the app.
+   *
+   * A panel with the error message will be displayed from the main app
+   * component.
+   */
+  errorMessage?: ErrorMessage;
 }
 
 /** The initial app state. */
@@ -38,4 +49,5 @@ export const initialState: AppState = {
       modelType: ModelTypeId.SAME_AS_CONFIG1,
     }
   },
+  tfjsReleases: [],
 };

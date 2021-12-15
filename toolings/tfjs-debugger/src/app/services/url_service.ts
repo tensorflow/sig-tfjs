@@ -29,12 +29,20 @@ export class UrlService {
       private readonly router: Router,
   ) {}
 
-  updateUrlParameters(params: Params) {
-    this.router.navigate([], {
-      queryParams: {
-        ...params,
-      },
-      queryParamsHandling: 'merge',
+  async updateUrlParameters(params: Params) {
+    // Wrap router.navigate inside a setTimeout to make sure navigation happens
+    // with update-to-date parameters.
+    //
+    // If router.navigate is called rapidly in succession within a tick without
+    // using setTimeout, the second call will not have the updated query
+    // parameters set from the first call.
+    setTimeout(() => {
+      return this.router.navigate([], {
+        queryParams: {
+          ...params,
+        },
+        queryParamsHandling: 'merge',
+      });
     });
   }
 }

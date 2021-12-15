@@ -15,19 +15,23 @@
  * =============================================================================
  */
 
+import {HttpClientModule} from '@angular/common/http';
 import {NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {RouterModule} from '@angular/router';
+import {EffectsModule} from '@ngrx/effects';
 import {routerReducer, StoreRouterConnectingModule} from '@ngrx/router-store';
 import {StoreModule} from '@ngrx/store';
 import {StoreDevtoolsModule} from '@ngrx/store-devtools';
 
 import {AppBarModule} from '../components/app_bar/app_bar.module';
 import {ConfigsPanelModule} from '../components/configs_panel/configs_panel.module';
+import {ErrorPanelModule} from '../components/error_panel/error_panel.module';
 import {GraphPaneModule} from '../components/graph_panel/graph_panel.module';
 import {InfoPanelModule} from '../components/info_panel/info_panel.module';
-import {configsReducer} from '../store/reducers';
+import {GithubEffects} from '../store/effects';
+import {mainReducer} from '../store/reducers';
 
 import {AppComponent} from './app.component';
 
@@ -39,11 +43,14 @@ import {AppComponent} from './app.component';
     BrowserModule,
     BrowserAnimationsModule,
     ConfigsPanelModule,
+    EffectsModule.forRoot([GithubEffects]),
+    ErrorPanelModule,
+    HttpClientModule,
     InfoPanelModule,
     GraphPaneModule,
     StoreModule.forRoot({
       router: routerReducer,
-      configs: configsReducer,
+      main: mainReducer,
     }),
     RouterModule.forRoot([
       {path: '', component: AppComponent},

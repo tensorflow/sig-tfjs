@@ -14,21 +14,22 @@ limitations under the License.
 ==============================================================================
 -->
 
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>TFJS Debugger</title>
-  <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+<div class="container">
+  <!-- Drop down select -->
+  <mat-form-field appearance="outline" floatLabel="never">
+    <mat-select
+        [(value)]="selectedBackendId"
+        (selectionChange)="handleSelectionChange($event)">
+      <mat-option *ngFor="let option of backends"
+          [value]="option.id">
+        {{option.label}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
 
-  <!-- Google Sans font -->
-  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Google+Sans:400,500,700">
-  <!-- Material icon -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-</head>
-<body>
-  <app-root></app-root>
-</body>
-</html>
+  <!-- Backend version selector -->
+  <div class="extra-components-container">
+    <div class="title">Version</div>
+    <backend-version-selector [configIndex]="configIndex"></backend-version-selector>
+  </div>
+</div>
