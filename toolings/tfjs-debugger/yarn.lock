@@ -121,6 +121,11 @@
     ora "5.4.1"
     rxjs "6.6.7"
 
+"@angular/animation@~4.0.0-beta.8":
+  version "4.0.0-beta.8"
+  resolved "https://registry.yarnpkg.com/@angular/animation/-/animation-4.0.0-beta.8.tgz#9f61b4ee84ff4e8f48abb0eb49fff02bdedccc2e"
+  integrity sha1-n2G07oT/To9Iq7DrSf/wK97czC4=
+
 "@angular/animations@~13.0.0":
   version "13.0.0"
   resolved "https://registry.yarnpkg.com/@angular/animations/-/animations-13.0.0.tgz#61bdbbbf4391beaf744339eb37c76ba750bb539c"

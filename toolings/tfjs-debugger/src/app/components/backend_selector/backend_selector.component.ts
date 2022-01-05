@@ -77,7 +77,7 @@ export class BackendSelector implements OnInit, OnDestroy {
           // The first one is the default.
           let backendId = this.backends[0].id;
           if (strId != null) {
-            backendId = Number(strId);
+            backendId = strId;
           }
           this.selectedBackendId = backendId;
           this.changeDetectorRef.markForCheck();

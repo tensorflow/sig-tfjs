@@ -50,8 +50,9 @@ export function releaseJsonToTfjsRelease(json: ReleaseJson): TfjsRelease|
   // Remove 'tfjs-v' prefix.
   const version = tagName.replace('tfjs-v', '');
 
-  // Only keep 3.x releases.
-  if (!version.startsWith('3.')) {
+  // Only keep >= 3.x releases.
+  const majorVersion = Number(version.split('.')[0]);
+  if (majorVersion < 3) {
     return undefined;
   }
 

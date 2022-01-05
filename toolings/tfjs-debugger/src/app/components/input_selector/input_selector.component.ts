@@ -91,7 +91,7 @@ export class InputSelector implements OnInit, OnDestroy {
           // The first one is the default.
           let inputTypeId = this.inputTypes[0].id;
           if (strId != null) {
-            inputTypeId = Number(strId);
+            inputTypeId = strId;
           }
           this.selectedInputTypeId = inputTypeId;
           this.changeDetectorRef.markForCheck();

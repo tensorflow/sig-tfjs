@@ -17,7 +17,7 @@
 
 /** Backend ids. */
 export enum BackendId {
-  WEBGL,
-  WASM,
-  CPU,
+  WEBGL = 'webgl',
+  WASM = 'wasm',
+  CPU = 'cpu',
 }

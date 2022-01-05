@@ -105,7 +105,9 @@ export class BackendVersionSelector implements OnInit, OnDestroy {
             // Update url with the default version.
             //
             // See comments above about why this is necessary.
-            this.updateUrlWithVersion(version);
+            if (!strVersion) {
+              this.updateUrlWithVersion(version);
+            }
           }
           if (strVersion) {
             version = strVersion;
