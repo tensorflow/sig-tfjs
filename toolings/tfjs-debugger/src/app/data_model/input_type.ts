@@ -17,8 +17,8 @@
 
 /** Input type ids. */
 export enum InputTypeId {
-  RANDOM,
-  CUSTOM_VALUE,
-  IMAGE,
-  SAME_AS_CONFIG1,
+  RANDOM = 'random',
+  CUSTOM_VALUE = 'custom_value',
+  IMAGE = 'image',
+  SAME_AS_CONFIG1 = 'same_as_config1',
 }

@@ -21,10 +21,16 @@ import {createFeatureSelector, createSelector} from '@ngrx/store';
 import {ConfigIndex, UrlParamKey} from '../common/types';
 import {appendConfigIndexToKey} from '../common/utils';
 
+import {AppState} from './state';
+
 const selectRouter = createFeatureSelector<RouterReducerState>('router');
+const selectMainState = createFeatureSelector<AppState>('main');
 const selectQueryParams = getSelectors(selectRouter).selectQueryParams;
 
-/** Selector to select the id of the currently selected model item from URL. */
+/**
+ * Selector to select the value for the given url parameter key and config
+ * index.
+ */
 export const selectConfigValueFromUrl =
     (configIndex: ConfigIndex, paramKey: UrlParamKey) =>
         createSelector(selectQueryParams, (params) => {
@@ -34,3 +40,13 @@ export const selectConfigValueFromUrl =
           const key = appendConfigIndexToKey(paramKey, configIndex);
           return params[key];
         });
+
+/** Selector to select the currently loaded TFJS releases. */
+export const selectTfjsReleases = createSelector(selectMainState, (state) => {
+  return state.tfjsReleases;
+});
+
+/** Selector to select the current error message. */
+export const selectErrorMessage = createSelector(selectMainState, (state) => {
+  return state.errorMessage;
+});

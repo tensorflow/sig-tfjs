@@ -13,22 +13,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================
 -->
+<div class="container">
+  <div @errorMessageTrigger class="error-msg-container" *ngIf="hasErrorMessage">
+    <!-- Title -->
+    <div class="title-container">
+      <mat-icon>error</mat-icon>
+      <div class="title">
+        {{curErrorMessage!.title}}
+      </div>
+    </div>
 
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>TFJS Debugger</title>
-  <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <!-- Content -->
+    <div class="content-container">
+      {{curErrorMessage!.content}}
+    </div>
 
-  <!-- Google Sans font -->
-  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Google+Sans:400,500,700">
-  <!-- Material icon -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-</head>
-<body>
-  <app-root></app-root>
-</body>
-</html>
+    <!-- Buttons to reload page or dismiss it -->
+    <div class="buttons-container">
+      <button mat-button (click)="refresh()">Reload</button>
+      <button mat-button (click)="dismissErrorMessage()">Dismiss</button>
+    </div>
+  </div>
+
+</div>

@@ -17,9 +17,9 @@
 
 /** Model type ids. */
 export enum ModelTypeId {
-  TFJS,
-  TF,
-  TFLITE,
-  TFJS_CUSTOM_GRAPH,
-  SAME_AS_CONFIG1,
+  TFJS = 'tfjs',
+  TF = 'tf',
+  TFLITE = 'tflite',
+  TFJS_CUSTOM_GRAPH = 'tfjs_custom_graph',
+  SAME_AS_CONFIG1 = 'same_as_config1',
 }

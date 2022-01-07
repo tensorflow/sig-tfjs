@@ -1,0 +1,50 @@
+<!-- Copyright 2021 Google LLC. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+==============================================================================
+-->
+
+<div class="container">
+  <!-- Drop down select -->
+  <ng-container *ngIf="releasesLoaded; else releasesLoading">
+    <mat-form-field appearance="outline" floatLabel="never">
+      <mat-select
+          [(value)]="selectedVersion"
+          (selectionChange)="handleSelectionChange($event)">
+        <!-- Show version + published date as the trigger label -->
+        <mat-select-trigger>
+          <div class="version-item">
+            <div>{{selectedVersion}}</div>
+            <div class="date">{{getDate(selectedVersion)}}</div>
+          </div>
+        </mat-select-trigger>
+
+        <mat-option *ngFor="let release of releases"
+            [value]="release.version">
+          <!-- Show version + published date in drop-down options -->
+          <div class="version-item">
+            <div>{{release.version}}</div>
+            <div class="date">{{release.date}}</div>
+          </div>
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </ng-container>
+
+  <!-- Show "loading" when releases are being loaded. -->
+  <ng-template #releasesLoading>
+    <div class="loading">
+      Loading...
+    </div>
+  </ng-template>
+</div>

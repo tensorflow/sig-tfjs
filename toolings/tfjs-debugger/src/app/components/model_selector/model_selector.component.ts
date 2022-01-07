@@ -109,7 +109,7 @@ export class ModelSelector implements OnInit, OnDestroy {
           // The first one is the default.
           let modelTypeId = this.modelTypes[0].id;
           if (strId != null) {
-            modelTypeId = Number(strId);
+            modelTypeId = strId;
           }
           this.selectedModelTypeId = modelTypeId;
           this.changeDetectorRef.markForCheck();

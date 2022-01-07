@@ -21,48 +21,43 @@ import {Store} from '@ngrx/store';
 import {takeWhile} from 'rxjs';
 import {ConfigIndex, UrlParamKey} from 'src/app/common/types';
 import {appendConfigIndexToKey} from 'src/app/common/utils';
-import {InputTypeId} from 'src/app/data_model/input_type';
+import {BackendId} from 'src/app/data_model/backend_type';
 import {UrlService} from 'src/app/services/url_service';
 import {selectConfigValueFromUrl} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 
-import {InputTypeOption} from './types';
+import {BackendOption} from './types';
 
 /**
- * A selector for users to select the type of input (e.g. random, const, image,
- * etc) to the model.
+ * A selector for users to select backend.
  */
 @Component({
-  selector: 'input-selector',
-  templateUrl: './input_selector.component.html',
-  styleUrls: ['./input_selector.component.scss'],
+  selector: 'backend-selector',
+  templateUrl: './backend_selector.component.html',
+  styleUrls: ['./backend_selector.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class InputSelector implements OnInit, OnDestroy {
+export class BackendSelector implements OnInit, OnDestroy {
   @Input() configIndex: ConfigIndex = 0;
 
-  /** All supported input types.  */
-  readonly inputTypes: InputTypeOption[] = [
+  /** All supported backends.  */
+  readonly backends: BackendOption[] = [
     {
-      id: InputTypeId.RANDOM,
-      label: 'Random',
-    },
-    // TODO: the following types are disabled for now. Will enable them as they
-    // are implemented.
-    {
-      id: InputTypeId.CUSTOM_VALUE,
-      label: 'Custom value',
-      disabled: true,
+      id: BackendId.WEBGL,
+      label: 'WebGL',
     },
     {
-      id: InputTypeId.IMAGE,
-      label: 'Image',
-      disabled: true,
+      id: BackendId.WASM,
+      label: 'WASM',
+    },
+    {
+      id: BackendId.CPU,
+      label: 'CPU',
     },
   ];
 
-  /** Stores the currently selected input type. */
-  selectedInputTypeId!: InputTypeId;
+  /** Stores the currently selected backend. */
+  selectedBackendId!: BackendId;
 
   private active = true;
 
@@ -73,27 +68,18 @@ export class InputSelector implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    // Add "Same as configuration 1" option when the input selector is used in
-    // the configuration 2.
-    if (this.configIndex === 1) {
-      this.inputTypes.unshift({
-        id: InputTypeId.SAME_AS_CONFIG1,
-        label: 'Same as configuration 1',
-      });
-    }
-
-    // Update currently selected input type from URL.
+    // Update currently selected backend from URL.
     this.store
         .select(selectConfigValueFromUrl(
-            this.configIndex, UrlParamKey.SELECTED_INPUT_TYPE_ID))
+            this.configIndex, UrlParamKey.SELECTED_BACKEND_ID))
         .pipe(takeWhile(() => this.active))
         .subscribe((strId) => {
           // The first one is the default.
-          let inputTypeId = this.inputTypes[0].id;
+          let backendId = this.backends[0].id;
           if (strId != null) {
-            inputTypeId = strId;
+            backendId = strId;
           }
-          this.selectedInputTypeId = inputTypeId;
+          this.selectedBackendId = backendId;
           this.changeDetectorRef.markForCheck();
 
           // TODO: update configs in store.
@@ -105,20 +91,12 @@ export class InputSelector implements OnInit, OnDestroy {
   }
 
   handleSelectionChange(event: MatSelectChange) {
-    const inputTypeId = event.value as InputTypeId;
+    const backendId = event.value as BackendId;
 
-    // TODO: add other logic as needed to handle selection change (e.g. show
-    // certain UI elements when an item is selected).
-
-    // Update url with selected input type id.
+    // Update url with selected backend id.
     this.urlService.updateUrlParameters({
       [appendConfigIndexToKey(
-          UrlParamKey.SELECTED_INPUT_TYPE_ID, this.configIndex)]:
-          `${inputTypeId}`
+          UrlParamKey.SELECTED_BACKEND_ID, this.configIndex)]: `${backendId}`
     });
-  }
-
-  get isSameAsConfig1Selected(): boolean {
-    return this.selectedInputTypeId === InputTypeId.SAME_AS_CONFIG1;
   }
 }

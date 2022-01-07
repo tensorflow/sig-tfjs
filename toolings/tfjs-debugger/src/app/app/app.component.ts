@@ -15,7 +15,11 @@
  * =============================================================================
  */
 
-import {ChangeDetectionStrategy, Component} from '@angular/core';
+import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
+import {Store} from '@ngrx/store';
+
+import {fetchTfjsReleases} from '../store/actions';
+import {AppState} from '../store/state';
 
 @Component({
   selector: 'app-root',
@@ -23,6 +27,13 @@ import {ChangeDetectionStrategy, Component} from '@angular/core';
   styleUrls: ['./app.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent {
-  title = 'tfjs-debugger';
+export class AppComponent implements OnInit {
+  constructor(
+      private readonly store: Store<AppState>,
+  ) {}
+
+  ngOnInit() {
+    // Start fetching TFJS releases.
+    this.store.dispatch(fetchTfjsReleases());
+  }
 }

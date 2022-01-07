@@ -15,7 +15,12 @@
  * =============================================================================
  */
 
+@use '../../variables.scss' as var;
+
+$error-msg-container-width: 400px;
+
 .container {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -25,5 +30,12 @@
     display: flex;
     flex-grow: 1;
     overflow: hidden;
+  }
+
+  error-panel {
+    position: absolute;
+    bottom: var.$spacing-6x;
+    left: calc(50% - $error-msg-container-width / 2);
+    width: $error-msg-container-width;
   }
 }

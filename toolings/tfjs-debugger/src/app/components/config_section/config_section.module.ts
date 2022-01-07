@@ -18,6 +18,7 @@
 import {CommonModule} from '@angular/common';
 import {NgModule} from '@angular/core';
 
+import {BackendSelectorModule} from '../backend_selector/backend_selector.module';
 import {InputSelectorModule} from '../input_selector/input_selector.module';
 import {ModelSelectorModule} from '../model_selector/model_selector.module';
 
@@ -28,6 +29,7 @@ import {ConfigSection} from './config_section.component';
     ConfigSection,
   ],
   imports: [
+    BackendSelectorModule,
     CommonModule,
     ModelSelectorModule,
     InputSelectorModule,

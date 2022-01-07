@@ -15,36 +15,25 @@
  * =============================================================================
  */
 
-// Text styles.
-$font-face: 'Google Sans', sans-serif;
-$font-size-smaller: 12px;
-$font-size-small: 13px;
-$font-size-normal: 14px;
-$font-size-large: 16px;
+import {CommonModule} from '@angular/common';
+import {NgModule} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
 
-// Colors.
-$grey-50: #fafafa;
-$grey-100: #f5f5f5;
-$grey-200: #eee;
-$grey-300: #e0e0e0;
-$grey-400: #bdbdbd;
-$grey-500: #9e9e9e;
-$grey-600: #757575;
-$grey-700: #616161;
-$grey-800: #424242;
-$grey-900: #212121;
+import {ErrorPanel} from './error_panel.component';
 
-// Spacings.
-$spacing-1x: 4px;
-$spacing-2x: 8px;
-$spacing-3x: 12px;
-$spacing-4x: 16px;
-$spacing-5x: 20px;
-$spacing-6x: 24px;
-
-// Sizes.
-$config-header-height: 28px;
-
-// Shadows
-$card-shadow: 0 1.8px 1.8px -13px rgb(0 0 0 / 8%),
-  0 14px 14px -13px rgb(0 0 0 / 16%);
+@NgModule({
+  declarations: [
+    ErrorPanel,
+  ],
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatIconModule,
+  ],
+  exports: [
+    ErrorPanel,
+  ]
+})
+export class ErrorPanelModule {
+}
