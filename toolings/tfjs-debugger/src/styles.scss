@@ -22,10 +22,12 @@ body {
   height: 100%;
   margin: 0;
   font-family: var.$font-face;
+  overscroll-behavior-y: none;
 }
 
 html {
   height: 100%;
+  overscroll-behavior-y: none;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

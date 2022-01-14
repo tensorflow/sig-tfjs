@@ -17,12 +17,66 @@
 
 import {createReducer, on} from '@ngrx/store';
 
-import {clearErrorMessage, fetchTfjsReleasesFail, fetchTfjsReleasesSuccess, setErrorMessage} from './actions';
-import {initialState} from './state';
+import {clearErrorMessage, fetchTfjsModelJsonSuccess, fetchTfjsReleasesFail, fetchTfjsReleasesSuccess, setErrorMessage, setModelType, setTfjsModelUrl, triggerRunCurrentConfigs} from './actions';
+import {Configs, initialState} from './state';
 
 /** Reducer for the app state. */
 export const mainReducer = createReducer(
     initialState,
+
+    on(setModelType,
+       (state, {configIndex, modelType}) => {
+         let configs: Configs|undefined;
+         if (configIndex === 0) {
+           configs = {
+             ...state.configs,
+             config1: {
+               ...state.configs.config1,
+               modelType,
+             }
+           };
+         } else if (configIndex === 1) {
+           configs = {
+             ...state.configs,
+             config2: {
+               ...state.configs.config2,
+               modelType,
+             }
+           };
+         }
+         if (!configs) {
+           return state;
+         } else {
+           return {...state, configs};
+         }
+       }),
+
+    on(setTfjsModelUrl,
+       (state, {configIndex, url}) => {
+         let configs: Configs|undefined;
+         if (configIndex === 0) {
+           configs = {
+             ...state.configs,
+             config1: {
+               ...state.configs.config1,
+               tfjsModelUrl: url,
+             }
+           };
+         } else if (configIndex === 1) {
+           configs = {
+             ...state.configs,
+             config2: {
+               ...state.configs.config2,
+               tfjsModelUrl: url,
+             }
+           };
+         }
+         if (!configs) {
+           return state;
+         } else {
+           return {...state, configs};
+         }
+       }),
 
     on(fetchTfjsReleasesSuccess,
        (state, {releases}) => {
@@ -43,6 +97,28 @@ export const mainReducer = createReducer(
          };
        }),
 
+    on(fetchTfjsModelJsonSuccess,
+       (state, {configIndex, modelGraph}) => {
+         if (configIndex === 0) {
+           return {
+             ...state,
+             runResults: {
+               ...state.runResults,
+               modelGraph1: modelGraph,
+             },
+           };
+         } else if (configIndex === 1) {
+           return {
+             ...state,
+             runResults: {
+               ...state.runResults,
+               modelGraph2: modelGraph,
+             },
+           };
+         }
+         return state;
+       }),
+
     on(setErrorMessage,
        (state, {title, content}) => {
          return {
@@ -59,6 +135,16 @@ export const mainReducer = createReducer(
          return {
            ...state,
            errorMessage: undefined,
+         };
+       }),
+
+    on(triggerRunCurrentConfigs,
+       (state) => {
+         return {
+           ...state,
+           // Reset run results.
+           runResults: {},
+           runCurrentConfigsTrigger: {},
          };
        }),
 );
