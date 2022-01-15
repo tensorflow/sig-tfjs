@@ -68,13 +68,13 @@ export class AppBar implements OnInit {
 
     // TODO: add more check conditions.
     if (config1.modelType === ModelTypeId.TFJS) {
-      return config1.tfjsModelUrl == null ?
+      return (config1.tfjsModelUrl == null || config1.tfjsModelUrl === '') ?
           'TFJS model url required in configuration 1' :
           '';
     }
 
     if (config2.modelType === ModelTypeId.TFJS) {
-      return config2.tfjsModelUrl == null ?
+      return (config2.tfjsModelUrl == null || config2.tfjsModelUrl === '') ?
           'TFJS model url required in configuration 2' :
           '';
     }
