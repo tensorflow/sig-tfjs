@@ -94,7 +94,7 @@ interface TFLiteDelegatePlugin<Options> {
 ##### Loading Delegates in Node
 This diagram illustrates how a delegate can be loaded dynamically in node.
 
-<img src="20211109-coral-support-for-tfjs-node/coral-delegate-node.png">
+<img src="20211109-tflite-support-for-node/coral-delegate-node.png">
 
 To load a delegate, the user passes the TFLiteDelegatePlugin to tfjs-tflite along with its options. tfjs-tflite passes tfjs-tflite-node the delegate when constructing an interpreter. tfjs-tflite-node gets the path to the delegate's shared library file and dynamically loads it, adding it to the interpreter. Then, when the user runs a model, ops that can be run on the delegate are accelerated. For this to work, delegate DLLs will need to implement the [external_delegate.h](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/delegates/external) header.
 
@@ -118,10 +118,10 @@ Coral is not a typical TFLite delegate. It does not directly support running any
     </tr>
     <tr>
         <td>
-            <img src="20211109-coral-support-for-tfjs-node/mediapipe-face-coral.png">
+            <img src="20211109-tflite-support-for-node/mediapipe-face-coral.png">
         </td>
         <td>
-            <img src="20211109-coral-support-for-tfjs-node/mediapipe-face.png">
+            <img src="20211109-tflite-support-for-node/mediapipe-face.png">
         </td>
     </tr>
 </table>
