@@ -79,11 +79,30 @@ The NPM package format for a delegate plugin is likely simpler than the main TFL
 ```typescript
 interface TFLiteDelegatePlugin<Options> {
   name: string; // Name of the delegate. We could remove this if we don't think it's needed.
-  path(platform?: string): string; // Returns the path to the delegate dll based on the platform.
+  node?: {
+    path(platform?: string): string; // Returns the path to the delegate dll based on the platform.
+  },
+  browser?: {
+    
+  },
   serializeOptions(options: Options): Map<string, string> // https://github.com/tensorflow/tensorflow/blob/v2.7.0/tensorflow/lite/python/interpreter.py#L98-L104
 }
 ```
-Within `tfjs-tflite-node`, we will provide a `loadDelegate()` function that can load a delegate plugin with its corresponding options. In order for this to work for all delegates, delegates DLLs will need to implement the same interface as each other. This section is correct to the best of our knowledge, but there may be some inaccuracies. We will update it as we experiment with this.
+
+`tfjs-tflite` will include a `loadDelegate()` function that can load a delegate plugin with its corresponding options.
+
+##### Loading Delegates in Node
+This diagram illustrates how a delegate can be loaded dynamically in node.
+
+TODO(mattsoulanille): Screenshot of diagram goes here
+
+To load a delegate, the user passes the TFLiteDelegatePlugin to tfjs-tflite along with its options. tfjs-tflite passes tfjs-tflite-node the delegate when constructing an interpreter. tfjs-tflite-node gets the path to the delegate's shared library file and dynamically loads it, adding it to the interpreter. Then, when the user runs a model, ops that can be run on the delegate are accelerated. For this to work, delegate DLLs will need to implement the [external_delegate.h](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/delegates/external) header.
+
+##### Loading Delegates in the Browser
+This section is TODO pending investigation. We think it may be possible to implement this in a similar way to node by using [Emscripten Dynamic Linking](https://emscripten.org/docs/compiling/Dynamic-Linking.html).
+
+
+This section is correct to the best of our knowledge, but there may be some inaccuracies. We will update it as we experiment with this.
 
 Given the complexity of this plugin system and of loading DLLs dynamically, the first version of `tfjs-tflite-node` may not include it, but it's important to consider its design from the start. We might also implement a version of the Coral delegate directly into `tfjs-tflite-node` before this plugin system is complete, but we hope to avoid this.
  
@@ -190,14 +209,17 @@ import * as tflite from '@tensorflow/tfjs-tflite-node'
 ### Where should we implement this?
 1. `tfjs-tflite`
   * Pros: Keeps tflite support in one place. Easier for users to use the same package for node and web.
-  * Cons: Does not have node-gyp or node-gn set up. Does not work in node currently. Platform differences may force API differences anyway (e.g. dynamically loading a delegate may not be possible on the web).
+  * Cons: Does not have node-gyp or node-gn set up. Does not work in node currently. Platform differences may force API differences anyway.
 2. `tfjs-node`
   * Pros: Already works with node. Already has node-gyp set up. 
   * Cons: Possibly confusing to have full Tensorflow and Tensorflow Lite support in the same package? 
 3. Another package, e.g. `tfjs-tflite-node`
   * Pros: Clean slate. Does not affect existing codebase. Any weird requirements of node-gyp or the plugin system can be implemented without breaking anything else.
   * Cons: Another package to maintain, publish, make users aware of etc. Further fragments our offerings.
-
+4. Another package, but as an optional dependency to tfjs-tflite. tfjs-tflite `require`s that package at runtime if running in node (and if it's not installed, it complains). Similar to `tfjs-node-gpu`. Added after 2021-12-02.
+  * Pros: Same as 3, plus users only need to import a single package. No switching between tfjs-tflite and tfjs-tflite-node (less fragmentation).
+  * Cons: Some delegates may only work in node / browser, which may be confusing to users when they're using a single package.
+  
 2021-12-02: We decided that implementing this proposal in another package, `tfjs-tflite-node`, that implements the same API as `tfjs-tflite` would be the cleanest solution.
 
 ### Building the native addon
