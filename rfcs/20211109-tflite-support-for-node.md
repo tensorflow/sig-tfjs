@@ -94,9 +94,11 @@ interface TFLiteDelegatePlugin<Options> {
 ##### Loading Delegates in Node
 This diagram illustrates how a delegate can be loaded dynamically in node.
 
-TODO(mattsoulanille): Screenshot of diagram goes here
+<img src="20211109-coral-support-for-tfjs-node/coral-delegate-node.png">
 
 To load a delegate, the user passes the TFLiteDelegatePlugin to tfjs-tflite along with its options. tfjs-tflite passes tfjs-tflite-node the delegate when constructing an interpreter. tfjs-tflite-node gets the path to the delegate's shared library file and dynamically loads it, adding it to the interpreter. Then, when the user runs a model, ops that can be run on the delegate are accelerated. For this to work, delegate DLLs will need to implement the [external_delegate.h](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/delegates/external) header.
+
+See also the TFLite and Coral for Node.js [slides](https://docs.google.com/presentation/d/1d_cEGJ04RZEPpR_wv2pcNnpb98q3S4wiCBsRee2UFAA/edit#slide=id.gcfc3b03fb9_1_71).
 
 ##### Loading Delegates in the Browser
 This section is TODO pending investigation. We think it may be possible to implement this in a similar way to node by using [Emscripten Dynamic Linking](https://emscripten.org/docs/compiling/Dynamic-Linking.html).
