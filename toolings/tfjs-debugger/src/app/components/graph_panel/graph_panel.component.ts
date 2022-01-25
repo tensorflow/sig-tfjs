@@ -53,8 +53,10 @@ export class GraphPanel implements OnInit {
             filter(trigger => trigger != null),
             withLatestFrom(this.store.select(selectCurrentConfigs)))
         .subscribe(([unusedTrigger, curConfigs]) => {
+          const prevConfigs: Configs|undefined =
+              !this.curConfigs ? undefined : {...this.curConfigs};
           this.curConfigs = curConfigs;
-          this.fetchModelJsonFiles();
+          this.fetchModelJsonFiles(prevConfigs, this.curConfigs);
         });
 
     // Send the loaded ModelGraph (converted from model.json) to worker to do
@@ -97,7 +99,8 @@ export class GraphPanel implements OnInit {
     };
   }
 
-  private fetchModelJsonFiles() {
+  private fetchModelJsonFiles(
+      prevConfigs: Configs|undefined, curConfigs: Configs) {
     if (!this.curConfigs) {
       return;
     }
@@ -106,7 +109,10 @@ export class GraphPanel implements OnInit {
     // tfjs model is selected.
     if (this.curConfigs.config1.modelType === ModelTypeId.TFJS &&
         this.curConfigs.config2.modelType === ModelTypeId.SAME_AS_CONFIG1) {
-      if (this.curConfigs.config1.tfjsModelUrl) {
+      const urlChanged = !prevConfigs ||
+          (prevConfigs.config1.tfjsModelUrl !==
+           curConfigs.config1.tfjsModelUrl);
+      if (this.curConfigs.config1.tfjsModelUrl && urlChanged) {
         this.store.dispatch(fetchTfjsModelJson(
             {configIndex: 0, url: this.curConfigs.config1.tfjsModelUrl}));
       }

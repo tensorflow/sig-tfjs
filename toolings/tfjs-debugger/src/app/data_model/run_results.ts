@@ -4,6 +4,9 @@
  * Run results include model graph topology and metadata, values for all
  * intermediate nodes, and performance data. These are stored separately for
  * easier processing by different components.
+ *
+ * TODO: consider changing modelGraph and valueResult to arrays for
+ * extensibility. Also the main configs.
  */
 export interface RunResults {
   /**
