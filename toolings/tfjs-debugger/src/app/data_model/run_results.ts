@@ -1,3 +1,5 @@
+import {INodeDef} from '@tensorflow/tfjs-converter/dist/data/compiled_api';
+
 /**
  * Stores the run results.
  *
@@ -91,12 +93,7 @@ export interface NodeValueResult {
 /** The type that matches the model.json file. */
 export declare interface ModelJson {
   modelTopology: {
-    node: [{
-      name: string;
-      op: string;
-      input: string[];
-      // TODO: add more as needed.
-    }]
+    node: INodeDef[],
   };
 }
 
@@ -105,14 +102,17 @@ export function modelJsonToModelGraph(json: ModelJson): ModelGraph {
   const modelGraph: ModelGraph = {};
 
   for (const node of json.modelTopology.node) {
+    if (!node.name) {
+      continue;
+    }
     modelGraph[node.name] = {
       // Use node name as id since it is unique.
       id: node.name,
-      op: node.op,
+      op: node.op || '',
       // TODO: calculate node size based on node's op and other factors.
       width: 60,
       height: 30,
-      inputNodeIds: node.input,
+      inputNodeIds: node.input || [],
     };
   }
   return modelGraph;

@@ -56,7 +56,7 @@ export class GraphPanel implements OnInit {
           const prevConfigs: Configs|undefined =
               !this.curConfigs ? undefined : {...this.curConfigs};
           this.curConfigs = curConfigs;
-          this.fetchModelJsonFiles(prevConfigs, this.curConfigs);
+          this.fetchModelJsonFilesIfChanged(prevConfigs, this.curConfigs);
         });
 
     // Send the loaded ModelGraph (converted from model.json) to worker to do
@@ -99,7 +99,7 @@ export class GraphPanel implements OnInit {
     };
   }
 
-  private fetchModelJsonFiles(
+  private fetchModelJsonFilesIfChanged(
       prevConfigs: Configs|undefined, curConfigs: Configs) {
     if (!this.curConfigs) {
       return;
