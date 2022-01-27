@@ -1,3 +1,5 @@
+// TODO: update when the types are exported in the new converter release.
+// tslint:disable-next-line:no-imports-from-dist
 import {INodeDef} from '@tensorflow/tfjs-converter/dist/data/compiled_api';
 
 /**
