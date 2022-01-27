@@ -18,6 +18,7 @@
 import {CommonModule} from '@angular/common';
 import {NgModule} from '@angular/core';
 import {MatButtonModule} from '@angular/material/button';
+import {MatTooltipModule} from '@angular/material/tooltip';
 
 import {AppBar} from './app_bar.component';
 
@@ -28,6 +29,7 @@ import {AppBar} from './app_bar.component';
   imports: [
     CommonModule,
     MatButtonModule,
+    MatTooltipModule,
   ],
   exports: [
     AppBar,

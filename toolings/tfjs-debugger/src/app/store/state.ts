@@ -18,6 +18,7 @@
 import {Configuration} from '../data_model/configuration';
 import {ErrorMessage} from '../data_model/misc';
 import {ModelTypeId} from '../data_model/model_type';
+import {RunResults} from '../data_model/run_results';
 import {TfjsRelease} from '../data_model/tfjs_release';
 
 export interface Configs {
@@ -29,6 +30,15 @@ export interface Configs {
 export interface AppState {
   configs: Configs;
   tfjsReleases: TfjsRelease[];
+
+  /**
+   * Any new (empty) object that is set to this field will trigger a run for the
+   * currently stored configs.
+   */
+  runCurrentConfigsTrigger?: {};
+
+  /** Stores the results for the latest run. */
+  runResults: RunResults;
 
   /**
    * The current error message occurred in the app.
@@ -50,4 +60,5 @@ export const initialState: AppState = {
     }
   },
   tfjsReleases: [],
+  runResults: {},
 };

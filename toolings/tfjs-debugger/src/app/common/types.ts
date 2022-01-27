@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {ModelGraph} from '../data_model/run_results';
+
 /** URL parameter keys. */
 export enum UrlParamKey {
   SELECTED_MODEL_TYPE_ID = 'mid',
@@ -26,3 +28,16 @@ export enum UrlParamKey {
 
 /** Valid config index. */
 export type ConfigIndex = 0|1;
+
+/** Message sent between main app and layout worker. */
+export interface WorkerMessage {
+  cmd: WorkerCommand;
+  configIndex: number;
+  modelGraph: ModelGraph;
+}
+
+/** Possible commands for the msg. */
+export enum WorkerCommand {
+  LAYOUT = 'layout',
+  LAYOUT_RESULT = 'layout_result',
+}

@@ -15,7 +15,12 @@
  * =============================================================================
  */
 
-import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit} from '@angular/core';
+import {Store} from '@ngrx/store';
+import {ModelTypeId} from 'src/app/data_model/model_type';
+import {triggerRunCurrentConfigs} from 'src/app/store/actions';
+import {selectCurrentConfigs} from 'src/app/store/selectors';
+import {AppState, Configs} from 'src/app/store/state';
 
 /**
  * The app bar located at the top of the screen that shows the app title and a
@@ -28,7 +33,52 @@ import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppBar implements OnInit {
-  constructor() {}
+  private curConfigs?: Configs;
 
-  ngOnInit() {}
+  constructor(
+      private readonly changeDetectorRef: ChangeDetectorRef,
+      private readonly store: Store<AppState>,
+  ) {}
+
+  handleClickRun() {
+    // Triggers a run for the current configs when the "Run" button is clicked.
+    this.store.dispatch(triggerRunCurrentConfigs());
+  }
+
+  ngOnInit() {
+    // Stores the current configs when it changes.
+    this.store.select(selectCurrentConfigs).subscribe(curConfigs => {
+      this.curConfigs = curConfigs;
+      this.changeDetectorRef.markForCheck();
+    });
+  }
+
+  /**
+   * Returns the tooltip that will be shown when the Run button is disabled to
+   * give users hint about why the button is disabled (e.g. didn't fill out the
+   * required fields, etc).
+   */
+  get runButtonDisabledMessage(): string {
+    if (!this.curConfigs) {
+      return 'Configs not initialized';
+    }
+
+    const config1 = this.curConfigs.config1;
+    const config2 = this.curConfigs.config2;
+
+    // TODO: add more check conditions.
+    if (config1.modelType === ModelTypeId.TFJS) {
+      return (config1.tfjsModelUrl == null || config1.tfjsModelUrl === '') ?
+          'TFJS model url required in configuration 1' :
+          '';
+    }
+
+    if (config2.modelType === ModelTypeId.TFJS) {
+      return (config2.tfjsModelUrl == null || config2.tfjsModelUrl === '') ?
+          'TFJS model url required in configuration 2' :
+          '';
+    }
+
+    return '';
+  }
 }

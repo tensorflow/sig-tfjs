@@ -30,7 +30,7 @@ import {ConfigsPanelModule} from '../components/configs_panel/configs_panel.modu
 import {ErrorPanelModule} from '../components/error_panel/error_panel.module';
 import {GraphPaneModule} from '../components/graph_panel/graph_panel.module';
 import {InfoPanelModule} from '../components/info_panel/info_panel.module';
-import {GithubEffects} from '../store/effects';
+import {GithubEffects, TfjsEffects} from '../store/effects';
 import {mainReducer} from '../store/reducers';
 
 import {AppComponent} from './app.component';
@@ -43,7 +43,7 @@ import {AppComponent} from './app.component';
     BrowserModule,
     BrowserAnimationsModule,
     ConfigsPanelModule,
-    EffectsModule.forRoot([GithubEffects]),
+    EffectsModule.forRoot([GithubEffects, TfjsEffects]),
     ErrorPanelModule,
     HttpClientModule,
     InfoPanelModule,
