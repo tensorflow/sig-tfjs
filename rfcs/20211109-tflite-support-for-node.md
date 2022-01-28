@@ -157,8 +157,11 @@ In order of priority, the platforms we plan to support are:
 
 #### Building for an Unsupported Platform
 We also want to let users build `tfjs-tflite-node` for platforms that are not officially supported. We will support this with a similar approach to [how we support building TensorFlow from source in `tfjs-node`](https://github.com/tensorflow/tfjs/tree/master/tfjs-node#optional-build-optimal-tensorflow-from-source).
+
 ### Best Practices
-This change does not introduce any new best practices.
+Different versions of TFLite are not necessarily [ABI compatible](https://en.wikipedia.org/wiki/Application_binary_interface), so strict versioning between tfjs-tflite-node and delegaet plugins is required. This should be enforced by [peer dependencies](https://nodejs.org/es/blog/npm/peer-dependencies/#the-solution-peer-dependencies) on plugins to ensure the plugin and tfjs-tflite-node were compiled against the same version of tflite.
+
+This requirement creates another versioning issue. On one hand, tfjs-tflite-node and associated plugins should use the same version numbers as TFLite so that it's easy to choose the correct plugin version. On the other hand, we need to be able to publish bugfixes to tfjs-tflite-node and plugins, which means we need to change the version number to comply with semantic versioning. We're open to suggestions on this.
 
 ### Tutorials and Examples
 #### Coral Proof of Concept Demo Repository
