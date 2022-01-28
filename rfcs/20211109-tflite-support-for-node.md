@@ -80,31 +80,32 @@ The NPM package format for a delegate plugin is likely simpler than the main TFL
 interface TFLiteDelegatePlugin<Options> {
   name: string; // Name of the delegate. We could remove this if we don't think it's needed.
   node?: {
-    path(platform?: string): string; // Returns the path to the delegate dll based on the platform.
+    path(): string; // Returns the path to the delegate dll. This is a function since path depends on the platform.
   },
   browser?: {
-    
+    path(): string; // Returns the url where the delegate wasm file can be downloaded.
   },
   serializeOptions(options: Options): Map<string, string> // https://github.com/tensorflow/tensorflow/blob/v2.7.0/tensorflow/lite/python/interpreter.py#L98-L104
 }
 ```
 
-`tfjs-tflite` will include a `loadDelegate()` function that can load a delegate plugin with its corresponding options.
+This interface 
+
+`tfjs-tflite-node` will include a `loadDelegate<Options>(delegate: TFLiteDelegatePlugin<Options>, options: Options)` function that can load a delegate plugin with its corresponding options.
 
 ##### Loading Delegates in Node
 This diagram illustrates how a delegate can be loaded dynamically in node.
 
 <img src="20211109-tflite-support-for-node/coral-delegate-node.png">
 
-To load a delegate, the user passes the TFLiteDelegatePlugin to tfjs-tflite along with its options. tfjs-tflite passes tfjs-tflite-node the delegate when constructing an interpreter. tfjs-tflite-node gets the path to the delegate's shared library file and dynamically loads it, adding it to the interpreter. Then, when the user runs a model, ops that can be run on the delegate are accelerated. For this to work, delegate DLLs will need to implement the [external_delegate.h](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/delegates/external) header.
+To load a delegate, the user passes the TFLiteDelegatePlugin to tfjs-tflite-node along with its options. tfjs-tflite-node gets the path to the delegate's shared library file and dynamically loads it, adding it to the interpreter. Then, when the user runs a model, ops that can be run on the delegate are accelerated. For this to work, delegate DLLs will need to implement the [external_delegate.h](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/delegates/external) header.
 
 See also the TFLite and Coral for Node.js [slides](https://docs.google.com/presentation/d/1d_cEGJ04RZEPpR_wv2pcNnpb98q3S4wiCBsRee2UFAA/edit#slide=id.gcfc3b03fb9_1_71).
 
 ##### Loading Delegates in the Browser
-This section is TODO pending investigation. We think it may be possible to implement this in a similar way to node by using [Emscripten Dynamic Linking](https://emscripten.org/docs/compiling/Dynamic-Linking.html).
+This section requires more investigation, but we think it may be possible to implement this in a similar way to node by using [Emscripten Dynamic Linking](https://emscripten.org/docs/compiling/Dynamic-Linking.html). Specifically, we plan to use [runtime dynamic linking with dlopen()](https://emscripten.org/docs/compiling/Dynamic-Linking.html#runtime-dynamic-linking-with-dlopen) to load the delegate after the TFLite WASM process is started.
 
-
-This section is correct to the best of our knowledge, but there may be some inaccuracies. We will update it as we experiment with this.
+One caveat of dynamic loading in Emscripten is that system libraries are only available in the main module and are included only if they are used. To avoid a delegate depending on a missing system library, we will likely need to force the inclusion of all standard libs with `EMCC_FORCE_STDLIBS=1`. 
 
 Given the complexity of this plugin system and of loading DLLs dynamically, the first version of `tfjs-tflite-node` may not include it, but it's important to consider its design from the start. We might also implement a version of the Coral delegate directly into `tfjs-tflite-node` before this plugin system is complete, but we hope to avoid this.
  
@@ -135,7 +136,7 @@ For alternative places we could implement the proposal, see the questions and di
 Instead of implementing the above plugin system, we could link all delegates in the `tfjs-tflite-node` package's Napi bindings. This would be a lot simpler to implement since there would be no runtime loading of DLLs, but it would make it more difficult for contributors to write new delegates, since they would need to be included in the `tfjs-tflite-node` package (and be merged into the tfjs repo).
 
 #### Alternative: Run TFLite in WASM in Node
-Instead of using native binaries, we could run TFLite in WASM in Node. This makes it a lot easier to support all platforms, since we wouldn't need a separate build for each of them. However, it would affect performance (Node's support for WASM webworkers (threads) is not as good as in the browser), and would make it more difficult or impossible to support delegates like Coral that require access to hardware.
+Instead of using native binaries, we could run TFLite in WASM in Node. This makes it a lot easier to support all platforms, since we wouldn't need a separate build for each of them. However, it would affect performance (Node's support for WASM webworkers (threads) is not as good as in the browser), and would make it more difficult or impossible to support delegates like Coral that require access to hardware. This might become possible with something like [WASI](https://github.com/WebAssembly/WASI), but it does not seem to be possible yet.
 
 ### Performance Implications
 * There are no performance implications for existing packages.
@@ -201,7 +202,9 @@ console.log(outputTensor.dataSync());
 ```
 
 ### Compatibility
-This proposal adds a new package, `tfjs-tflite-node`, and does not change any existing packages. As the name indicates, it will only be compatible with node and with TFLite models. It does not use any existing TFJS backends and instead ties directly into the native TFLite binary for a given platform.
+This proposal adds a new package, `tfjs-tflite-node`. `tfjs-tflite-node` will only be compatible with node and with TFLite models. It does not use any existing TFJS backends and instead ties directly into the native TFLite binary for a given platform.
+
+Delegate support depends on the platform and hardware available. Some delegates may only work on the web while some will only work in node (e.g. Coral).
 
 ### User Impact
 This feature will be rolled out on npm in a new `tfjs-tflite-node` package. Users can import or require it in node in the usual way:
@@ -210,6 +213,9 @@ import * as tflite from '@tensorflow/tfjs-tflite-node'
 ```
 
 ## Questions and Discussion Topics
+
+### How should we version tfjs-tflite-node and plugins?
+We would like to use semantic versioning, but we also want to make it obvious which version of TFLite a package is built against. See [Best Practices](#best-practices) for more details.
 
 ### Where should we implement this?
 1. `tfjs-tflite`
