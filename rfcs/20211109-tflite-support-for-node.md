@@ -26,6 +26,7 @@ As TensorFlow.js models in the model.json format can not be executed on the Cora
 
 
 ## Motivation
+Supporting TFLite in NodeJS will add support for [over 100 pretrained models](https://tfhub.dev/s?deployment-format=lite) from TFHub, many of which do not yet have an equivalent TF.js model. It will also make our offerings more consistent between NodeJS and the browser, which already supports TFLite. One of the most significant motivators, however, is to gain access to hardware accelerators, particularly for edge devices with weaker GPUs.
 
 The TensorFlow.js team has received a number of requests (~20% of responses in our developer survey) that mentioned a desire for Coral support on edge devices such as the Raspberry Pi to acheive faster inference speeds when working with TensorFlow.js on such devices. In fact, for some users, not having Coral support was the main reason they could not work with TensorFlow.js as only Python bindings were available. There are a number of users making custom physical experiences that can benefit from such acceleration while still using the tech stacks they love, such as this user's feedback:
 
