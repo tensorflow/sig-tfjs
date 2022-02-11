@@ -26,7 +26,7 @@ As TensorFlow.js models in the model.json format can not be executed on the Cora
 
 
 ## Motivation
-Supporting TFLite in NodeJS will add support for [over 100 pretrained models](https://tfhub.dev/s?deployment-format=lite) from TFHub, many of which do not yet have an equivalent TF.js model. It will also make our offerings more consistent between NodeJS and the browser, which already supports TFLite. One of the most significant motivators, however, is to gain access to hardware accelerators, particularly for edge devices with weaker GPUs.
+Supporting TFLite in NodeJS will add support for [over 100 pretrained models](https://tfhub.dev/s?deployment-format=lite) from TFHub, many of which do not yet have an equivalent TF.js model. It will also make our offerings more consistent between NodeJS and the browser, which already supports TFLite. One of the most significant motivators, however, is to gain access to a number of pluggable accelerators, in the form of TFLite delegates, particularly for low power edge devices. One such delegate is the Coral accelerator.
 
 The TensorFlow.js team has received a number of requests (~20% of responses in our developer survey) that mentioned a desire for Coral support on edge devices such as the Raspberry Pi to acheive faster inference speeds when working with TensorFlow.js on such devices. In fact, for some users, not having Coral support was the main reason they could not work with TensorFlow.js as only Python bindings were available. There are a number of users making custom physical experiences that can benefit from such acceleration while still using the tech stacks they love, such as this user's feedback:
 
@@ -35,6 +35,8 @@ The TensorFlow.js team has received a number of requests (~20% of responses in o
 [After further investingation](https://github.com/tensorflow/tfjs/issues/1422#issuecomment-949049456), supporting Coral accelerators via WebUSB in the browser is currently not feasible due to OS level constraints around USB refresh after uploading firmware to the device each time it is plugged in. Currently this is best handled via a program that can interface with drivers at the OS Level such as Node.js vs the web browser itself. 
 
 Furthrmore after speaking with potential users of such a system, the primary use case is to accelerate edge devices like the Raspberry Pi or Asus Tinker Edge T, as most laptops/desktops or current generation smart phones that execute TensorFlow.js in browser already have real time performance with many of our models and users are satisfied with performance on these higher end devices.
+
+In addition to the Coral delegate, the TensorFlow.js team would like to support delegates in general. We envision a setup where a user could write their own delegate and load it in tfjs-tflite-node without having to send us a PR. This should let users rapidly prototype with new accelerators without being blocked waiting for a PR to be reveiwed or a release to be published. While we do not intend to write a browser-based delegate for Coral, this approach of separating delegates from the tflite implemention would also be useful in the browser, so we propoes a dynamic loading scheme for the browser as well.
 
 ## User Benefit
 
@@ -152,13 +154,13 @@ Instead of using native binaries, we could run TFLite in WASM in Node. This make
 * Additional maintenance cost of maintaining TFLite binaries, if we end up having to do that.
 
 ### Platforms and Environments
-In order of priority, the platforms we plan to support are:
+In no specific order, the platforms we plan to support are:
 1. Linux x86 and ARM64 / ARM32, especially Raspberry Pi.
 2. Windows x86 (use case is low power kiosk machines / [PC Sticks](https://www.amazon.com/Computer-Windows-Support-Bluetooh-AIOEXPC/dp/B08G1CCWN5/ref=asc_df_B08G1CCWN5/?tag=hyprod-20&linkCode=df0&hvadid=459623382939&hvpos=&hvnetw=g&hvrand=5388614202533491403&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=9031136&hvtargid=pla-980775817871&th=1)).
 4. Possibly Mac, x86 and ARM64, but less likely due to maintenance cost and available alternatives (tfjs-node), but we are open to community feedback on this.
 
 #### Building for an Unsupported Platform
-We also want to let users build `tfjs-tflite-node` for platforms that are not officially supported. We will support this with a similar approach to [how we support building TensorFlow from source in `tfjs-node`](https://github.com/tensorflow/tfjs/tree/master/tfjs-node#optional-build-optimal-tensorflow-from-source).
+We also want to let users build `tfjs-tflite-node` for platforms that are not officially supported. We will support this with a similar approach to [how we support building TensorFlow from source in `tfjs-node`](https://github.com/tensorflow/tfjs/tree/master/tfjs-node#optional-build-optimal-tensorflow-from-source). Due to the complexity of compiling tflite, this will likely not be an automatic process handled entirely by node-gyp.
 
 ### Best Practices
 Different versions of TFLite are not necessarily [ABI compatible](https://en.wikipedia.org/wiki/Application_binary_interface), so strict versioning between tfjs-tflite-node and delegaet plugins is required. This should be enforced by [peer dependencies](https://nodejs.org/es/blog/npm/peer-dependencies/#the-solution-peer-dependencies) on plugins to ensure the plugin and tfjs-tflite-node were compiled against the same version of tflite.
