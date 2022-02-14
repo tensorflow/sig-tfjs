@@ -15,23 +15,31 @@
  * =============================================================================
  */
 
-import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
+import {AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {Store} from '@ngrx/store';
 import {combineLatest, filter, withLatestFrom} from 'rxjs';
-import {WorkerCommand, WorkerMessage} from 'src/app/common/types';
+import {LayoutRequest, LayoutResponse, WorkerCommand, WorkerMessage} from 'src/app/common/types';
 import {ModelTypeId} from 'src/app/data_model/model_type';
 import {ModelGraph} from 'src/app/data_model/run_results';
 import {fetchTfjsModelJson} from 'src/app/store/actions';
 import {selectCurrentConfigs, selectModelGraph, selectRunCurrentConfigsTrigger} from 'src/app/store/selectors';
 import {AppState, Configs} from 'src/app/store/state';
+import * as THREE from 'three';
+
+import {GraphService} from './graph_service';
 
 @Component({
   selector: 'graph-panel',
   templateUrl: './graph_panel.component.html',
   styleUrls: ['./graph_panel.component.scss'],
+  // GraphService is only available for GraphPanel.
+  providers: [GraphService],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GraphPanel implements OnInit {
+export class GraphPanel implements OnInit, AfterViewInit {
+  @ViewChild('canvas', {static: false}) canvas!: ElementRef;
+  @ViewChild('container', {static: false}) container!: ElementRef;
+
   /** The model graph that has done the layout.  */
   modelGraph?: ModelGraph;
 
@@ -43,6 +51,7 @@ export class GraphPanel implements OnInit {
 
   constructor(
       private readonly store: Store<AppState>,
+      private readonly graphService: GraphService,
   ) {}
 
   ngOnInit() {
@@ -76,7 +85,7 @@ export class GraphPanel implements OnInit {
       if (this.curConfigs.config1.modelType === ModelTypeId.TFJS &&
           this.curConfigs.config2.modelType === ModelTypeId.SAME_AS_CONFIG1 &&
           modelGraph1 != null) {
-        const msg: WorkerMessage = {
+        const msg: LayoutRequest = {
           cmd: WorkerCommand.LAYOUT,
           configIndex: 0,
           modelGraph: modelGraph1,
@@ -87,16 +96,23 @@ export class GraphPanel implements OnInit {
 
     // Listen to worker's response.
     this.layoutWorker.onmessage = ({data}) => {
-      const msg = data as WorkerMessage;
+      const msg = data as LayoutResponse;
       switch (msg.cmd) {
         case WorkerCommand.LAYOUT_RESULT:
-          console.log('got layout result', msg);
+          this.graphService.renderGraph(msg.modelGraphLayout);
           break;
 
         default:
           break;
       }
     };
+  }
+
+  ngAfterViewInit() {
+    // Setup rendering related.
+    this.graphService.setupThreeJs(
+        this.container.nativeElement, this.canvas.nativeElement);
+    this.graphService.setupPanAndZoom();
   }
 
   private fetchModelJsonFilesIfChanged(

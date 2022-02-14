@@ -47,7 +47,7 @@ export interface RunResults {
  * This is essentially our internal representation of model.json file.
  */
 export interface ModelGraph {
-  [modelGraphId: string]: ModelGraphNode;
+  [nodeId: string]: ModelGraphNode;
 }
 
 /** Stores the topology and metadata for a single node.  */
@@ -82,9 +82,22 @@ export interface ModelGraphNode {
   y?: number;
 }
 
+/** Stores data for an edge in the layout results. */
+export interface ModelGraphLayoutEdge {
+  fromNodeId: string;
+  toNodeId: string;
+  controlPoints: Array<{x: number; y: number;}>;
+}
+
+/** Stores the layout results for a model graph. */
+export interface ModelGraphLayout {
+  nodes: ModelGraphNode[];
+  edges: ModelGraphLayoutEdge[];
+}
+
 /** Stores the value result (e.g. tensor output) indexed by node ids. */
 export interface ValueResult {
-  [modelGraphId: string]: NodeValueResult;
+  [nodeId: string]: NodeValueResult;
 }
 
 /** Stores the value result for a single node. */
@@ -107,13 +120,13 @@ export function modelJsonToModelGraph(json: ModelJson): ModelGraph {
     if (!node.name) {
       continue;
     }
+    const op = node.op || '';
     modelGraph[node.name] = {
       // Use node name as id since it is unique.
       id: node.name,
-      op: node.op || '',
-      // TODO: calculate node size based on node's op and other factors.
-      width: 60,
-      height: 30,
+      op,
+      width: op.toLowerCase() === 'const' ? 56 : 90,
+      height: 28,
       inputNodeIds: node.input || [],
     };
   }

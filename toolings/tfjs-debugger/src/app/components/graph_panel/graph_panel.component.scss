@@ -27,4 +27,10 @@
   justify-content: center;
   height: 100%;
   overflow: hidden;
+
+  canvas {
+    box-sizing: border-box;
+    width: 100% !important;
+    height: 100% !important;
+  }
 }

@@ -2,18 +2,19 @@
 
 import * as dagre from 'dagre';
 
-import {WorkerCommand, WorkerMessage} from '../common/types';
-import {ModelGraph, ModelGraphNode} from '../data_model/run_results';
+import {LayoutRequest, LayoutResponse, WorkerCommand, WorkerMessage} from '../common/types';
+import {ModelGraph, ModelGraphLayout, ModelGraphLayoutEdge, ModelGraphNode} from '../data_model/run_results';
 
 addEventListener('message', ({data}) => {
   const msg = data as WorkerMessage;
   switch (msg.cmd) {
     case WorkerCommand.LAYOUT:
-      layoutModelGraph(msg.modelGraph);
-      const resp: WorkerMessage = {
+      const req = msg as LayoutRequest;
+      const layout = layoutModelGraph(req.modelGraph);
+      const resp: LayoutResponse = {
         cmd: WorkerCommand.LAYOUT_RESULT,
-        configIndex: msg.configIndex,
-        modelGraph: msg.modelGraph,
+        configIndex: req.configIndex,
+        modelGraphLayout: layout,
       };
       postMessage(resp);
       break;
@@ -27,10 +28,15 @@ addEventListener('message', ({data}) => {
  * coordinates) will be stored directly inside each ModelGraphNode in
  * ModelGraph.
  */
-function layoutModelGraph(modelGraph: ModelGraph) {
+function layoutModelGraph(modelGraph: ModelGraph): ModelGraphLayout {
   const graph = new dagre.graphlib.Graph<ModelGraphNode>();
   // Separation between nodes.
-  graph.setGraph({nodesep: 10});
+  graph.setGraph({
+    nodesep: 20,
+    ranksep: 40,
+    // This could make certain layouts more "straignt".
+    align: 'DR',
+  });
   // We don't need to show edge labels.
   graph.setDefaultEdgeLabel(() => ({}));
 
@@ -49,4 +55,19 @@ function layoutModelGraph(modelGraph: ModelGraph) {
 
   // Layout.
   dagre.layout(graph);
+
+  // Gather results.
+  const nodes = Object.values(modelGraph);
+  const edges: ModelGraphLayoutEdge[] = [];
+  for (const edge of graph.edges()) {
+    edges.push({
+      fromNodeId: edge.v,
+      toNodeId: edge.w,
+      controlPoints: graph.edge(edge).points,
+    });
+  }
+  return {
+    nodes,
+    edges,
+  };
 }
