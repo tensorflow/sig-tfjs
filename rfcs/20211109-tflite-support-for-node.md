@@ -82,6 +82,7 @@ The NPM package format for a delegate plugin is likely simpler than the main TFL
 ```typescript
 interface TFLiteDelegatePlugin<Options> {
   name: string; // Name of the delegate. We could remove this if we don't think it's needed.
+  tfliteVersion: string; // The version of tflite this delegate was compiled with.
   node?: {
     path(): string; // Returns the path to the delegate dll. This is a function since path depends on the platform.
   },
@@ -91,8 +92,6 @@ interface TFLiteDelegatePlugin<Options> {
   serializeOptions(options: Options): Map<string, string> // https://github.com/tensorflow/tensorflow/blob/v2.7.0/tensorflow/lite/python/interpreter.py#L98-L104
 }
 ```
-
-This interface 
 
 `tfjs-tflite-node` will include a `loadDelegate<Options>(delegate: TFLiteDelegatePlugin<Options>, options: Options)` function that can load a delegate plugin with its corresponding options.
 
