@@ -2,10 +2,10 @@
 
 | Status        | Proposed       |
 :-------------- |:---------------------------------------------------- |
-| **RFC #**     | [NNN](https://github.com/tfjs-sig/pull/NNN) (update when you have community PR #)|
+| **RFC #**     | [005](https://github.com/tfjs-sig/pull/5)|
 | **Author(s)** | Matthew Soulanille (msoulanille@google.com), Jason Mayes (jmayes@google.com) |
 | **Sponsor**   | Ping Yu (piyu@google.com)                 |
-| **Updated**   | 2021-12-03                                          |
+| **Updated**   | 2022-02-17                                          |
 
 
 ## Objective
