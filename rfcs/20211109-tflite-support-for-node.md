@@ -2,7 +2,7 @@
 
 | Status        | Proposed       |
 :-------------- |:---------------------------------------------------- |
-| **RFC #**     | [005](https://github.com/tfjs-sig/pull/5)|
+| **RFC #**     | [5](https://github.com/sig-tfjs/pull/5)|
 | **Author(s)** | Matthew Soulanille (msoulanille@google.com), Jason Mayes (jmayes@google.com) |
 | **Sponsor**   | Ping Yu (piyu@google.com)                 |
 | **Updated**   | 2022-02-17                                          |
