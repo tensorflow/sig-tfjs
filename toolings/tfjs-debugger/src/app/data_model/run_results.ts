@@ -61,6 +61,9 @@ export interface ModelGraphNode {
   /** Ids of input nodes. */
   inputNodeIds: string[];
 
+  /** Ids of output nodes */
+  outputNodeIds: string[];
+
   /**
    * The width of the node.
    *
@@ -116,6 +119,19 @@ export declare interface ModelJson {
 export function modelJsonToModelGraph(json: ModelJson): ModelGraph {
   const modelGraph: ModelGraph = {};
 
+  // Output node ids indexed by source node ids.
+  const outputNodeIds: {[nodeId: string]: string[]} = {};
+  for (const node of json.modelTopology.node) {
+    if (node.input) {
+      for (const inputNodeId of node.input) {
+        if (!outputNodeIds[inputNodeId]) {
+          outputNodeIds[inputNodeId] = [];
+        }
+        outputNodeIds[inputNodeId].push(node.name || '');
+      }
+    }
+  }
+
   for (const node of json.modelTopology.node) {
     if (!node.name) {
       continue;
@@ -128,6 +144,7 @@ export function modelJsonToModelGraph(json: ModelJson): ModelGraph {
       width: op.toLowerCase() === 'const' ? 56 : 90,
       height: 28,
       inputNodeIds: node.input || [],
+      outputNodeIds: outputNodeIds[node.name] || [],
     };
   }
   return modelGraph;

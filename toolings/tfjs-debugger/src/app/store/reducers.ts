@@ -17,8 +17,13 @@
 
 import {createReducer, on} from '@ngrx/store';
 
-import {clearErrorMessage, fetchTfjsModelJsonSuccess, fetchTfjsReleasesFail, fetchTfjsReleasesSuccess, setErrorMessage, setModelType, setTfjsModelUrl, triggerRunCurrentConfigs} from './actions';
+import {RunStatus, RunTask, TaskStatus} from '../data_model/misc';
+
+import {clearErrorMessage, fetchTfjsModelJsonFail, fetchTfjsModelJsonSuccess, fetchTfjsReleasesFail, fetchTfjsReleasesSuccess, resetRunStatus, setErrorMessage, setModelType, setTfjsModelUrl, triggerRunCurrentConfigs, updateRunTaskStatus} from './actions';
 import {Configs, initialState} from './state';
+import {getRunTasksFromConfigs} from './utils';
+
+
 
 /** Reducer for the app state. */
 export const mainReducer = createReducer(
@@ -106,6 +111,10 @@ export const mainReducer = createReducer(
                ...state.runResults,
                modelGraph1: modelGraph,
              },
+             runStatus: {
+               ...state.runStatus,
+               [RunTask.LOAD_TFJS_MODEL1]: TaskStatus.SUCCESS,
+             },
            };
          } else if (configIndex === 1) {
            return {
@@ -114,9 +123,29 @@ export const mainReducer = createReducer(
                ...state.runResults,
                modelGraph2: modelGraph,
              },
+             runStatus: {
+               ...state.runStatus,
+               [RunTask.LOAD_TFJS_MODEL2]: TaskStatus.SUCCESS,
+             },
            };
          }
          return state;
+       }),
+
+    on(fetchTfjsModelJsonFail,
+       (state, {configIndex, error}) => {
+         return {
+           ...state,
+           errorMessage: {
+             title: 'Network error',
+             content: `Failed to fetch TFJS model: ${error.message}`,
+           },
+           runStatus: {
+             ...state.runStatus,
+             [configIndex === 0 ? RunTask.LOAD_TFJS_MODEL1 :
+                                  RunTask.LOAD_TFJS_MODEL2]: TaskStatus.FAILED,
+           },
+         };
        }),
 
     on(setErrorMessage,
@@ -140,11 +169,37 @@ export const mainReducer = createReducer(
 
     on(triggerRunCurrentConfigs,
        (state) => {
+         // Get tasks for this run and set their initial status (in progress).
+         const runStatus: RunStatus = {};
+         for (const runTask of getRunTasksFromConfigs(state.configs)) {
+           runStatus[runTask] = TaskStatus.IN_PROGRESS;
+         }
+
          return {
            ...state,
            // Reset run results.
            runResults: {},
            runCurrentConfigsTrigger: {},
+           runStatus,
+         };
+       }),
+
+    on(updateRunTaskStatus,
+       (state, {task, status}) => {
+         return {
+           ...state,
+           runStatus: {
+             ...state.runStatus,
+             [task]: status,
+           },
+         };
+       }),
+
+    on(resetRunStatus,
+       (state) => {
+         return {
+           ...state,
+           runStatus: undefined,
          };
        }),
 );

@@ -16,7 +16,7 @@
  */
 
 import {Configuration} from '../data_model/configuration';
-import {ErrorMessage} from '../data_model/misc';
+import {ErrorMessage, RunStatus} from '../data_model/misc';
 import {ModelTypeId} from '../data_model/model_type';
 import {RunResults} from '../data_model/run_results';
 import {TfjsRelease} from '../data_model/tfjs_release';
@@ -39,6 +39,15 @@ export interface AppState {
 
   /** Stores the results for the latest run. */
   runResults: RunResults;
+
+  /**
+   * Stores the status of various tasks (e.g. loading models, running
+   * inferences, etc) during a run.
+   *
+   * This will mainly be used to render an overlay that shows progress during a
+   * run. The overlay will be hidden if this value is set to undefined.
+   */
+  runStatus?: RunStatus;
 
   /**
    * The current error message occurred in the app.

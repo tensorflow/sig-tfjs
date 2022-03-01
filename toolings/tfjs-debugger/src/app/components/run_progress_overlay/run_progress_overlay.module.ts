@@ -15,7 +15,21 @@
  * =============================================================================
  */
 
-// Minimum module definition for troika-three-text npm package.
-//
-// TODO: add proper type definitions. For now, all types are "any".
-declare module 'troika-three-text';
+import {CommonModule} from '@angular/common';
+import {NgModule} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+
+import {RunProgressOverlay} from './run_progress_overlay.component';
+
+@NgModule({
+  declarations: [RunProgressOverlay],
+  imports: [
+    CommonModule,
+    MatProgressSpinnerModule,
+    MatIconModule,
+  ],
+  exports: [RunProgressOverlay],
+})
+export class RunProgressOverlayModule {
+}
