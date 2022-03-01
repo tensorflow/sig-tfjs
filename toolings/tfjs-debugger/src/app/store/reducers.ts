@@ -24,7 +24,6 @@ import {Configs, initialState} from './state';
 import {getRunTasksFromConfigs} from './utils';
 
 
-
 /** Reducer for the app state. */
 export const mainReducer = createReducer(
     initialState,
