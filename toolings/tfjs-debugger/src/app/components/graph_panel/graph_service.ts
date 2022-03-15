@@ -255,6 +255,32 @@ export class GraphService {
     //
     // tslint:disable-next-line:no-any
     (view as any).call(this.zoom);
+
+    // Press space to reset zoom and pan.
+    document.addEventListener('keydown', (event) => {
+      if (event.key === ' ') {
+        // Don't handle it when the model graph layout has not been loaded.
+        if (!this.currentModelGraphLayout) {
+          return;
+        }
+
+        const element = event.target as HTMLElement;
+
+        // Don't trigger it when the current focus is in any input element.
+        const isInputElement = element.tagName === 'INPUT' ||
+            element.tagName === 'SELECT' || element.tagName === 'TEXTAREA' ||
+            element.contentEditable === 'true';
+        if (isInputElement) {
+          return;
+        }
+
+        // Reset the graph.
+        this.currentTranslatX = 0;
+        this.currentTranslatY = 0;
+        this.currentZoom = 1;
+        this.centerModelGraph(200);
+      }
+    });
   }
 
   renderGraph(modelGraphLayout: ModelGraphLayout) {
@@ -272,8 +298,8 @@ export class GraphService {
     let maxX = Number.NEGATIVE_INFINITY;
     let maxZ = Number.NEGATIVE_INFINITY;
     for (const node of modelGraphLayout.nodes) {
-      const isConstNodde = node.op.toLowerCase() === 'const';
-      let material = isConstNodde ? CONST_NODE_MATERIAL : OP_NODE_MATERIAL;
+      const isConstNode = node.op.toLowerCase() === 'const';
+      let material = isConstNode ? CONST_NODE_MATERIAL : OP_NODE_MATERIAL;
 
       // Input nodes.
       if (node.inputNodeIds.length === 0 && node.op.toLowerCase() !== 'const') {
@@ -313,7 +339,7 @@ export class GraphService {
       const opNameText = this.createText(node.op, {
         font: Font.GoogleSansMedium,
         fontSize: node.op.length > 15 ? 8 : 11,
-        color: isConstNodde ? 0x000000 : 0xffffff,
+        color: isConstNode ? 0x000000 : 0xffffff,
         maxWidth: node.width - 4,
         lineHeight: 1,
       });
@@ -476,7 +502,7 @@ export class GraphService {
     this.renderer.render(this.scene, this.camera);
   }
 
-  private centerModelGraph() {
+  private centerModelGraph(transitionDuration = 0) {
     if (!this.container) {
       return;
     }
@@ -520,8 +546,14 @@ export class GraphService {
         // 0,
         minInputNodeY + 30);
     const view = d3.select(this.container as Element);
-    // tslint:disable-next-line:no-any
-    (view as any).call(this.zoom.transform, transform);
+    if (transitionDuration === 0) {
+      // tslint:disable-next-line:no-any
+      (view as any).call(this.zoom.transform, transform);
+    } else {
+      view.transition()
+          .duration(transitionDuration)
+          .call(this.zoom.transform, transform);
+    }
   }
 
   private cameraLeftToD3Translate(targetCameraLeft: number): number {

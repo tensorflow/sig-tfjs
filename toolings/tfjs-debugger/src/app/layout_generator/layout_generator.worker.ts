@@ -34,7 +34,10 @@ function layoutModelGraph(modelGraph: ModelGraph): ModelGraphLayout {
   graph.setGraph({
     nodesep: 20,
     ranksep: 40,
-    // This could make certain layouts more "straignt".
+    // This could make certain layouts more "straight".
+    //
+    // See more options here:
+    // https://github.com/dagrejs/dagre/wiki#configuring-the-layout
     align: 'DR',
   });
   // We don't need to show edge labels.

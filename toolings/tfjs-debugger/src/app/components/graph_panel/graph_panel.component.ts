@@ -43,7 +43,7 @@ export class GraphPanel implements OnInit, AfterViewInit {
   /** The processed model graph with the layout data. */
   modelGraphLayout?: ModelGraphLayout;
 
-  /** Track whether mouse cursor is in or out of of the help icon. */
+  /** Track whether mouse cursor is in or out of the help icon. */
   mouseEnteredHelpIcon = false;
 
   private curConfigs?: Configs;
@@ -136,10 +136,7 @@ export class GraphPanel implements OnInit, AfterViewInit {
     // tfjs model is selected.
     if (this.curConfigs.config1.modelType === ModelTypeId.TFJS &&
         this.curConfigs.config2.modelType === ModelTypeId.SAME_AS_CONFIG1) {
-      const urlChanged = !prevConfigs ||
-          (prevConfigs.config1.tfjsModelUrl !==
-           curConfigs.config1.tfjsModelUrl);
-      if (this.curConfigs.config1.tfjsModelUrl && urlChanged) {
+      if (this.curConfigs.config1.tfjsModelUrl) {
         this.store.dispatch(fetchTfjsModelJson(
             {configIndex: 0, url: this.curConfigs.config1.tfjsModelUrl}));
       }

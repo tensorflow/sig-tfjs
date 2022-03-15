@@ -40,7 +40,10 @@ export class AppBar implements OnInit {
       private readonly store: Store<AppState>,
   ) {}
 
-  handleClickRun() {
+  handleClickRun(event: MouseEvent) {
+    // Don't leave focus on the button.
+    (event.target as HTMLElement).blur();
+
     // Triggers a run for the current configs when the "Run" button is clicked.
     this.store.dispatch(triggerRunCurrentConfigs());
   }
