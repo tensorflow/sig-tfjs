@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2021 Google LLC. All Rights Reserved.
+ * Copyright 2022 Google LLC. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,32 +15,21 @@
  * =============================================================================
  */
 
-@use '../../variables.scss' as var;
+import {CommonModule} from '@angular/common';
+import {NgModule} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 
-$error-msg-container-width: 400px;
+import {RunProgressOverlay} from './run_progress_overlay.component';
 
-.container {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-
-  .content {
-    display: flex;
-    flex-grow: 1;
-    overflow: hidden;
-  }
-
-  error-panel {
-    position: absolute;
-    bottom: var.$spacing-6x;
-    left: calc(50% - $error-msg-container-width / 2);
-    z-index: 300;
-    width: $error-msg-container-width;
-  }
-
-  run-progress-overlay {
-    z-index: 200;
-  }
+@NgModule({
+  declarations: [RunProgressOverlay],
+  imports: [
+    CommonModule,
+    MatProgressSpinnerModule,
+    MatIconModule,
+  ],
+  exports: [RunProgressOverlay],
+})
+export class RunProgressOverlayModule {
 }

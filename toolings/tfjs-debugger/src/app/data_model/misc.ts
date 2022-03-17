@@ -20,3 +20,22 @@ export interface ErrorMessage {
   title: string;
   content: string;
 }
+
+/** Names of possible tasks in a run. */
+export enum RunTask {
+  LOAD_TFJS_MODEL1 = 'Load TJFS model in config 1',
+  LOAD_TFJS_MODEL2 = 'Load TJFS model in config 2',
+  LAYOUT_AND_RENDER_MODEL_GRAPH = 'Layout and render model graph',
+}
+
+/** Status for a task. */
+export enum TaskStatus {
+  IN_PROGRESS,
+  SUCCESS,
+  FAILED,
+}
+
+/** Status indexed by task names. */
+export type RunStatus = {
+  [task: string]: TaskStatus
+};

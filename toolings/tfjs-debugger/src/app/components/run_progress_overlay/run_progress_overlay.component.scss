@@ -1,0 +1,67 @@
+/**
+ * @license
+ * Copyright 2022 Google LLC. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =============================================================================
+ */
+
+@use '../../../variables.scss' as var;
+
+.container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(255 255 255 / 85%);
+  backdrop-filter: blur(4px);
+}
+
+.tasks-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  .task-row {
+    display: flex;
+    justify-content: center;
+    height: 18px;
+    line-height: 18px;
+
+    .task-name {
+      margin-left: var.$spacing-3x;
+      color: var.$grey-700;
+      font-weight: 500;
+      font-size: 13px;
+    }
+
+    .mat-icon {
+      width: 16px;
+      height: 16px;
+      font-size: 16px;
+      line-height: 16px;
+    }
+
+    .success .mat-icon {
+      color: #0a0;
+    }
+
+    .failed .mat-icon {
+      color: #ef4d6a;
+    }
+  }
+}

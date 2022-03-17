@@ -15,25 +15,36 @@
  * =============================================================================
  */
 
-import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
+import {AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {Store} from '@ngrx/store';
 import {combineLatest, filter, withLatestFrom} from 'rxjs';
-import {WorkerCommand, WorkerMessage} from 'src/app/common/types';
+import {LayoutRequest, LayoutResponse, WorkerCommand} from 'src/app/common/types';
+import {RunTask, TaskStatus} from 'src/app/data_model/misc';
 import {ModelTypeId} from 'src/app/data_model/model_type';
-import {ModelGraph} from 'src/app/data_model/run_results';
-import {fetchTfjsModelJson} from 'src/app/store/actions';
+import {ModelGraphLayout} from 'src/app/data_model/run_results';
+import {fetchTfjsModelJson, updateRunTaskStatus} from 'src/app/store/actions';
 import {selectCurrentConfigs, selectModelGraph, selectRunCurrentConfigsTrigger} from 'src/app/store/selectors';
 import {AppState, Configs} from 'src/app/store/state';
+
+import {GraphService} from './graph_service';
 
 @Component({
   selector: 'graph-panel',
   templateUrl: './graph_panel.component.html',
   styleUrls: ['./graph_panel.component.scss'],
+  // GraphService is only available for GraphPanel.
+  providers: [GraphService],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GraphPanel implements OnInit {
-  /** The model graph that has done the layout.  */
-  modelGraph?: ModelGraph;
+export class GraphPanel implements OnInit, AfterViewInit {
+  @ViewChild('canvas', {static: false}) canvas!: ElementRef;
+  @ViewChild('container', {static: false}) container!: ElementRef;
+
+  /** The processed model graph with the layout data. */
+  modelGraphLayout?: ModelGraphLayout;
+
+  /** Track whether mouse cursor is in or out of the help icon. */
+  mouseEnteredHelpIcon = false;
 
   private curConfigs?: Configs;
 
@@ -42,7 +53,9 @@ export class GraphPanel implements OnInit {
       '../../layout_generator/layout_generator.worker', import.meta.url));
 
   constructor(
+      private readonly changeDetectionRef: ChangeDetectorRef,
       private readonly store: Store<AppState>,
+      private readonly graphService: GraphService,
   ) {}
 
   ngOnInit() {
@@ -76,7 +89,7 @@ export class GraphPanel implements OnInit {
       if (this.curConfigs.config1.modelType === ModelTypeId.TFJS &&
           this.curConfigs.config2.modelType === ModelTypeId.SAME_AS_CONFIG1 &&
           modelGraph1 != null) {
-        const msg: WorkerMessage = {
+        const msg: LayoutRequest = {
           cmd: WorkerCommand.LAYOUT,
           configIndex: 0,
           modelGraph: modelGraph1,
@@ -85,18 +98,32 @@ export class GraphPanel implements OnInit {
       }
     });
 
-    // Listen to worker's response.
+    // Listen to worker's response after layout is done.
     this.layoutWorker.onmessage = ({data}) => {
-      const msg = data as WorkerMessage;
+      const msg = data as LayoutResponse;
       switch (msg.cmd) {
         case WorkerCommand.LAYOUT_RESULT:
-          console.log('got layout result', msg);
+          // Render.
+          this.modelGraphLayout = msg.modelGraphLayout;
+          this.graphService.renderGraph(msg.modelGraphLayout);
+          this.changeDetectionRef.markForCheck();
+
+          // Update task status.
+          this.store.dispatch(updateRunTaskStatus({
+            task: RunTask.LAYOUT_AND_RENDER_MODEL_GRAPH,
+            status: TaskStatus.SUCCESS
+          }));
           break;
 
         default:
           break;
       }
     };
+  }
+
+  ngAfterViewInit() {
+    this.graphService.init(
+        this.container.nativeElement, this.canvas.nativeElement);
   }
 
   private fetchModelJsonFilesIfChanged(
@@ -109,10 +136,7 @@ export class GraphPanel implements OnInit {
     // tfjs model is selected.
     if (this.curConfigs.config1.modelType === ModelTypeId.TFJS &&
         this.curConfigs.config2.modelType === ModelTypeId.SAME_AS_CONFIG1) {
-      const urlChanged = !prevConfigs ||
-          (prevConfigs.config1.tfjsModelUrl !==
-           curConfigs.config1.tfjsModelUrl);
-      if (this.curConfigs.config1.tfjsModelUrl && urlChanged) {
+      if (this.curConfigs.config1.tfjsModelUrl) {
         this.store.dispatch(fetchTfjsModelJson(
             {configIndex: 0, url: this.curConfigs.config1.tfjsModelUrl}));
       }
