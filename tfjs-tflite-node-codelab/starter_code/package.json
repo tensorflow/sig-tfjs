@@ -1,0 +1,17 @@
+{
+  "name": "tfjs-tflite-node-example",
+  "version": "0.0.1-alpha.1",
+  "description": "A codelab for tfjs-tflite-node",
+  "main": "main.js",
+  "license": "Apache-2.0",
+  "private": true,
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^17.1.2"
+  },
+  "dependencies": {
+    "stats.js": "^0.17.0"
+  }
+}
