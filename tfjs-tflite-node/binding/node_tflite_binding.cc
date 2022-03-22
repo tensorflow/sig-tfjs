@@ -18,9 +18,40 @@
 #include <cstdint>
 #include <napi.h>
 #include <sstream>
+#include <type_traits>
 #include "tensorflow/lite/c/c_api.h"
 #include "tensorflow/lite/c/c_api_types.h"
 #include "tensorflow/lite/delegates/external/external_delegate.h"
+
+std::string decodeStatus(TfLiteStatus status) {
+  switch (status) {
+    case kTfLiteOk:
+      return "Ok";
+    case kTfLiteError:
+      return "Unexpected Interpreter Error";
+    case kTfLiteDelegateError:
+      return "Error from delegate";
+    case kTfLiteApplicationError:
+      return "Incompatability between runtime and delegate, \
+            possibly due to applying a delegate to a model graph \
+            that is already immutable";
+    case kTfLiteDelegateDataNotFound:
+      return "Serialized delegate data not found";
+    case kTfLiteDelegateDataWriteError:
+      return "Could not write serialized data to delegate";
+    case kTfLiteDelegateDataReadError:
+      return "Could not read serialized data from delegate";
+    case kTfLiteUnresolvedOps:
+      return "Model contains ops that cannot be resolved at runtime";
+  }
+  return "Unknown status code";
+}
+
+void throwIfError(Napi::Env &env, std::string message, TfLiteStatus status) {
+  if (status != kTfLiteOk) {
+    Napi::Error::New(env, message + ": " + decodeStatus(status)).ThrowAsJavaScriptException();
+  }
+}
 
 class TensorInfo : public Napi::ObjectWrap<TensorInfo> {
  public:
@@ -39,7 +70,6 @@ class TensorInfo : public Napi::ObjectWrap<TensorInfo> {
     // instantiate TensorInfos in the interpreter.
     constructor = Napi::Persistent(func);
     constructor.SuppressDestruct();
-    //exports.Set("TensorInfo", func);
 
     return exports;
   }
@@ -54,22 +84,42 @@ class TensorInfo : public Napi::ObjectWrap<TensorInfo> {
  private:
   friend class Interpreter;
   const TfLiteTensor *tensor = nullptr;
+  void *localData = nullptr;
   int id = -1;
   Napi::Reference<Napi::TypedArray> dataArray;
+
+  /**
+   * Copy the tensor's local data to the TFLite tensor.
+   *
+   * This is necessary because we can't base the TypedArray off of the TFLite
+   * tensor's void* data pointer. If we do, we see the following error in node
+   * versions 13 through 16:
+   * # Fatal error in , line 0
+   * # Check failed: result.second.
+   */
+  void copyToTflite(Napi::Env &env) {
+    throwIfError(env, "Failed to copy tensor data to TFLite",
+                 TfLiteTensorCopyFromBuffer((TfLiteTensor*) tensor, localData,
+                                            TfLiteTensorByteSize(tensor)));
+  }
+
+  /**
+   * Copy the TFLite tensor to local data.
+   */
+  void copyFromTflite(Napi::Env &env) {
+    throwIfError(env, "Failed to copy tensor data from TFLite",
+                 TfLiteTensorCopyToBuffer(tensor, localData,
+                                          TfLiteTensorByteSize(tensor)));
+  }
 
   void setTensor(Napi::Env env, const TfLiteTensor *t, int i) {
     tensor = t;
     id = i;
-    void* data = TfLiteTensorData(tensor);
-    if (!data) {
-      Napi::Error::New(env, "Failed to get tensor data").ThrowAsJavaScriptException();
-    }
 
     TfLiteType tensorType = TfLiteTensorType(tensor);
-    size_t length = getLength();
     size_t byteSize = TfLiteTensorByteSize(tensor);
-    auto buffer = Napi::ArrayBuffer::New(
-        env, (uint8_t*)data, byteSize); // TODO: Finalizer?
+    auto buffer = Napi::ArrayBuffer::New(env, byteSize);
+    localData = buffer.Data();
 
     Napi::TypedArray typedArray;
     switch (tensorType) {
@@ -132,6 +182,8 @@ class TensorInfo : public Napi::ObjectWrap<TensorInfo> {
       typedArray = Napi::Uint32Array::New(env, getLength(), buffer, 0);
       break;
     }
+    // Start reference count at 1 since the Tensor object (this object) has a
+    // reference to the data array. This prevents JavaScript from GC-ing it.
     dataArray = Napi::Reference<Napi::TypedArray>::New(typedArray, 1);
   }
 
@@ -187,6 +239,8 @@ class TensorInfo : public Napi::ObjectWrap<TensorInfo> {
         return Napi::String::New(env, "kTfLiteVariant");
       case kTfLiteUInt32:
         return Napi::String::New(env, "uint32");
+      default:
+        return Napi::String::New(env, "Unknown data type");
     }
   }
 
@@ -243,6 +297,8 @@ class TensorInfo : public Napi::ObjectWrap<TensorInfo> {
         return byteSize;
       case kTfLiteUInt32:
         return byteSize / 4;
+      default:
+        return byteSize;
     }
   }
 
@@ -364,8 +420,7 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
       auto wrappedTensorInfo = TensorInfo::constructor.New({});
       auto tensorInfo = TensorInfo::Unwrap(wrappedTensorInfo);
       tensorInfo->setTensor(env, tensor, id);
-      // tensorInfo->id = id;
-      // tensorInfo->tensor = tensor;
+      inputTensors.push_back(tensorInfo);
       inputTensorArray[id] = wrappedTensorInfo;
     }
     inputTensorRef = Napi::Reference<Napi::Array>::New(inputTensorArray, 1);
@@ -378,9 +433,7 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
       auto wrappedTensorInfo = TensorInfo::constructor.New({});
       auto tensorInfo = TensorInfo::Unwrap(wrappedTensorInfo);
       tensorInfo->setTensor(env, tensor, id);
-      //tensorInfo->id = id;
-      //tensorInfo->tensor = tensor;
-
+      outputTensors.push_back(tensorInfo);
       outputTensorArray[id] = wrappedTensorInfo;
     }
     outputTensorRef = Napi::Reference<Napi::Array>::New(outputTensorArray, 1);
@@ -402,48 +455,28 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
 
  private:
   TfLiteInterpreter *interpreter = nullptr;
+  std::vector<TensorInfo*> inputTensors;
   Napi::Reference<Napi::Array> inputTensorRef;
+  std::vector<TensorInfo*> outputTensors;
   Napi::Reference<Napi::Array> outputTensorRef;
   std::vector<uint8_t> modelData;
   std::string delegate_path;
 
   Napi::Value Infer(const Napi::CallbackInfo &info) {
     Napi::Env env = info.Env();
+
+    for (TensorInfo* tensor : inputTensors) {
+      tensor->copyToTflite(env);
+    }
+
     throwIfError(env, "Failed to invoke interpreter", TfLiteInterpreterInvoke(interpreter));
+
+    for (TensorInfo* tensor : outputTensors) {
+      tensor->copyFromTflite(env);
+    }
 
     return Napi::Boolean::New(env, true);
   }
-
-  void throwIfError(Napi::Env &env, std::string message, TfLiteStatus status) {
-    if (status != kTfLiteOk) {
-      Napi::Error::New(env, message + ": " + decodeStatus(status)).ThrowAsJavaScriptException();
-    }
-  }
-
-  std::string decodeStatus(TfLiteStatus status) {
-    switch (status) {
-      case kTfLiteOk:
-        return "Ok";
-      case kTfLiteError:
-        return "Unexpected Interpreter Error";
-      case kTfLiteDelegateError:
-        return "Error from delegate";
-      case kTfLiteApplicationError:
-        return "Incompatability between runtime and delegate, \
-            possibly due to applying a delegate to a model graph \
-            that is already immutable";
-      case kTfLiteDelegateDataNotFound:
-        return "Serialized delegate data not found";
-      case kTfLiteDelegateDataWriteError:
-        return "Could not write serialized data to delegate";
-      case kTfLiteDelegateDataReadError:
-        return "Could not read serialized data from delegate";
-      case kTfLiteUnresolvedOps:
-        return "Model contains ops that cannot be resolved at runtime";
-    }
-    return "Unknown status code";
-  }
-
 };
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {

@@ -9,9 +9,6 @@
     "directory": "tfjs-tflite-node"
   },
   "license": "Apache-2.0",
-  "engines": {
-    "node": "^12.22.7 || >=17.6.0"
-  },
   "scripts": {
     "build": "node-gyp rebuild && tsc",
     "build-deps": "cd ../link-package && yarn build",
