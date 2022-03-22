@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2021 Google LLC. All Rights Reserved.
+ * Copyright 2022 Google LLC. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,32 +15,7 @@
  * =============================================================================
  */
 
-@use '../../variables.scss' as var;
-
-$error-msg-container-width: 400px;
-
-.container {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-
-  .content {
-    display: flex;
-    flex-grow: 1;
-    overflow: hidden;
-  }
-
-  error-panel {
-    position: absolute;
-    bottom: var.$spacing-6x;
-    left: calc(50% - $error-msg-container-width / 2);
-    z-index: 300;
-    width: $error-msg-container-width;
-  }
-
-  run-progress-overlay {
-    z-index: 200;
-  }
-}
+// Minimum module definition for troika-three-text npm package.
+//
+// TODO: add proper type definitions. For now, all types are "any".
+declare module 'troika-three-text';

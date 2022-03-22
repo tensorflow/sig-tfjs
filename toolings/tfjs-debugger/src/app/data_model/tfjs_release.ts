@@ -58,7 +58,11 @@ export function releaseJsonToTfjsRelease(json: ReleaseJson): TfjsRelease|
 
   // The original date string is in the form of 2021-10-22T02:07:40Z.
   // Re-format it to "Fri, Oct 22, 2021".
-  const date = dateFormat(new Date(json.published_at), 'ddd, mmm dd, yyyy');
+  //
+  // Prefix "UTC:" in the format string will convert the date to UTC before
+  // applying the mask. This is needed because the date stored in published_at
+  // is in UTC not local time.
+  const date = dateFormat(new Date(json.published_at), 'UTC:ddd, mmm dd, yyyy');
 
   return {
     version,

@@ -17,6 +17,7 @@
 
 import {CommonModule} from '@angular/common';
 import {NgModule} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
 
 import {GraphPanel} from './graph_panel.component';
 
@@ -26,6 +27,7 @@ import {GraphPanel} from './graph_panel.component';
   ],
   imports: [
     CommonModule,
+    MatIconModule,
   ],
   exports: [
     GraphPanel,

@@ -60,7 +60,8 @@ export class TfjsEffects {
                                 {configIndex: action.configIndex, modelGraph});
                           }),
                           catchError((error: HttpErrorResponse) => {
-                            return of(fetchTfjsModelJsonFail({error}));
+                            return of(fetchTfjsModelJsonFail(
+                                {configIndex: action.configIndex, error}));
                           }))),
           ));
 }
