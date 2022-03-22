@@ -486,4 +486,4 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   return exports;
 }
 
-NODE_API_MODULE(hello, Init)
+NODE_API_MODULE(tfjs_tflite_node, Init)
