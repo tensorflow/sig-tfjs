@@ -14,6 +14,66 @@ limitations under the License.
 ==============================================================================
 -->
 
-<div class="container">
-  Model graph
+<div class="container" #container>
+  <!-- The main canvas where the model graph is rendered -->
+  <canvas #canvas></canvas>
+
+  <!--
+    Show a help icon at the corner.
+
+    A panel showing the navigation instructions and legends will appear when mousing over the
+    help icon.
+  -->
+  <div class="help" [class.hide]="!modelGraphLayout">
+    <div class="content" [class.show]="mouseEnteredHelpIcon">
+      <!-- Navigation instructions -->
+      <div class="section">
+        <div class="section-title">
+          navigation
+        </div>
+        <div class="row">
+          <div class="key">Zoom</div>
+          <div class="description">Ctrl+ScrollWheel, or pinch on trackpad</div>
+        </div>
+        <div class="row">
+          <div class="key">Pan</div>
+          <div class="description">
+            Drag the graph, two-finger move on trackpad, or use scroll wheel to pan vertically
+          </div>
+        </div>
+        <div class="row">
+          <div class="key">Reset</div>
+          <div class="description">The Space key</div>
+        </div>
+      </div>
+
+      <!-- Legends -->
+      <div class="section legends">
+        <div class="section-title">
+          legends
+        </div>
+        <div class="row">
+          <div class="key"><div class="circle input"></div></div>
+          <div class="description">Input nodes</div>
+        </div>
+        <div class="row">
+          <div class="key"><div class="circle output"></div></div>
+          <div class="description">Output nodes</div>
+        </div>
+        <div class="row">
+          <div class="key"><div class="circle op"></div></div>
+          <div class="description">Operators</div>
+        </div>
+        <div class="row">
+          <div class="key"><div class="circle const"></div></div>
+          <div class="description">Constants/Weights</div>
+        </div>
+      </div>
+    </div>
+    <div class="icon-container"
+        (mouseenter)="mouseEnteredHelpIcon = true"
+        (mouseleave)="mouseEnteredHelpIcon = false">
+      <mat-icon>help_outline</mat-icon>
+    </div>
+  </div>
 </div>

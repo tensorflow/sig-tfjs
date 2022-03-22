@@ -36,6 +36,11 @@ $error-msg-container-width: 400px;
     position: absolute;
     bottom: var.$spacing-6x;
     left: calc(50% - $error-msg-container-width / 2);
+    z-index: 300;
     width: $error-msg-container-width;
+  }
+
+  run-progress-overlay {
+    z-index: 200;
   }
 }

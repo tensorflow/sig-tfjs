@@ -50,3 +50,30 @@ export const selectTfjsReleases = createSelector(selectMainState, (state) => {
 export const selectErrorMessage = createSelector(selectMainState, (state) => {
   return state.errorMessage;
 });
+
+/** Selector to select the configs run trigger. */
+export const selectRunCurrentConfigsTrigger =
+    createSelector(selectMainState, (state) => {
+      return state.runCurrentConfigsTrigger;
+    });
+
+/** Selector to select current configs. */
+export const selectCurrentConfigs = createSelector(selectMainState, (state) => {
+  return state.configs;
+});
+
+/** Selector to select model graph for the given config index. */
+export const selectModelGraph = (configIndex: ConfigIndex) =>
+    createSelector(selectMainState, (state) => {
+      if (configIndex === 0) {
+        return state.runResults.modelGraph1;
+      } else if (configIndex === 1) {
+        return state.runResults.modelGraph2;
+      }
+      return undefined;
+    });
+
+/** Selector to select run status. */
+export const selectRunStatus = createSelector(selectMainState, (state) => {
+  return state.runStatus;
+});

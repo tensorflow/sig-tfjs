@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2021 Google LLC. All Rights Reserved.
+ * Copyright 2022 Google LLC. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,25 +15,7 @@
  * =============================================================================
  */
 
-import {CommonModule} from '@angular/common';
-import {NgModule} from '@angular/core';
-import {MatButtonModule} from '@angular/material/button';
-import {MatTooltipModule} from '@angular/material/tooltip';
-
-import {AppBar} from './app_bar.component';
-
-@NgModule({
-  declarations: [
-    AppBar,
-  ],
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatTooltipModule,
-  ],
-  exports: [
-    AppBar,
-  ],
-})
-export class AppBarModule {
-}
+// Minimum module definition for troika-three-text npm package.
+//
+// TODO: add proper type definitions. For now, all types are "any".
+declare module 'troika-three-text';

@@ -22,7 +22,12 @@ limitations under the License.
   </div>
 
   <!-- Action buttons -->
-  <div class="btns-container">
-    <button mat-flat-button color="primary">Run</button>
+  <div class="btns-container"
+       [matTooltip]="runButtonDisabledMessage">
+    <button mat-flat-button color="primary"
+        [disabled]="runButtonDisabledMessage !== ''"
+        (click)="handleClickRun($event)">
+      Run
+    </button>
   </div>
 </div>

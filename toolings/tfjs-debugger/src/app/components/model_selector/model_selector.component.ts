@@ -23,6 +23,7 @@ import {ConfigIndex, UrlParamKey} from 'src/app/common/types';
 import {appendConfigIndexToKey} from 'src/app/common/utils';
 import {ModelTypeId} from 'src/app/data_model/model_type';
 import {UrlService} from 'src/app/services/url_service';
+import {setModelType, setTfjsModelUrl} from 'src/app/store/actions';
 import {selectConfigValueFromUrl} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 
@@ -114,7 +115,11 @@ export class ModelSelector implements OnInit, OnDestroy {
           this.selectedModelTypeId = modelTypeId;
           this.changeDetectorRef.markForCheck();
 
-          // TODO: update configs in store.
+          // Update store.
+          this.store.dispatch(setModelType({
+            configIndex: this.configIndex,
+            modelType: modelTypeId,
+          }));
         });
 
     // Update tfjs model url from URL.
@@ -127,7 +132,11 @@ export class ModelSelector implements OnInit, OnDestroy {
             this.tfjsModelUrl = url;
             this.changeDetectorRef.markForCheck();
 
-            // TODO: update configs in store.
+            // Update store.
+            this.store.dispatch(setTfjsModelUrl({
+              configIndex: this.configIndex,
+              url,
+            }));
           }
         });
   }

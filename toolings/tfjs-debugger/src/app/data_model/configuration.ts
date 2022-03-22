@@ -18,5 +18,9 @@
 import {ModelTypeId} from './model_type';
 
 export interface Configuration {
+  /** The type of the model, e.g. TFJS, TFLite, etc. */
   modelType: ModelTypeId;
+
+  /** The URL of the tfjs model's model.json file. */
+  tfjsModelUrl?: string;
 }
