@@ -85,8 +85,8 @@ async function createModel(model: string | ArrayBuffer,
 /**
  * Loads a TFLiteModel from the given model url or file.
  *
- * @param model The path to the model (string), or the model content in memory
- *     (ArrayBuffer).
+ * @param model The file path to the model (string), the url to the model
+ *     (string), or the model content in memory (ArrayBuffer).
  * @param options Options related to model inference.
  *
  * @doc {heading: 'Models', subheading: 'Loading'}
