@@ -312,7 +312,6 @@ export class TFLiteModel implements InferenceModel {
   }
 }
 
-
 /**
  * Returns the compatible tfjs DataType from the given TFLite data type.
  *

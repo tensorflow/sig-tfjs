@@ -15,14 +15,11 @@
  * =============================================================================
  */
 
-import { loadTFLiteModel, TFLiteNodeModelRunner} from './index';
+import {loadTFLiteModel, TFLiteNodeModelRunner} from './index';
 import * as fs from 'fs';
-import { TFLiteWebModelRunner } from '@tensorflow/tfjs-tflite/dist/types/tflite_web_model_runner';
+import {TFLiteWebModelRunner} from '@tensorflow/tfjs-tflite/dist/types/tflite_web_model_runner';
 import '@tensorflow/tfjs-backend-cpu';
 import * as jpeg from 'jpeg-js';
-
-//import * as SegfaultHandler from 'segfault-handler';
-//SegfaultHandler.registerHandler('crash.log');
 
 describe('interpreter', () => {
   let model: ArrayBuffer;
@@ -51,7 +48,7 @@ describe('interpreter', () => {
   });
 
   it('runs infer', () => {
-    let outputs = modelRunner.getOutputs();
+    const outputs = modelRunner.getOutputs();
     modelRunner.infer();
     expect(outputs[0].data()).toBeDefined();
   });
@@ -147,7 +144,8 @@ describe('float32 support', () => {
   let labels: string[];
 
   beforeEach(() => {
-    model = fs.readFileSync('./test_data/teachable_machine_float.tflite').buffer;
+    model = fs.readFileSync('./test_data/teachable_machine_float.tflite')
+      .buffer;
     modelRunner = new TFLiteNodeModelRunner(model, {});
     labels = ['class1', 'class2'];
 
@@ -184,7 +182,8 @@ describe('float32 support', () => {
 // the web. Alternatively, serve the model locally.
 describe('loading model from the web', () => {
   it('loads a model from the web', async () => {
-    const model = await loadTFLiteModel('https://tfhub.dev/sayakpaul/lite-model/cartoongan/fp16/1');
+    const url = 'https://tfhub.dev/sayakpaul/lite-model/cartoongan/fp16/1';
+    const model = await loadTFLiteModel(url);
     expect(model).toBeDefined();
   });
 });

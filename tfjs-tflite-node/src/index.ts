@@ -23,20 +23,23 @@ export * from './delegate_plugin';
 import {TFLiteDelegatePlugin} from './delegate_plugin';
 import fetch from 'node-fetch';
 
+// tslint:disable-next-line:no-require-imports
 const addon = require('bindings')('node_tflite_binding');
 
 interface InterpreterOptions {
   threads?: number;
   delegate?: {
     path: string;
-    options: [string, string][];
-  }
+    options: Array<[string, string]>;
+  };
 }
 
+// tslint:disable-next-line:variable-name
 export const TFLiteNodeModelRunner = addon.Interpreter as {
   new(model: ArrayBuffer, options: InterpreterOptions): TFLiteWebModelRunner;
 };
 
+// tslint:disable-next-line:variable-name
 export const TensorInfo = addon.TensorInfo as {
   new(): TFLiteWebModelRunnerTensorInfo;
 };
@@ -60,7 +63,7 @@ async function createModel(model: string | ArrayBuffer,
 
   const interpreterOptions: InterpreterOptions = {
     threads: options?.numThreads ?? 4,
-  }
+  };
 
   const firstDelegate = options?.delegates?.[0];
   if (options?.delegates?.length > 1) {
@@ -73,7 +76,7 @@ async function createModel(model: string | ArrayBuffer,
       interpreterOptions.delegate = {
         path: delegatePath,
         options: firstDelegate.options,
-      }
+      };
     }
   }
   return new TFLiteNodeModelRunner(modelData, interpreterOptions);

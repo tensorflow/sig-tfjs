@@ -16,7 +16,8 @@
     "build": "node-gyp rebuild && tsc",
     "build-deps": "cd ../link-package && yarn build",
     "test-dev": "jasmine --config=jasmine.json",
-    "test": "yarn build && yarn test-dev"
+    "test": "yarn build && yarn test-dev",
+    "lint": "tslint -p . -t verbose"
   },
   "dependencies": {
     "bindings": "^1.5.0",
@@ -33,6 +34,8 @@
     "jasmine": "^4.0.2",
     "jpeg-js": "^0.4.3",
     "node-gyp": "^8.4.1",
+    "tslint": "^6.1.3",
+    "tslint-no-circular-imports": "^0.7.0",
     "typescript": "^4.5.4"
   }
 }

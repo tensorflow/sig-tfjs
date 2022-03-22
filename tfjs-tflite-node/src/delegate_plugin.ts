@@ -15,16 +15,15 @@
  * =============================================================================
  */
 
-
 // TODO(mattsoulanille): Move this to @tensorflow/tfjs-tflite
 export interface TFLiteDelegatePlugin {
   readonly name: string;
   readonly tfliteVersion: string;
-  readonly options: [string, string][],
+  readonly options: Array<[string, string]>;
   readonly node?: {
     path: string;
-  },
+  };
   readonly browser?: {
     url: string;
-  },
+  };
 }
