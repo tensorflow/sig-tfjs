@@ -16,6 +16,17 @@
  */
 
 // TODO(mattsoulanille): Move this to @tensorflow/tfjs-tflite
+/**
+ * Represents a TFLite delegate that can be passed as an option to the
+ * loadTFLitemodel function.
+ * @example
+ * // Load the Coral delegate
+ * const coralDelegate: TFLiteDelegatePlugin = new CoralDelegate();
+ * // Load a model with the delegate registered.
+ * const model = loadTFLiteModel('./model.tflite', {
+ *   delegates: [coralDelegate],
+ * });
+ */
 export interface TFLiteDelegatePlugin {
   readonly name: string;
   readonly tfliteVersion: string;
