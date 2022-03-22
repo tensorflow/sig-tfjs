@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {ModelGraph} from '../data_model/run_results';
+import {ModelGraph, ModelGraphLayout} from '../data_model/run_results';
 
 /** URL parameter keys. */
 export enum UrlParamKey {
@@ -32,8 +32,18 @@ export type ConfigIndex = 0|1;
 /** Message sent between main app and layout worker. */
 export interface WorkerMessage {
   cmd: WorkerCommand;
+}
+
+export interface LayoutRequest extends WorkerMessage {
   configIndex: number;
+  /** The model graph to calculate layout for. */
   modelGraph: ModelGraph;
+}
+
+export interface LayoutResponse extends WorkerMessage {
+  configIndex: number;
+  /** The layout result. */
+  modelGraphLayout: ModelGraphLayout;
 }
 
 /** Possible commands for the msg. */

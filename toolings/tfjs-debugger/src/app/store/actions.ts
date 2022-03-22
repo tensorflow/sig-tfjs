@@ -18,6 +18,7 @@
 import {HttpErrorResponse} from '@angular/common/http';
 import {createAction, props} from '@ngrx/store';
 
+import {RunTask, TaskStatus} from '../data_model/misc';
 import {ModelTypeId} from '../data_model/model_type';
 import {ModelGraph} from '../data_model/run_results';
 import {TfjsRelease} from '../data_model/tfjs_release';
@@ -34,6 +35,8 @@ export enum DebuggerAction {
   SET_ERROR_MESSAGE = '[App] Set Error Message',
   CLEAR_ERROR_MESSAGE = '[App] Clear Error Message',
   TRIGGER_RUN_CURRENT_CONFIGS = '[App] Trigger to Run Current Configs',
+  UPDATE_RUN_TASK_STATUS = '[App] Update Run Task Status',
+  RESET_RUN_STATUS = '[App] Reset Run Status',
 }
 
 /** Sets model type for the given config. */
@@ -79,7 +82,7 @@ export const fetchTfjsModelJsonSuccess = createAction(
 /** Failed to fetch TFJS model json file. */
 export const fetchTfjsModelJsonFail = createAction(
     DebuggerAction.FETCH_TFJS_MODEL_JSON_FAIL,
-    props<{error: HttpErrorResponse}>(),
+    props<{configIndex: number; error: HttpErrorResponse}>(),
 );
 
 /** Sets the current error message. */
@@ -95,3 +98,12 @@ export const clearErrorMessage =
 /** Trigger to run current configs. */
 export const triggerRunCurrentConfigs =
     createAction(DebuggerAction.TRIGGER_RUN_CURRENT_CONFIGS);
+
+/** Updates status for the given run task. */
+export const updateRunTaskStatus = createAction(
+    DebuggerAction.UPDATE_RUN_TASK_STATUS,
+    props<{task: RunTask, status: TaskStatus}>(),
+);
+
+/** Resets run status. */
+export const resetRunStatus = createAction(DebuggerAction.RESET_RUN_STATUS);

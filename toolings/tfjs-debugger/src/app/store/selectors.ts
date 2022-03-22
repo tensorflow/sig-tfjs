@@ -72,3 +72,8 @@ export const selectModelGraph = (configIndex: ConfigIndex) =>
       }
       return undefined;
     });
+
+/** Selector to select run status. */
+export const selectRunStatus = createSelector(selectMainState, (state) => {
+  return state.runStatus;
+});

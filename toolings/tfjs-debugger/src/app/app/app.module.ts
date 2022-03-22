@@ -30,6 +30,7 @@ import {ConfigsPanelModule} from '../components/configs_panel/configs_panel.modu
 import {ErrorPanelModule} from '../components/error_panel/error_panel.module';
 import {GraphPaneModule} from '../components/graph_panel/graph_panel.module';
 import {InfoPanelModule} from '../components/info_panel/info_panel.module';
+import {RunProgressOverlayModule} from '../components/run_progress_overlay/run_progress_overlay.module';
 import {GithubEffects, TfjsEffects} from '../store/effects';
 import {mainReducer} from '../store/reducers';
 
@@ -48,6 +49,7 @@ import {AppComponent} from './app.component';
     HttpClientModule,
     InfoPanelModule,
     GraphPaneModule,
+    RunProgressOverlayModule,
     StoreModule.forRoot({
       router: routerReducer,
       main: mainReducer,
