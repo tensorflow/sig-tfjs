@@ -44,18 +44,18 @@
     mkdirp "^1.0.4"
     rimraf "^3.0.2"
 
-"@tensorflow/tfjs-backend-cpu@^3.14.0":
-  version "3.14.0"
-  resolved "https://registry.yarnpkg.com/@tensorflow/tfjs-backend-cpu/-/tfjs-backend-cpu-3.14.0.tgz#f4db5cd17609e274709f86a0c34233d35cb886b2"
-  integrity sha512-Sk0B8p1QUqxEVsOmBNxxX2BUgeR8mfXVc6JZM5lWKP79bYy8YGzuiitrSrcxAhEFAANgmDVvM9FTTVR25a0CWg==
+"@tensorflow/tfjs-backend-cpu@^3.15.0":
+  version "3.15.0"
+  resolved "https://registry.yarnpkg.com/@tensorflow/tfjs-backend-cpu/-/tfjs-backend-cpu-3.15.0.tgz#f9aa5309f464c019d36cb42463813455d970f101"
+  integrity sha512-f+GREHSiVkVIpFAwkjB7YWcZefqQvCKQhrNjZzm1WX4VdnWlo0b1lTI+gPIIYNk4LEFMBNJbfqy/N1xNS/SOLQ==
   dependencies:
     "@types/seedrandom" "2.4.27"
     seedrandom "2.4.3"
 
-"@tensorflow/tfjs-core@^3.14.0":
-  version "3.14.0"
-  resolved "https://registry.yarnpkg.com/@tensorflow/tfjs-core/-/tfjs-core-3.14.0.tgz#2d73e76e2ae740c2f91c2cbf15312b9e61ec1c72"
-  integrity sha512-bS/iuI9BpDVZuqEPfLzIFLoHYd+ihNIiux+EXveuFO8phPx7FkgPqakatHYLzrdYlOfAXurIxIlGNAzVKNQOUQ==
+"@tensorflow/tfjs-core@^3.15.0":
+  version "3.15.0"
+  resolved "https://registry.yarnpkg.com/@tensorflow/tfjs-core/-/tfjs-core-3.15.0.tgz#1fc676be2aa591cd48a2dd8301a41bc1bf0f9b14"
+  integrity sha512-X1XGr8rewm/n0RDMnaLRcRYsTHlQCqQUR5DCtjUf4TuII7kq/pkZ9xCKPPfS1qUd5jLy663h8j5cAyjJNUt/hw==
   dependencies:
     "@types/long" "^4.0.1"
     "@types/offscreencanvas" "~2019.3.0"

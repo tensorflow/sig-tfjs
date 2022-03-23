@@ -10,9 +10,9 @@
     "test": "yarn build && yarn test-dev"
   },
   "devDependencies": {
-    "@tensorflow/tfjs-backend-cpu": "^3.14.0",
-    "@tensorflow/tfjs-core": "^3.14.0",
-    "@tensorflow/tfjs-tflite-node": "link:../tfjs-tflite-node",
+    "@tensorflow/tfjs-backend-cpu": "^3.15.0",
+    "@tensorflow/tfjs-core": "^3.15.0",
+    "tfjs-tflite-node": "link:../tfjs-tflite-node",
     "@types/jasmine": "^4.0.0",
     "@types/node": "^17.0.21",
     "jasmine": "^4.0.2",

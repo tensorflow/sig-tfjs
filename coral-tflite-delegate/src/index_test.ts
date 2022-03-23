@@ -16,8 +16,8 @@
  */
 
 import {CoralDelegate} from './index';
-import {loadTFLiteModel} from '@tensorflow/tfjs-tflite-node'
-import {TFLiteModel} from '@tensorflow/tfjs-tflite-node/dist/tflite_model';
+import {loadTFLiteModel} from 'tfjs-tflite-node'
+import type {TFLiteModel} from 'tfjs-tflite-node/dist/tflite_model';
 import * as fs from 'fs';
 import * as tf from '@tensorflow/tfjs-core';
 import '@tensorflow/tfjs-backend-cpu';

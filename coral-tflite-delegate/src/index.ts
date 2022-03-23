@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import type {TFLiteDelegatePlugin} from '@tensorflow/tfjs-tflite-node';
+import type {TFLiteDelegatePlugin} from 'tfjs-tflite-node';
 import * as os from 'os';
 
 // The Coral delegate is unusual since it requires the user to have installed
