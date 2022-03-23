@@ -340,19 +340,7 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
     Napi::ArrayBuffer buffer = info[0].As<Napi::ArrayBuffer>();
     // Options are an object.
     Napi::Object options = info[1].As<Napi::Object>();
-
-    // Set number of threads from options.
-    int threads = 0;
-    auto maybeThreads = options.Get("threads");
-    if (maybeThreads.IsNumber()) {
-      threads = maybeThreads.ToNumber().Int32Value();
-    }
-
-    // Create options for the interpreter.
-    interpreterOptions = TfLiteInterpreterOptionsCreate();
-    if (threads > 0) {
-      TfLiteInterpreterOptionsSetNumThreads(interpreterOptions, threads);
-    }
+    setup_options(env, options);
 
     // TODO(mattsoulanille): Support multiple delegates at a time.
     if (options.Has("delegate")) {
@@ -360,6 +348,10 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
       delegate_path = delegateConfig.Get("path").As<Napi::String>().Utf8Value();
       auto delegate_options_array = delegateConfig.Get("options").As<Napi::Array>();
 
+      // TODO(mattsoulanille): This approach of storing options in an options
+      // vector to keep them in scope works, but it makes it difficult to
+      // factor this out into another function. Try to factor it out and make
+      // it more simple.
       std::vector<std::vector<std::string>> options;
       TfLiteExternalDelegateOptions delegateOptions = TfLiteExternalDelegateOptionsDefault(delegate_path.c_str());
       for (uint i = 0; i < delegate_options_array.Length(); i++) {
@@ -462,6 +454,21 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
   Napi::Reference<Napi::Array> outputTensorRef;
   std::vector<uint8_t> modelData;
   std::string delegate_path;
+
+  void setup_options(Napi::Env &env, Napi::Object &options) {
+    // Set number of threads from options.
+    int threads = 0;
+    auto maybeThreads = options.Get("threads");
+    if (maybeThreads.IsNumber()) {
+      threads = maybeThreads.ToNumber().Int32Value();
+    }
+
+    // Create options for the interpreter.
+    interpreterOptions = TfLiteInterpreterOptionsCreate();
+    if (threads > 0) {
+      TfLiteInterpreterOptionsSetNumThreads(interpreterOptions, threads);
+    }
+  }
 
   Napi::Value Infer(const Napi::CallbackInfo &info) {
     Napi::Env env = info.Env();
