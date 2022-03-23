@@ -23,6 +23,8 @@
 #include "tensorflow/lite/c/c_api_types.h"
 #include "tensorflow/lite/delegates/external/external_delegate.h"
 
+namespace tfjs_tflite_node {
+
 std::string decodeStatus(TfLiteStatus status) {
   switch (status) {
     case kTfLiteOk:
@@ -495,3 +497,4 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 }
 
 NODE_API_MODULE(tfjs_tflite_node, Init)
+}
