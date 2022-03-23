@@ -8,6 +8,8 @@
     "build": "tsc",
     "test-dev": "jasmine --config=jasmine.json",
     "test": "yarn build && yarn test-dev",
+    "test-integration-dev": "jasmine --config=jasmine-integration.json",
+    "test-integration": "yarn build && yarn test-integration-dev",
     "lint": "tslint -p . -t verbose"
   },
   "devDependencies": {

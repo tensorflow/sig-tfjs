@@ -39,13 +39,7 @@ parentDirs.forEach(curParentDir => {
   dirs.push(...curDirs.map(curDir => join(curParentDir, curDir)));
 })
 
-const skippedDirs = new Set(['coral-tflite-delegate']);
-
 dirs.forEach(dir => {
-  if (skippedDirs.has(dir)) {
-    console.log(`~~~~~~~~~~~~ Skipping ${dir} ~~~~~~~~~~~~`);
-    return;
-  }
   shell.cd(dir);
 
   if (!fs.existsSync('./package.json')) {

@@ -1,6 +1,6 @@
 {
   "spec_files": [
-    "dist/*_test.js"
+    "dist/integration_test/*_test.js"
   ],
   "env": {
     "stopSpecOnExpectationFailure": false,

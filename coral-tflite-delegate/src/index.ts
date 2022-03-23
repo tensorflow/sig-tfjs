@@ -25,21 +25,20 @@ import * as os from 'os';
 //
 // The following names are from the python implementation.
 // https://github.com/google-coral/pycoral/blob/9972f8ec6dbb8b2f46321e8c0d2513e0b6b152ce/pycoral/utils/edgetpu.py#L34-L38
-const libNames = new Map([
+const libNames = new Map<NodeJS.Platform, string>([
   ['linux', 'libedgetpu.so.1'],
   ['darwin', 'libedgetpu.1.dylib'],
-  ['windows', 'edgetpu.dll'],
+  ['win32', 'edgetpu.dll'],
 ]);
 
 export class CoralDelegate implements TFLiteDelegatePlugin {
-  readonly name: 'CoralDelegate';
+  readonly name = 'CoralDelegate';
   readonly tfliteVersion: '2.7';
   readonly node: TFLiteDelegatePlugin['node'];
 
   constructor(readonly options: Array<[string, string]> = [],
-    libPath?: string) {
+              libPath?: string, platform = os.platform()) {
     if (!libPath) {
-      const platform = os.platform();
       libPath = libNames.get(platform);
       if (!libPath) {
         throw new Error(`Unknown platform ${platform}`);
