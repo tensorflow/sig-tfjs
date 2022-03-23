@@ -49,6 +49,11 @@ parentDirs.forEach(curParentDir => {
 const dependenciesInOrder = new Set([
   'tfjs-tflite-node', 'coral-tflite-delegate']);
 const dirsSet = new Set(dirs);
+for (const dep of dependenciesInOrder) {
+  if (!dirsSet.has(dep)) {
+    throw new Error(`Directory missing for manually added dependency ${dep}`);
+  }
+}
 for (const dir of dirsSet) {
   if (dependenciesInOrder.has(dir)) {
     dirsSet.delete(dir);
@@ -60,7 +65,7 @@ sortedDirs.forEach(dir => {
   shell.cd(dir);
 
   if (!fs.existsSync('./package.json')) {
-    shell.cd('../');
+    shell.cd(__dirname);
     return;
   }
 
@@ -84,5 +89,5 @@ sortedDirs.forEach(dir => {
     shell.exec('yarn lint');
     console.log('\n');
   }
-  shell.cd('../');
+  shell.cd(__dirname);
 });
