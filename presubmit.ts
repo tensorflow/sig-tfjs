@@ -39,7 +39,24 @@ parentDirs.forEach(curParentDir => {
   dirs.push(...curDirs.map(curDir => join(curParentDir, curDir)));
 })
 
-dirs.forEach(dir => {
+// TODO(mattsoulanille): Packages are not sorted based on dependencies. There
+// are a few ways to fix this:
+// 1. Use only npm versions of packages, so they don't depend on each other.
+// 2. Parse package.json and implement topological sort here.
+// 3. Use something like Lerna or TurboRepo.
+// The current approach is just to enforce order in a subset of the packages.
+// It's not a scalabe approach.
+const dependenciesInOrder = new Set([
+  'tfjs-tflite-node', 'coral-tflite-delegate']);
+const dirsSet = new Set(dirs);
+for (const dir of dirsSet) {
+  if (dependenciesInOrder.has(dir)) {
+    dirsSet.delete(dir);
+  }
+}
+const sortedDirs = [...dirsSet, ...dependenciesInOrder];
+
+sortedDirs.forEach(dir => {
   shell.cd(dir);
 
   if (!fs.existsSync('./package.json')) {
