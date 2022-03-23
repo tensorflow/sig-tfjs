@@ -23,6 +23,8 @@
 #include "tensorflow/lite/c/c_api_types.h"
 #include "tensorflow/lite/delegates/external/external_delegate.h"
 
+namespace tfjs_tflite_node {
+
 std::string decodeStatus(TfLiteStatus status) {
   switch (status) {
     case kTfLiteOk:
@@ -340,19 +342,7 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
     Napi::ArrayBuffer buffer = info[0].As<Napi::ArrayBuffer>();
     // Options are an object.
     Napi::Object options = info[1].As<Napi::Object>();
-
-    // Set number of threads from options.
-    int threads = 0;
-    auto maybeThreads = options.Get("threads");
-    if (maybeThreads.IsNumber()) {
-      threads = maybeThreads.ToNumber().Int32Value();
-    }
-
-    // Create options for the interpreter.
-    auto interpreterOptions = TfLiteInterpreterOptionsCreate();
-    if (threads > 0) {
-      TfLiteInterpreterOptionsSetNumThreads(interpreterOptions, threads);
-    }
+    setup_options(env, options);
 
     // TODO(mattsoulanille): Support multiple delegates at a time.
     if (options.Has("delegate")) {
@@ -360,6 +350,10 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
       delegate_path = delegateConfig.Get("path").As<Napi::String>().Utf8Value();
       auto delegate_options_array = delegateConfig.Get("options").As<Napi::Array>();
 
+      // TODO(mattsoulanille): This approach of storing options in an options
+      // vector to keep them in scope works, but it makes it difficult to
+      // factor this out into another function. Try to factor it out and make
+      // it more simple.
       std::vector<std::vector<std::string>> options;
       TfLiteExternalDelegateOptions delegateOptions = TfLiteExternalDelegateOptionsDefault(delegate_path.c_str());
       for (uint i = 0; i < delegate_options_array.Length(); i++) {
@@ -390,7 +384,7 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
     modelData = std::vector<uint8_t>(
         (uint8_t*) buffer.Data(), (uint8_t*) buffer.Data() + buffer.ByteLength());
 
-    auto model = TfLiteModelCreate(modelData.data(), modelData.size());
+    model = TfLiteModelCreate(modelData.data(), modelData.size());
     if (!model) {
       Napi::Error::New(env, "Failed to create tflite model").ThrowAsJavaScriptException();
       TfLiteInterpreterOptionsDelete(interpreterOptions);
@@ -408,9 +402,6 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
     // Allocate tensors
     throwIfError(env, "Failed to allocate tensors",
                 TfLiteInterpreterAllocateTensors(interpreter));
-
-    TfLiteModelDelete(model);
-    TfLiteInterpreterOptionsDelete(interpreterOptions);
 
     // Construct input tensor objects
     int inputTensorCount = TfLiteInterpreterGetInputTensorCount(interpreter);
@@ -450,17 +441,36 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
   ~Interpreter() {
     inputTensorRef.Unref();
     outputTensorRef.Unref();
+    TfLiteModelDelete(model);
+    TfLiteInterpreterOptionsDelete(interpreterOptions);
     TfLiteInterpreterDelete(interpreter);
   }
 
  private:
   TfLiteInterpreter *interpreter = nullptr;
+  TfLiteModel *model = nullptr;
+  TfLiteInterpreterOptions *interpreterOptions = nullptr;
   std::vector<TensorInfo*> inputTensors;
   Napi::Reference<Napi::Array> inputTensorRef;
   std::vector<TensorInfo*> outputTensors;
   Napi::Reference<Napi::Array> outputTensorRef;
   std::vector<uint8_t> modelData;
   std::string delegate_path;
+
+  void setup_options(Napi::Env &env, Napi::Object &options) {
+    // Set number of threads from options.
+    int threads = 0;
+    auto maybeThreads = options.Get("threads");
+    if (maybeThreads.IsNumber()) {
+      threads = maybeThreads.ToNumber().Int32Value();
+    }
+
+    // Create options for the interpreter.
+    interpreterOptions = TfLiteInterpreterOptionsCreate();
+    if (threads > 0) {
+      TfLiteInterpreterOptionsSetNumThreads(interpreterOptions, threads);
+    }
+  }
 
   Napi::Value Infer(const Napi::CallbackInfo &info) {
     Napi::Env env = info.Env();
@@ -487,3 +497,4 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 }
 
 NODE_API_MODULE(tfjs_tflite_node, Init)
+}

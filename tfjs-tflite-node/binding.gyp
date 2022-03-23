@@ -85,7 +85,7 @@
         }
       ],
       [
-        'OS=="win"', {
+        'OS=="win" and ARCH=="x64"', {
           'defines': ['COMPILER_MSVC'],
           'libraries': [
             '<(module_root_dir)/cc_deps/windows_amd64/tensorflowlite_c.dll.if.lib',
