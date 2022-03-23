@@ -16,7 +16,7 @@
  */
 
 import {CoralDelegate} from './index';
-import {loadTFLiteModel} from 'tfjs-tflite-node'
+import {loadTFLiteModel} from 'tfjs-tflite-node';
 import type {TFLiteModel} from 'tfjs-tflite-node/dist/tflite_model';
 import * as fs from 'fs';
 import * as tf from '@tensorflow/tfjs-core';
@@ -31,7 +31,7 @@ describe('coral delegate', () => {
 
   beforeEach(async () => {
     model = await loadTFLiteModel(modelPath, {
-      delegates: [new CoralDelegate([["device", "usb"]])],
+      delegates: [new CoralDelegate([['device', 'usb']])],
     });
 
     // Load the input image of a parrot.
