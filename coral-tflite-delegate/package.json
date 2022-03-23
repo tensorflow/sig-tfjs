@@ -1,0 +1,22 @@
+{
+  "name": "coral-tflite-delegate",
+  "version": "0.0.1-alpha.1",
+  "description": "A tflite delegate for using Coral accelerators.",
+  "main": "dist/index.js",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc",
+    "test-dev": "jasmine --config=jasmine.json",
+    "test": "yarn build && yarn test-dev"
+  },
+  "devDependencies": {
+    "@tensorflow/tfjs-backend-cpu": "^3.14.0",
+    "@tensorflow/tfjs-core": "^3.14.0",
+    "@tensorflow/tfjs-tflite-node": "link:../tfjs-tflite-node",
+    "@types/jasmine": "^4.0.0",
+    "@types/node": "^17.0.21",
+    "jasmine": "^4.0.2",
+    "jpeg-js": "^0.4.3",
+    "typescript": "^4.5.4"
+  }
+}
