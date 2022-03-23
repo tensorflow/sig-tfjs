@@ -36,7 +36,8 @@ export class CoralDelegate implements TFLiteDelegatePlugin {
   readonly tfliteVersion: '2.7';
   readonly node: TFLiteDelegatePlugin['node'];
 
-  constructor(readonly options: [string, string][] = [], libPath?: string) {
+  constructor(readonly options: Array<[string, string]> = [],
+    libPath?: string) {
     if (!libPath) {
       const platform = os.platform();
       libPath = libNames.get(platform);
