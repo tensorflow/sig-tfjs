@@ -349,7 +349,7 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
     }
 
     // Create options for the interpreter.
-    auto interpreterOptions = TfLiteInterpreterOptionsCreate();
+    interpreterOptions = TfLiteInterpreterOptionsCreate();
     if (threads > 0) {
       TfLiteInterpreterOptionsSetNumThreads(interpreterOptions, threads);
     }
@@ -390,7 +390,7 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
     modelData = std::vector<uint8_t>(
         (uint8_t*) buffer.Data(), (uint8_t*) buffer.Data() + buffer.ByteLength());
 
-    auto model = TfLiteModelCreate(modelData.data(), modelData.size());
+    model = TfLiteModelCreate(modelData.data(), modelData.size());
     if (!model) {
       Napi::Error::New(env, "Failed to create tflite model").ThrowAsJavaScriptException();
       TfLiteInterpreterOptionsDelete(interpreterOptions);
@@ -408,9 +408,6 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
     // Allocate tensors
     throwIfError(env, "Failed to allocate tensors",
                 TfLiteInterpreterAllocateTensors(interpreter));
-
-    TfLiteModelDelete(model);
-    TfLiteInterpreterOptionsDelete(interpreterOptions);
 
     // Construct input tensor objects
     int inputTensorCount = TfLiteInterpreterGetInputTensorCount(interpreter);
@@ -450,11 +447,15 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
   ~Interpreter() {
     inputTensorRef.Unref();
     outputTensorRef.Unref();
+    TfLiteModelDelete(model);
+    TfLiteInterpreterOptionsDelete(interpreterOptions);
     TfLiteInterpreterDelete(interpreter);
   }
 
  private:
   TfLiteInterpreter *interpreter = nullptr;
+  TfLiteModel *model = nullptr;
+  TfLiteInterpreterOptions *interpreterOptions = nullptr;
   std::vector<TensorInfo*> inputTensors;
   Napi::Reference<Napi::Array> inputTensorRef;
   std::vector<TensorInfo*> outputTensors;
