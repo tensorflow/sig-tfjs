@@ -53,10 +53,12 @@ async function main() {
 
   // CODELAB part 1: Load the model here.
   // CODELAB part 1: Set up tf.data.webcam here.
+  // CODELAB part 2: Create the delegate button here.
 
   async function run() {
     stats.begin();
     // CODELAB part 1: Capture and preprocess frames here.
+    // CODELAB part 2: Check whether to use the delegate here.
     // CODELAB part 1: Run the model and display the results here.
     stats.end();
     requestAnimationFrame(run);

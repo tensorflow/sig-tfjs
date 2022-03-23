@@ -67,14 +67,13 @@ async function main() {
 
   async function run() {
     stats.begin();
-    // CODELAB part 2: Check whether to use the delegate here.
-
     // CODELAB part 1: Capture and preprocess frames here.
     const image = await tensorCam.capture();
     const expanded = tf.expandDims(image, 0);
     const divided = tf.div(expanded, tf.scalar(127));
     const normalized = tf.sub(divided, tf.scalar(1));
 
+    // CODELAB part 2: Check whether to use the delegate here.
     // CODELAB part 1: Run the model and display the results here.
     let prediction = model.predict(normalized);
     const percentage = tf.mul(prediction, tf.scalar(100));
