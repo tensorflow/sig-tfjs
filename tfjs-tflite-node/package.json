@@ -11,7 +11,6 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "node-gyp rebuild && tsc",
-    "build-deps": "cd ../link-package && yarn build",
     "test-dev": "jasmine --config=jasmine.json",
     "test": "yarn build && yarn test-dev",
     "lint": "tslint -p . -t verbose"
