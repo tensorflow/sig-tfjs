@@ -39,29 +39,7 @@ parentDirs.forEach(curParentDir => {
   dirs.push(...curDirs.map(curDir => join(curParentDir, curDir)));
 })
 
-// TODO(mattsoulanille): Packages are not sorted based on dependencies. There
-// are a few ways to fix this:
-// 1. Use only npm versions of packages, so they don't depend on each other.
-// 2. Parse package.json and implement topological sort here.
-// 3. Use something like Lerna or TurboRepo.
-// The current approach is just to enforce order in a subset of the packages.
-// It's not a scalabe approach.
-const dependenciesInOrder = new Set([
-  'tfjs-tflite-node', 'coral-tflite-delegate']);
-const dirsSet = new Set(dirs);
-for (const dep of dependenciesInOrder) {
-  if (!dirsSet.has(dep)) {
-    throw new Error(`Directory missing for manually added dependency ${dep}`);
-  }
-}
-for (const dir of dirsSet) {
-  if (dependenciesInOrder.has(dir)) {
-    dirsSet.delete(dir);
-  }
-}
-const sortedDirs = [...dirsSet, ...dependenciesInOrder];
-
-sortedDirs.forEach(dir => {
+dirs.forEach(dir => {
   shell.cd(dir);
 
   if (!fs.existsSync('./package.json')) {
@@ -71,21 +49,27 @@ sortedDirs.forEach(dir => {
 
   const packageJSON: {'scripts': {[key: string]: string}} =
       JSON.parse(fs.readFileSync('./package.json', {encoding: 'utf-8'}));
+  console.log(`~~~~~~~~~~~~ Running yarn in ${dir} ~~~~~~~~~~~~`);
+  shell.exec('yarn');
+
+  if (packageJSON['scripts']['build-deps'] != null) {
+    console.log(`~~~~~~~~~~~~ Building deps for ${dir} ~~~~~~~~~~~~`);
+    shell.exec('yarn build-deps');
+    console.log('\n');
+  }
+
   if (packageJSON['scripts']['test-ci'] != null) {
     console.log(`~~~~~~~~~~~~ Testing ${dir} ~~~~~~~~~~~~`);
-    shell.exec('yarn');
     shell.exec('yarn test-ci');
     console.log('\n');
   } else if (packageJSON['scripts']['test'] != null) {
     console.log(`~~~~~~~~~~~~ Testing ${dir} ~~~~~~~~~~~~`);
-    shell.exec('yarn');
     shell.exec('yarn test');
     console.log('\n');
   }
 
   if (packageJSON['scripts']['lint'] != null) {
     console.log(`~~~~~~~~~~~~ Linting ${dir} ~~~~~~~~~~~~`);
-    shell.exec('yarn');
     shell.exec('yarn lint');
     console.log('\n');
   }

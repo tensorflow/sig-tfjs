@@ -6,6 +6,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "tsc",
+    "build-deps": "cd ../tfjs-tflite-node && yarn build",
     "test-dev": "jasmine --config=jasmine.json",
     "test": "yarn build && yarn test-dev",
     "test-integration-dev": "jasmine --config=jasmine-integration.json",
