@@ -15,7 +15,8 @@
  * =============================================================================
  */
 
-// CODELAB part 1: Import tfjs-tflite-node and @tensorflow/tfjs here.
+// CODELAB part 1: Import tfjs-tflite-node.
+const tf = require('@tensorflow/tfjs');
 // CODELAB part 2: Import the delegate here.
 const fs = require('fs');
 const Stats = require('stats.js');
@@ -74,11 +75,13 @@ async function main() {
   // CODELAB part 2: Create the delegate button here.
 
   async function run() {
-    stats.begin();
-    // CODELAB part 1: Capture and preprocess frames here.
-    // CODELAB part 2: Check whether to use the delegate here.
-    // CODELAB part 1: Run the model and display the results here.
-    stats.end();
+    // CODELAB part 1: Capture webcam frames here.
+    tf.tidy(() => {
+      // CODELAB part 1: Preprocess webcam frames here.
+      // CODELAB part 2: Check whether to use the delegate here.
+      // CODELAB part 1: Run the model and display the results here.
+    });
+    // CODELAB part 1: Dispose webcam frames here.
     requestAnimationFrame(run);
   }
 
