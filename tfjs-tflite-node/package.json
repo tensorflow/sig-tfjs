@@ -11,7 +11,6 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "node-gyp rebuild && tsc",
-    "build-deps": "cd ../link-package && yarn build",
     "test-dev": "jasmine --config=jasmine.json",
     "test": "yarn build && yarn test-dev",
     "lint": "tslint -p . -t verbose"
@@ -22,8 +21,8 @@
     "node-fetch": "2"
   },
   "devDependencies": {
-    "@tensorflow/tfjs-backend-cpu": "^3.14.0",
-    "@tensorflow/tfjs-core": "^3.14.0",
+    "@tensorflow/tfjs-backend-cpu": "^3.15.0",
+    "@tensorflow/tfjs-core": "^3.15.0",
     "@tensorflow/tfjs-tflite": "^0.0.1-alpha.8",
     "@types/jasmine": "^4.0.0",
     "@types/node": "^17.0.21",

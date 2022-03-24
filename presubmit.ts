@@ -43,29 +43,35 @@ dirs.forEach(dir => {
   shell.cd(dir);
 
   if (!fs.existsSync('./package.json')) {
-    shell.cd('../');
+    shell.cd(__dirname);
     return;
   }
 
   const packageJSON: {'scripts': {[key: string]: string}} =
       JSON.parse(fs.readFileSync('./package.json', {encoding: 'utf-8'}));
+  console.log(`~~~~~~~~~~~~ Running yarn in ${dir} ~~~~~~~~~~~~`);
+  shell.exec('yarn');
+
+  if (packageJSON['scripts']['build-deps'] != null) {
+    console.log(`~~~~~~~~~~~~ Building deps for ${dir} ~~~~~~~~~~~~`);
+    shell.exec('yarn build-deps');
+    console.log('\n');
+  }
+
   if (packageJSON['scripts']['test-ci'] != null) {
     console.log(`~~~~~~~~~~~~ Testing ${dir} ~~~~~~~~~~~~`);
-    shell.exec('yarn');
     shell.exec('yarn test-ci');
     console.log('\n');
   } else if (packageJSON['scripts']['test'] != null) {
     console.log(`~~~~~~~~~~~~ Testing ${dir} ~~~~~~~~~~~~`);
-    shell.exec('yarn');
     shell.exec('yarn test');
     console.log('\n');
   }
 
   if (packageJSON['scripts']['lint'] != null) {
     console.log(`~~~~~~~~~~~~ Linting ${dir} ~~~~~~~~~~~~`);
-    shell.exec('yarn');
     shell.exec('yarn lint');
     console.log('\n');
   }
-  shell.cd('../');
+  shell.cd(__dirname);
 });
