@@ -19,6 +19,7 @@
 const {loadTFLiteModel} = require('tfjs-tflite-node');
 const tf = require('@tensorflow/tfjs');
 // CODELAB part 2: Import the delegate here.
+const {CoralDelegate} = require('coral-tflite-delegate');
 const fs = require('fs');
 const Stats = require('stats.js');
 
@@ -78,25 +79,47 @@ async function main() {
         .split('\n');
 
   // CODELAB part 2: Load the delegate model here.
+  const coralModelPath = './coral_model/model_edgetpu.tflite';
+  const options = {delegates: [new CoralDelegate()]};
+  const coralModel = await loadTFLiteModel(coralModelPath, options);
 
   // CODELAB part 1: Set up tf.data.webcam here.
   const tensorCam = await tf.data.webcam(webcam);
 
   // CODELAB part 2: Create the delegate button here.
+  let useCoralDelegate = false;
+  const toggleCoralButton = document.createElement('button');
+  function toggleCoral() {
+    useCoralDelegate = !useCoralDelegate;
+    toggleCoralButton.innerHTML = useCoralDelegate
+        ? 'Using Coral. Press to switch to CPU.'
+        : 'Using CPU. Press to switch to Coral.';
+  }
+  toggleCoralButton.addEventListener('click', toggleCoral);
+  toggleCoral();
+  document.body.appendChild(toggleCoralButton);
+
 
   async function run() {
     stats.begin();
     // CODELAB part 1: Capture and preprocess frames here.
     const image = await tensorCam.capture();
     const expanded = tf.expandDims(image, 0);
-    const divided = tf.div(expanded, tf.scalar(127));
-    const normalized = tf.sub(divided, tf.scalar(1));
 
     // CODELAB part 2: Check whether to use the delegate here.
     // CODELAB part 1: Run the model and display the results here.
-    let prediction = model.predict(normalized);
-    const percentage = tf.mul(prediction, tf.scalar(100));
-    showPrediction(percentage.dataSync(), labels);
+    if (useCoralDelegate) {
+      // CODELAB part 2: Run Coral prediction here.
+      const prediction = coralModel.predict(expanded);
+      const percentage = tf.div(tf.mul(prediction, tf.scalar(100)), tf.scalar(255));
+      showPrediction(percentage.dataSync(), labels);
+    } else {
+      const divided = tf.div(expanded, tf.scalar(127));
+      const normalized = tf.sub(divided, tf.scalar(1));
+      const prediction = model.predict(normalized);
+      const percentage = tf.mul(prediction, tf.scalar(100));
+      showPrediction(percentage.dataSync(), labels);
+    }
 
     stats.end();
     requestAnimationFrame(run);

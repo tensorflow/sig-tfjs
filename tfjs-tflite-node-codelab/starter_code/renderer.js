@@ -69,6 +69,7 @@ async function main() {
   }
 
   // CODELAB part 1: Load the model here.
+  // CODELAB part 2: Load the delegate model here.
   // CODELAB part 1: Set up tf.data.webcam here.
   // CODELAB part 2: Create the delegate button here.
 
