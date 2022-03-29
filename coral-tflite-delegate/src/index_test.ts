@@ -23,6 +23,10 @@ describe('coral delegate', () => {
     expect(new CoralDelegate().name).toEqual('CoralDelegate');
   });
 
+  it('has a TfLite version string', () => {
+    expect(new CoralDelegate().tfliteVersion).toBeDefined();
+  });
+
   it('stores options', () => {
     const options: Array<[string, string]> = [['foo', 'bar'], ['123', '456']];
     const coralDelegate = new CoralDelegate(options);
