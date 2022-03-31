@@ -16,7 +16,7 @@
  */
 
 import '@tensorflow/tfjs-backend-cpu';
-import {WebNNDelegate} from './index';
+import {WebNNDelegate, WebNNDevice} from './index';
 import * as path from 'path';
 
 describe('webnn delegate', () => {
@@ -29,20 +29,21 @@ describe('webnn delegate', () => {
   });
 
   it('stores options', () => {
-    const options: Array<[string, string]> = [['foo', 'bar'], ['123', '456']];
-    const webnnDelegate = new WebNNDelegate(options);
-    expect(webnnDelegate.options).toEqual(options);
+    const webnnDelegate = new WebNNDelegate({
+      webnnDevice: WebNNDevice.GPU,
+    });
+    expect(webnnDelegate.options).toEqual([['webnn_device', WebNNDevice.GPU]]);
   });
 
   it('allows manually setting lib path', () => {
     const libPath = 'some lib path';
-    const webnnDelegate = new WebNNDelegate([], libPath);
+    const webnnDelegate = new WebNNDelegate({}, libPath);
     expect(webnnDelegate.node.path).toEqual(libPath);
   });
 
   it('sets the lib path automatically based on platorm', () => {
-    const webnnLinux = new WebNNDelegate([], undefined, 'linux');
-    const webnnWindows = new WebNNDelegate([], undefined, 'win32');
+    const webnnLinux = new WebNNDelegate({}, undefined, 'linux');
+    const webnnWindows = new WebNNDelegate({}, undefined, 'win32');
 
     const pathPrefix = path.join(__dirname, '../cc_lib');
     expect(webnnLinux.node.path).toEqual(
