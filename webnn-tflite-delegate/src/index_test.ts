@@ -44,9 +44,10 @@ describe('webnn delegate', () => {
     const webnnLinux = new WebNNDelegate([], undefined, 'linux');
     const webnnWindows = new WebNNDelegate([], undefined, 'win32');
 
+    const pathPrefix = path.join(__dirname, '../cc_lib');
     expect(webnnLinux.node.path).toEqual(
-      path.join(__dirname, '../cc_lib/linux_x64/webnn_external_delegate_obj.so'));
+      path.join(pathPrefix, 'linux_x64/webnn_external_delegate_obj.so'));
     expect(webnnWindows.node.path).toEqual(
-      path.join(__dirname, '../cc_lib/win32_x64/webnn_external_delegate_obj.dll'));
+      path.join(pathPrefix, 'win32_x64/webnn_external_delegate_obj.dll'));
   });
 });
