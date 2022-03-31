@@ -33,7 +33,7 @@ const libNames = new Map<NodeJS.Platform, string>([
 
 export class CoralDelegate implements TFLiteDelegatePlugin {
   readonly name = 'CoralDelegate';
-  readonly tfliteVersion: '2.7';
+  readonly tfliteVersion = '2.7';
   readonly node: TFLiteDelegatePlugin['node'];
 
   constructor(readonly options: Array<[string, string]> = [],
