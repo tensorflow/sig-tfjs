@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@tensorflow/tfjs": "^3.15.0",
+    "coral-tflite-delegate": "link:../../coral-tflite-delegate",
+    "tfjs-tflite-node": "link:../../tfjs-tflite-node",
     "stats.js": "^0.17.0"
   }
 }

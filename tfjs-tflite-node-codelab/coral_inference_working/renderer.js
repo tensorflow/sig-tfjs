@@ -15,9 +15,11 @@
  * =============================================================================
  */
 
-// CODELAB part 1: Import tfjs-tflite-node.
+// CODELAB part 1: Import tfjs-tflite-node here.
+const {loadTFLiteModel} = require('tfjs-tflite-node');
 const tf = require('@tensorflow/tfjs');
 // CODELAB part 2: Import the delegate here.
+const {CoralDelegate} = require('coral-tflite-delegate');
 const fs = require('fs');
 const Stats = require('stats.js');
 
@@ -70,18 +72,61 @@ async function main() {
   }
 
   // CODELAB part 1: Load the model here.
+  const modelPath = './model/model_unquant.tflite';
+  const model = await loadTFLiteModel(modelPath);
+  const labelsPath = './coral_model/labels.txt';
+  const labels = fs.readFileSync('./model/labels.txt', 'utf8')
+        .split('\n');
+
   // CODELAB part 2: Load the delegate model here.
+  const coralModelPath = './coral_model/model_edgetpu.tflite';
+  const options = {delegates: [new CoralDelegate()]};
+  const coralModel = await loadTFLiteModel(coralModelPath, options);
+
   // CODELAB part 1: Set up tf.data.webcam here.
+  const tensorCam = await tf.data.webcam(webcam);
+
   // CODELAB part 2: Create the delegate button here.
+  let useCoralDelegate = false;
+  const toggleCoralButton = document.createElement('button');
+  function toggleCoral() {
+    useCoralDelegate = !useCoralDelegate;
+    toggleCoralButton.innerHTML = useCoralDelegate
+        ? 'Using Coral. Press to switch to CPU.'
+        : 'Using CPU. Press to switch to Coral.';
+  }
+  toggleCoralButton.addEventListener('click', toggleCoral);
+  toggleCoral();
+  document.body.appendChild(toggleCoralButton);
 
   async function run() {
     // CODELAB part 1: Capture webcam frames here.
+    const image = await tensorCam.capture();
     tf.tidy(() => {
       // CODELAB part 1: Preprocess webcam frames here.
+      const expanded = tf.expandDims(image, 0);
       // CODELAB part 2: Check whether to use the delegate here.
-      // CODELAB part 1: Run the model and display the results here.
+      if (useCoralDelegate) {
+        // CODELAB part 2: Run Coral prediction here.
+        stats.begin();
+        const prediction = coralModel.predict(expanded);
+        stats.end();
+        const percentage = tf.div(tf.mul(prediction, tf.scalar(100)), tf.scalar(255));
+        showPrediction(percentage.dataSync(), labels);
+      } else {
+        const divided = tf.div(expanded, tf.scalar(127));
+        const normalized = tf.sub(divided, tf.scalar(1));
+
+        // CODELAB part 1: Run the model and display the results here.
+        stats.begin();
+        const prediction = model.predict(normalized);
+        stats.end();
+        const percentage = tf.mul(prediction, tf.scalar(100));
+        showPrediction(percentage.dataSync(), labels);
+      }
     });
     // CODELAB part 1: Dispose webcam frames here.
+    image.dispose();
     requestAnimationFrame(run);
   }
 
