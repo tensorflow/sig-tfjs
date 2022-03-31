@@ -31,7 +31,7 @@ describe('coral delegate', () => {
 
   beforeEach(async () => {
     model = await loadTFLiteModel(modelPath, {
-      delegates: [new CoralDelegate([['device', 'usb']])],
+      delegates: [new CoralDelegate()],
     });
 
     // Load the input image of a parrot.
