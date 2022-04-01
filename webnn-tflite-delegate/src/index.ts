@@ -24,18 +24,33 @@ const libNames = new Map<NodeJS.Platform, string>([
   ['win32', path.join(__dirname, '../cc_lib/win32_x64/webnn_external_delegate_obj.dll')],
 ]);
 
+export enum WebNNDevice {
+  DEFAULT = '0',
+  GPU = '1',
+  CPU = '2',
+}
+
+export interface WebNNOptions {
+  webnnDevice?: WebNNDevice;
+}
+
 export class WebNNDelegate implements TFLiteDelegatePlugin {
   readonly name = 'WebNNDelegate';
   readonly tfliteVersion = '2.7';
   readonly node: TFLiteDelegatePlugin['node'];
+  readonly options: Array<[string, string]> = [];
 
-  constructor(readonly options: Array<[string, string]> = [],
+  constructor(options: WebNNOptions = {},
               libPath?: string, platform = os.platform()) {
     if (!libPath) {
       libPath = libNames.get(platform);
       if (!libPath) {
         throw new Error(`Unknown platform ${platform}`);
       }
+    }
+
+    if (options.webnnDevice !== undefined) {
+      this.options.push(['webnn_device', options.webnnDevice]);
     }
 
     this.node = {

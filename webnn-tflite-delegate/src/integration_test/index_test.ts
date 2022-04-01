@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {WebNNDelegate} from '../index';
+import {WebNNDelegate, WebNNDevice} from '../index';
 import {loadTFLiteModel} from 'tfjs-tflite-node';
 import type {TFLiteModel} from 'tfjs-tflite-node/dist/tflite_model';
 import * as fs from 'fs';
@@ -31,8 +31,7 @@ describe('webnn delegate', () => {
 
   beforeEach(async () => {
     model = await loadTFLiteModel(modelPath, {
-      // 'webnn_device' option: (0:default, 1:gpu, 2:cpu)
-      delegates: [new WebNNDelegate([['webnn_device', '2']])],
+      delegates: [new WebNNDelegate({webnnDevice: WebNNDevice.CPU})],
     });
 
     // Load the input image of a wine.
