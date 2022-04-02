@@ -19,7 +19,7 @@
 const {loadTFLiteModel} = require('tfjs-tflite-node');
 const tf = require('@tensorflow/tfjs');
 // CODELAB part 2: Import the delegate here.
-const {WebNNDelegate} = require('webnn-tflite-delegate');
+const {WebNNDelegate, WebNNDevice} = require('webnn-tflite-delegate');
 const fs = require('fs');
 const Stats = require('stats.js');
 
@@ -79,7 +79,7 @@ async function main() {
 
   // CODELAB part 2: Load the delegate model here.
   let webnnModel = await loadTFLiteModel(modelPath, {
-    delegates: [new WebNNDelegate([['webnn_device', '0']])],
+    delegates: [new WebNNDelegate({webnnDevice: WebNNDevice.DEFAULT})],
   });
 
   // CODELAB part 1: Set up tf.data.webcam here.
@@ -103,8 +103,20 @@ async function main() {
     selectElem.appendChild(optionElem);
   }
   selectElem.addEventListener('change', async () => {
+    let webnnDevice;
+    switch(selectElem.value) {
+      case '1':
+        webnnDevice = WebNNDevice.GPU;
+        break;
+      case '2':
+        webnnDevice = WebNNDevice.CPU;
+        break;
+      default:
+        webnnDevice = WebNNDevice.DEFAULT;
+        break;
+    }
     webnnModel = await loadTFLiteModel(modelPath, {
-      delegates: [new WebNNDelegate([['webnn_device', selectElem.value]])],
+      delegates: [new WebNNDelegate({webnnDevice})],
     });
   });
 
@@ -112,8 +124,8 @@ async function main() {
   function toggleWebNN() {
     useWebNNDelegate = !useWebNNDelegate;
     toggleWebNNButton.innerHTML = useWebNNDelegate
-        ? 'Using WebNN. Press to switch to CPU.'
-        : 'Using CPU. Press to switch to WebNN.';
+        ? 'Using WebNN. Press to switch to TFLite CPU.'
+        : 'Using TFLite CPU. Press to switch to WebNN.';
     divElem.hidden = useWebNNDelegate ? false : true;
   }
 
