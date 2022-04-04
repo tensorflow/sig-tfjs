@@ -16,8 +16,7 @@ Register the WebNN delegate while loading a TFLite model in `tfjs-tflite-node` b
 
 ```typescript
 const model = await loadTFLiteModel('./mobilenetv2.tflite', {
-  // 'webnn_device' option: (0:default, 1:gpu, 2:cpu)
-  delegates: [new WebNNDelegate([['webnn_device', '1']])],
+  delegates: [new WebNNDelegate({webnnDevice: WebNNDevice.CPU})],
 });
 
 ```
