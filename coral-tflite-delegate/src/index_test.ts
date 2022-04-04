@@ -23,22 +23,27 @@ describe('coral delegate', () => {
     expect(new CoralDelegate().name).toEqual('CoralDelegate');
   });
 
+  it('has a TfLite version string', () => {
+    expect(new CoralDelegate().tfliteVersion).toBeDefined();
+  });
+
   it('stores options', () => {
-    const options: Array<[string, string]> = [['foo', 'bar'], ['123', '456']];
-    const coralDelegate = new CoralDelegate(options);
-    expect(coralDelegate.options).toEqual(options);
+    const coralDelegate = new CoralDelegate({
+      device: 'usb:123',
+    });
+    expect(coralDelegate.options).toEqual([['device', 'usb:123']]);
   });
 
   it('allows manually setting lib path', () => {
     const libPath = 'some lib path';
-    const coralDelegate = new CoralDelegate([], libPath);
+    const coralDelegate = new CoralDelegate({}, libPath);
     expect(coralDelegate.node.path).toEqual(libPath);
   });
 
   it('sets the lib path automatically based on platorm', () => {
-    const coralLinux = new CoralDelegate([], undefined, 'linux');
-    const coralMac = new CoralDelegate([], undefined, 'darwin');
-    const coralWindows = new CoralDelegate([], undefined, 'win32');
+    const coralLinux = new CoralDelegate({}, undefined, 'linux');
+    const coralMac = new CoralDelegate({}, undefined, 'darwin');
+    const coralWindows = new CoralDelegate({}, undefined, 'win32');
 
     expect(coralLinux.node.path).toEqual('libedgetpu.so.1');
     expect(coralMac.node.path).toEqual('libedgetpu.1.dylib');

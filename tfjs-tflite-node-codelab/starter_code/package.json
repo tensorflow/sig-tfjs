@@ -12,6 +12,7 @@
     "electron": "^17.1.2"
   },
   "dependencies": {
+    "@tensorflow/tfjs": "^3.15.0",
     "stats.js": "^0.17.0"
   }
 }
