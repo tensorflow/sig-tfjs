@@ -51,7 +51,7 @@ std::string decodeStatus(TfLiteStatus status) {
 
 void throwIfError(Napi::Env &env, std::string message, TfLiteStatus status) {
   if (status != kTfLiteOk) {
-    Napi::Error::New(env, message + ": " + decodeStatus(status)).ThrowAsJavaScriptException();
+    throw Napi::Error::New(env, message + ": " + decodeStatus(status));
   }
 }
 
@@ -141,8 +141,7 @@ class TensorInfo : public Napi::ObjectWrap<TensorInfo> {
       typedArray = Napi::BigInt64Array::New(env, getLength(), buffer, 0);
       break;
     case kTfLiteString:
-      Napi::Error::New(env, "'kTfLiteString' is not yet supported")
-          .ThrowAsJavaScriptException();
+      throw Napi::Error::New(env, "'kTfLiteString' is not yet supported");
       break;
     case kTfLiteBool:
       typedArray = Napi::Uint8Array::New(env, getLength(), buffer, 0);
@@ -151,34 +150,28 @@ class TensorInfo : public Napi::ObjectWrap<TensorInfo> {
       typedArray = Napi::Int16Array::New(env, getLength(), buffer, 0);
       break;
     case kTfLiteComplex64:
-      Napi::Error::New(env, "'kTfLiteComplex64' is not yet supported")
-          .ThrowAsJavaScriptException();
+      throw Napi::Error::New(env, "'kTfLiteComplex64' is not yet supported");
       break;
     case kTfLiteInt8:
       typedArray = Napi::Int8Array::New(env, getLength(), buffer, 0);
       break;
     case kTfLiteFloat16:
-      Napi::Error::New(env, "'kTfLiteFloat16' is not yet supported")
-          .ThrowAsJavaScriptException();
-      break;
+      throw Napi::Error::New(env, "'kTfLiteFloat16' is not yet supported");
       break;
     case kTfLiteFloat64:
       typedArray = Napi::Float64Array::New(env, getLength(), buffer, 0);
       break;
     case kTfLiteComplex128:
-      Napi::Error::New(env, "'kTfLiteComplex128' is not yet supported")
-          .ThrowAsJavaScriptException();
+      throw Napi::Error::New(env, "'kTfLiteComplex128' is not yet supported");
       break;
     case kTfLiteUInt64:
       typedArray = Napi::BigUint64Array::New(env, getLength(), buffer, 0);
       break;
     case kTfLiteResource:
-      Napi::Error::New(env, "'kTfLiteResource' is not yet supported")
-          .ThrowAsJavaScriptException();
+      throw Napi::Error::New(env, "'kTfLiteResource' is not yet supported");
       break;
     case kTfLiteVariant:
-      Napi::Error::New(env, "'kTfLiteVariant' is not yet supported")
-          .ThrowAsJavaScriptException();
+      throw Napi::Error::New(env, "'kTfLiteVariant' is not yet supported");
       break;
     case kTfLiteUInt32:
       typedArray = Napi::Uint32Array::New(env, getLength(), buffer, 0);
@@ -342,43 +335,7 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
     Napi::ArrayBuffer buffer = info[0].As<Napi::ArrayBuffer>();
     // Options are an object.
     Napi::Object options = info[1].As<Napi::Object>();
-    setup_options(env, options);
-
-    // TODO(mattsoulanille): Support multiple delegates at a time.
-    if (options.Has("delegate")) {
-      auto delegateConfig = options.Get("delegate").As<Napi::Object>();
-      delegate_path = delegateConfig.Get("path").As<Napi::String>().Utf8Value();
-      auto delegate_options_array = delegateConfig.Get("options").As<Napi::Array>();
-
-      // TODO(mattsoulanille): This approach of storing options in an options
-      // vector to keep them in scope works, but it makes it difficult to
-      // factor this out into another function. Try to factor it out and make
-      // it more simple.
-      std::vector<std::vector<std::string>> options;
-      TfLiteExternalDelegateOptions delegateOptions = TfLiteExternalDelegateOptionsDefault(delegate_path.c_str());
-      for (uint32_t i = 0; i < delegate_options_array.Length(); i++) {
-        auto pair = delegate_options_array.Get((uint32_t) i).As<Napi::Array>();
-        std::string key = pair.Get((uint32_t) 0).As<Napi::String>().Utf8Value();
-        std::string val = pair.Get((uint32_t) 1).As<Napi::String>().Utf8Value();
-
-        // Options must remain allocated until the interpreter is created, but
-        // options must be inserted as char*. Store options in a vector to keep
-        // them allocated.
-        std::vector<std::string> pairVec;
-        pairVec.push_back(key);
-        pairVec.push_back(val);
-        options.push_back(pairVec);
-
-        TfLiteStatus status = delegateOptions.insert(&delegateOptions,
-                                                     key.c_str(),
-                                                     val.c_str());
-        throwIfError(env, "Failed to set delegate options", status);
-      }
-
-      TfLiteDelegate* delegate = TfLiteExternalDelegateCreate(&delegateOptions);
-
-      TfLiteInterpreterOptionsAddDelegate(interpreterOptions, delegate);
-    }
+    apply_options(env, options);
 
     // Create a model from the model buffer.
     modelData = std::vector<uint8_t>(
@@ -386,17 +343,15 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
 
     model = TfLiteModelCreate(modelData.data(), modelData.size());
     if (!model) {
-      Napi::Error::New(env, "Failed to create tflite model").ThrowAsJavaScriptException();
       TfLiteInterpreterOptionsDelete(interpreterOptions);
-      return;
+      throw Napi::Error::New(env, "Failed to create tflite model");
     }
 
     interpreter = TfLiteInterpreterCreate(model, interpreterOptions);
     if (!interpreter) {
-      Napi::Error::New(env, "Failed to create tflite interpreter").ThrowAsJavaScriptException();
       TfLiteModelDelete(model);
       TfLiteInterpreterOptionsDelete(interpreterOptions);
-      return;
+      throw Napi::Error::New(env, "Failed to create tflite interpreter");
     }
 
     // Allocate tensors
@@ -456,8 +411,9 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
   Napi::Reference<Napi::Array> outputTensorRef;
   std::vector<uint8_t> modelData;
   std::string delegate_path;
+  std::vector<std::pair<std::string, std::string>> options_strings;
 
-  void setup_options(Napi::Env &env, Napi::Object &options) {
+  void apply_options(Napi::Env &env, Napi::Object &options) {
     // Set number of threads from options.
     int threads = 0;
     auto maybeThreads = options.Get("threads");
@@ -470,6 +426,76 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
     if (threads > 0) {
       TfLiteInterpreterOptionsSetNumThreads(interpreterOptions, threads);
     }
+
+    // TODO(mattsoulanille): Support multiple delegates at a time.
+    if (options.Has("delegate")) {
+      auto delegate_config = options.Get("delegate").As<Napi::Object>();
+      delegate_path = delegate_config.Get("path").As<Napi::String>().Utf8Value();
+      auto delegate_options_array = delegate_config.Get("options").As<Napi::Array>();
+
+      TfLiteExternalDelegateOptions delegate_options =
+          TfLiteExternalDelegateOptionsDefault(delegate_path.c_str());
+
+      // Options must remain allocated until the interpreter is created, but
+      // options must be inserted as char*. Store options in a vector to keep
+      // them allocated.
+      auto delegate_options_vec = parse_delegate_options(
+          env, delegate_options_array);
+      fill_delegate_options(env, delegate_options, delegate_options_vec);
+
+      TfLiteDelegate* delegate = TfLiteExternalDelegateCreate(&delegate_options);
+
+      TfLiteInterpreterOptionsAddDelegate(interpreterOptions, delegate);
+    }
+  }
+
+  void fill_delegate_options(
+      Napi::Env &env,
+      TfLiteExternalDelegateOptions &delegate_options,
+      std::vector<std::pair<std::string, std::string>> &options) {
+    for (auto option : options) {
+      auto status = delegate_options.insert(&delegate_options,
+                                            option.first.c_str(),
+                                            option.second.c_str());
+      throwIfError(env, "Failed to set delegate options", status);
+    }
+  }
+
+  std::vector<std::pair<std::string, std::string>> parse_delegate_options(
+      Napi::Env &env, Napi::Array &options) {
+
+    std::vector<std::pair<std::string, std::string>> options_vec;
+    for (uint32_t i = 0; i < options.Length(); i++) {
+      Napi::Value option = options.Get(i);
+      if (!option.IsArray()) {
+        throw Napi::Error::New(env, "Expected option to be an array but got "
+                               + option.ToString().Utf8Value());
+      }
+      Napi::Array as_array = option.As<Napi::Array>();
+      options_vec.push_back(parse_delegate_option(env, as_array));
+    }
+    return options_vec;
+  }
+
+  std::pair<std::string, std::string> parse_delegate_option(
+      Napi::Env &env, Napi::Array &option) {
+
+    std::pair<std::string, std::string> pair;
+    auto first = option.Get((uint32_t) 0);
+    if (!first.IsString()) {
+      throw Napi::Error::New(env, "Expected option key to be a string but got "
+                       + option.ToString().Utf8Value());
+    }
+
+    auto second = option.Get((uint32_t) 1);
+    if (!first.IsString()) {
+      throw Napi::Error::New(env, "Expected option value to be a string but got "
+                       + option.ToString().Utf8Value());
+    }
+
+    pair.first = first.As<Napi::String>().Utf8Value();
+    pair.second = second.As<Napi::String>().Utf8Value();
+    return pair;
   }
 
   Napi::Value Infer(const Napi::CallbackInfo &info) {
