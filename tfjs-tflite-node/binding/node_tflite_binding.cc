@@ -356,10 +356,10 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
       // it more simple.
       std::vector<std::vector<std::string>> options;
       TfLiteExternalDelegateOptions delegateOptions = TfLiteExternalDelegateOptionsDefault(delegate_path.c_str());
-      for (uint i = 0; i < delegate_options_array.Length(); i++) {
-        auto pair = delegate_options_array.Get(i).As<Napi::Array>();
-        std::string key = pair.Get((uint) 0).As<Napi::String>().Utf8Value();
-        std::string val = pair.Get((uint) 1).As<Napi::String>().Utf8Value();
+      for (uint32_t i = 0; i < delegate_options_array.Length(); i++) {
+        auto pair = delegate_options_array.Get((uint32_t) i).As<Napi::Array>();
+        std::string key = pair.Get((uint32_t) 0).As<Napi::String>().Utf8Value();
+        std::string val = pair.Get((uint32_t) 1).As<Napi::String>().Utf8Value();
 
         // Options must remain allocated until the interpreter is created, but
         // options must be inserted as char*. Store options in a vector to keep

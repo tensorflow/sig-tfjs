@@ -76,7 +76,7 @@ async function main() {
   const model = await loadTFLiteModel(modelPath);
   const labelsPath = './coral_model/labels.txt';
   const labels = fs.readFileSync('./model/labels.txt', 'utf8')
-        .split('\n');
+        .split(/\r?\n/);
 
   // CODELAB part 2: Load the delegate model here.
   const coralModelPath = './coral_model/model_edgetpu.tflite';
