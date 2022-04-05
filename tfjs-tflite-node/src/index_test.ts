@@ -123,7 +123,7 @@ describe('model', () => {
     model = fs.readFileSync('./test_data/mobilenet_v2_1.0_224_inat_bird_quant.tflite').buffer;
     modelRunner = new TFLiteNodeModelRunner(model, { threads: 4 });
     parrot = getParrot();
-    labels = fs.readFileSync('./test_data/inat_bird_labels.txt', 'utf-8').split('\n');
+    labels = fs.readFileSync('./test_data/inat_bird_labels.txt', 'utf-8').split(/\r?\n/);
   });
 
   it('runs a model', () => {

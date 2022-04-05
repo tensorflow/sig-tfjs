@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-// CODELAB part 1: Import tfjs-tflite-node and @tensorflow/tfjs here.
+// CODELAB part 1: Import tfjs-tflite-node here.
 const {loadTFLiteModel} = require('tfjs-tflite-node');
 const tf = require('@tensorflow/tfjs');
 // CODELAB part 2: Import the delegate here.
@@ -75,7 +75,9 @@ async function main() {
   const model = await loadTFLiteModel(modelPath);
   const labelsPath = './coral_model/labels.txt';
   const labels = fs.readFileSync('./model/labels.txt', 'utf8')
-        .split('\n');
+        .split(/\r?\n/);
+
+  // CODELAB part 2: Load the delegate model here.
 
   // CODELAB part 1: Set up tf.data.webcam here.
   const tensorCam = await tf.data.webcam(webcam);
@@ -83,20 +85,24 @@ async function main() {
   // CODELAB part 2: Create the delegate button here.
 
   async function run() {
-    stats.begin();
-    // CODELAB part 1: Capture and preprocess frames here.
+    // CODELAB part 1: Capture webcam frames here.
     const image = await tensorCam.capture();
-    const expanded = tf.expandDims(image, 0);
-    const divided = tf.div(expanded, tf.scalar(127));
-    const normalized = tf.sub(divided, tf.scalar(1));
+    tf.tidy(() => {
+      // CODELAB part 1: Preprocess webcam frames here.
+      const expanded = tf.expandDims(image, 0);
+      const divided = tf.div(expanded, tf.scalar(127));
+      const normalized = tf.sub(divided, tf.scalar(1));
 
-    // CODELAB part 2: Check whether to use the delegate here.
-    // CODELAB part 1: Run the model and display the results here.
-    let prediction = model.predict(normalized);
-    const percentage = tf.mul(prediction, tf.scalar(100));
-    showPrediction(percentage.dataSync(), labels);
-
-    stats.end();
+      // CODELAB part 2: Check whether to use the delegate here.
+      // CODELAB part 1: Run the model and display the results here.
+      stats.begin();
+      let prediction = model.predict(normalized);
+      stats.end();
+      const percentage = tf.mul(prediction, tf.scalar(100));
+      showPrediction(percentage.dataSync(), labels);
+    });
+    // CODELAB part 1: Dispose webcam frames here.
+    image.dispose();
     requestAnimationFrame(run);
   }
 

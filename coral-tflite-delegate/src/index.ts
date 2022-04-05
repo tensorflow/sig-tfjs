@@ -31,18 +31,32 @@ const libNames = new Map<NodeJS.Platform, string>([
   ['win32', 'edgetpu.dll'],
 ]);
 
+// Which Coral device to use. See edgetpu.py for more details.
+// https://github.com/google-coral/pycoral/blob/master/pycoral/utils/edgetpu.py#L66-L72
+export type CoralDevice = `:${number}` | 'usb' | `usb:${number}` | 'pci'
+  | `pci:${number}`;
+
+export interface CoralOptions {
+  device?: CoralDevice;
+}
+
 export class CoralDelegate implements TFLiteDelegatePlugin {
   readonly name = 'CoralDelegate';
-  readonly tfliteVersion: '2.7';
+  readonly tfliteVersion = '2.7';
   readonly node: TFLiteDelegatePlugin['node'];
+  readonly options: Array<[string, string]> = [];
 
-  constructor(readonly options: Array<[string, string]> = [],
+  constructor(options: CoralOptions = {},
               libPath?: string, platform = os.platform()) {
     if (!libPath) {
       libPath = libNames.get(platform);
       if (!libPath) {
         throw new Error(`Unknown platform ${platform}`);
       }
+    }
+
+    if (options.device) {
+      this.options.push(['device', options.device]);
     }
 
     this.node = {
