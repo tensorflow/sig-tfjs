@@ -358,31 +358,17 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
     throwIfError(env, "Failed to allocate tensors",
                 TfLiteInterpreterAllocateTensors(interpreter));
 
-    // Construct input tensor objects
-    int inputTensorCount = TfLiteInterpreterGetInputTensorCount(interpreter);
-    Napi::Array inputTensorArray = Napi::Array::New(info.Env(), inputTensorCount);
-    for (int id = 0; id < inputTensorCount; id++) {
-      const TfLiteTensor* tensor = TfLiteInterpreterGetInputTensor(interpreter, id);
-      auto wrappedTensorInfo = TensorInfo::constructor.New({});
-      auto tensorInfo = TensorInfo::Unwrap(wrappedTensorInfo);
-      tensorInfo->setTensor(env, tensor, id);
-      inputTensors.push_back(tensorInfo);
-      inputTensorArray[id] = wrappedTensorInfo;
-    }
-    inputTensorRef = Napi::Reference<Napi::Array>::New(inputTensorArray, 1);
+    // Get input tensors
+    auto inputs = make_tensors(env, interpreter, /* input? */ true);
+    // Start with a refcount of 1. Otherwise, it will get garbage collected,
+    // since we haven't passed it to JavaScript yet.
+    inputTensorRef = Napi::Reference<Napi::Array>::New(inputs.first, 1);
+    inputTensors = inputs.second;
 
-    // Construct output tensor objects
-    int outputTensorCount = TfLiteInterpreterGetOutputTensorCount(interpreter);
-    Napi::Array outputTensorArray = Napi::Array::New(info.Env(), outputTensorCount);
-    for (int id = 0; id < outputTensorCount; id++) {
-      const TfLiteTensor* tensor = TfLiteInterpreterGetOutputTensor(interpreter, id);
-      auto wrappedTensorInfo = TensorInfo::constructor.New({});
-      auto tensorInfo = TensorInfo::Unwrap(wrappedTensorInfo);
-      tensorInfo->setTensor(env, tensor, id);
-      outputTensors.push_back(tensorInfo);
-      outputTensorArray[id] = wrappedTensorInfo;
-    }
-    outputTensorRef = Napi::Reference<Napi::Array>::New(outputTensorArray, 1);
+    // Get output tensors
+    auto outputs = make_tensors(env, interpreter, /* input? */ false);
+    outputTensorRef = Napi::Reference<Napi::Array>::New(outputs.first, 1);
+    outputTensors = outputs.second;
   }
 
   Napi::Value GetInputs(const Napi::CallbackInfo& info) {
@@ -496,6 +482,37 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
     pair.first = first.As<Napi::String>().Utf8Value();
     pair.second = second.As<Napi::String>().Utf8Value();
     return pair;
+  }
+
+  std::pair<Napi::Array, std::vector<TensorInfo*>> make_tensors(
+      Napi::Env &env, TfLiteInterpreter* interpreter, bool get_inputs) {
+    // Functions to get data from TfLite.
+    int32_t(*get_count)(const TfLiteInterpreter*);
+    TfLiteTensor*(*get_tensor)(const TfLiteInterpreter*, int32_t);
+
+    if (get_inputs) {
+      get_count = &TfLiteInterpreterGetInputTensorCount;
+      get_tensor = &TfLiteInterpreterGetInputTensor;
+    } else {
+      get_count = &TfLiteInterpreterGetOutputTensorCount;
+      // Cast the function type because GetOutputTensor returns const tensors.
+      get_tensor = (TfLiteTensor*(*)(const TfLiteInterpreter*, int32_t))
+                   &TfLiteInterpreterGetOutputTensor;
+    }
+
+    int32_t tensor_count = get_count(interpreter);
+    Napi::Array tensor_array = Napi::Array::New(env, tensor_count);
+    std::vector<TensorInfo*> tensor_vector;
+    for (int id = 0; id < tensor_count; id++) {
+      const TfLiteTensor* tensor = get_tensor(interpreter, id);
+      auto wrapped_tensor_info = TensorInfo::constructor.New({});
+      auto tensor_info = TensorInfo::Unwrap(wrapped_tensor_info);
+      tensor_info->setTensor(env, tensor, id);
+      tensor_array[id] = wrapped_tensor_info;
+      tensor_vector.push_back(tensor_info);
+    }
+    return std::pair<Napi::Array, std::vector<TensorInfo*>>(tensor_array,
+                                                            tensor_vector);
   }
 
   Napi::Value Infer(const Napi::CallbackInfo &info) {
