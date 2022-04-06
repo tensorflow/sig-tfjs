@@ -7,7 +7,8 @@ This package takes dependencies on the WebNN API and implementation of [WebNN-na
 
 ## Installing
 
-Follow the [instructions here](https://docs.openvino.ai/2021.4/get_started.html) to install OpenVINO 2021.4 on Linux (x64) or Windows (x64).
+Follow the [instructions here](https://docs.openvino.ai/2021.4/get_started.html) to install OpenVINO 2021.4 on [Linux (x64)](https://registrationcenter-download.intel.com/akdlm/irc_nas/18319/l_openvino_toolkit_p_2021.4.752.tgz) or [Windows (x64)](https://registrationcenter-download.intel.com/akdlm/irc_nas/18320/w_openvino_toolkit_p_2021.4.752.exe).
+
 
 After OpenVINO is installed, you can install the `webnn-tflite-delegate` package with `npm i --save webnn-tflite-delegate`.
 
@@ -22,5 +23,5 @@ const model = await loadTFLiteModel('./mobilenetv2.tflite', {
 ```
 Before running model with this package, set following environment variables:
 
-- On Linux, [set environment variables](https://docs.openvino.ai/2021.4/openvino_docs_install_guides_installing_openvino_linux.html#set-the-environment-variables) for OpenVINO.
-- On Windows, [set environment variables](https://docs.openvino.ai/2021.4/openvino_docs_install_guides_installing_openvino_windows.html#step-3-configure-the-environment) for OpenVINO and set path of dependent WebNN native dll libraries (current location is `./cc_lib/win32_x64/`) to PATH: `set PATH=%PATH%;<path_to_webnn_native_dll>`.
+- On Linux, run `./setupvars.sh` to set environment variables for OpenVINO.
+- On Windows, run `.\setupvars.bat` to set environment variables for OpenVINO and set the path of dependent WebNN native dll libraries (current location is `./cc_lib/win32_x64/`) to `PATH`.
