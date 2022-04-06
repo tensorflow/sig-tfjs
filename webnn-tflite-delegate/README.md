@@ -20,4 +20,7 @@ const model = await loadTFLiteModel('./mobilenetv2.tflite', {
 });
 
 ```
-Before running model with this package, set the environment variables for OpenVINO on [Linux](https://docs.openvino.ai/2021.4/openvino_docs_install_guides_installing_openvino_linux.html#set-the-environment-variables) or [Windows](https://docs.openvino.ai/2021.4/openvino_docs_install_guides_installing_openvino_windows.html#step-3-configure-the-environment).
+Before running model with this package, set following environment variables:
+
+- On Linux, [set environment variables](https://docs.openvino.ai/2021.4/openvino_docs_install_guides_installing_openvino_linux.html#set-the-environment-variables) for OpenVINO.
+- On Windows, [set environment variables](https://docs.openvino.ai/2021.4/openvino_docs_install_guides_installing_openvino_windows.html#step-3-configure-the-environment) for OpenVINO and set path of dependent WebNN native dll libraries (current location is `./cc_lib/win32_x64/`) to PATH: `set PATH=%PATH%;<path_to_webnn_native_dll>`.
