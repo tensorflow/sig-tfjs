@@ -17,11 +17,15 @@
 
 #include <cstdint>
 #include <napi.h>
+#include <cstdio>
 #include <sstream>
+#include <string>
 #include <type_traits>
 #include "tensorflow/lite/c/c_api.h"
 #include "tensorflow/lite/c/c_api_types.h"
 #include "tensorflow/lite/delegates/external/external_delegate.h"
+
+#define MAX_ERROR_LEN 1000
 
 namespace tfjs_tflite_node {
 
@@ -47,12 +51,6 @@ std::string decodeStatus(TfLiteStatus status) {
       return "Model contains ops that cannot be resolved at runtime";
   }
   return "Unknown status code";
-}
-
-void throwIfError(Napi::Env &env, std::string message, TfLiteStatus status) {
-  if (status != kTfLiteOk) {
-    throw Napi::Error::New(env, message + ": " + decodeStatus(status));
-  }
 }
 
 class TensorInfo : public Napi::ObjectWrap<TensorInfo> {
@@ -89,6 +87,12 @@ class TensorInfo : public Napi::ObjectWrap<TensorInfo> {
   void *localData = nullptr;
   int id = -1;
   Napi::Reference<Napi::TypedArray> dataArray;
+
+  void throwIfError(Napi::Env &env, std::string message, TfLiteStatus status) {
+    if (status != kTfLiteOk) {
+      throw Napi::Error::New(env, message + ": " + decodeStatus(status));
+    }
+  }
 
   /**
    * Copy the tensor's local data to the TFLite tensor.
@@ -330,13 +334,17 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
+    // Options are an object.
+    Napi::Object options = info[1].As<Napi::Object>();
+    interpreterOptions = TfLiteInterpreterOptionsCreate();
+    apply_options(env, options);
+
+    // Create a custom error reporter so JS errors can have meaningful messages.
+    TfLiteInterpreterOptionsSetErrorReporter(interpreterOptions, report_error, &error_stream);
+
     // TODO: Throw error on incorrect argument types.
     // Model is stored as a uint8 buffer.
     Napi::ArrayBuffer buffer = info[0].As<Napi::ArrayBuffer>();
-    // Options are an object.
-    Napi::Object options = info[1].As<Napi::Object>();
-    apply_options(env, options);
-
     // Create a model from the model buffer.
     modelData = std::vector<uint8_t>(
         (uint8_t*) buffer.Data(), (uint8_t*) buffer.Data() + buffer.ByteLength());
@@ -344,18 +352,20 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
     model = TfLiteModelCreate(modelData.data(), modelData.size());
     if (!model) {
       TfLiteInterpreterOptionsDelete(interpreterOptions);
-      throw Napi::Error::New(env, "Failed to create tflite model");
+      throw Napi::Error::New(env, "Failed to create tflite model. "
+                             + get_and_clear_error_message());
     }
 
     interpreter = TfLiteInterpreterCreate(model, interpreterOptions);
     if (!interpreter) {
       TfLiteModelDelete(model);
       TfLiteInterpreterOptionsDelete(interpreterOptions);
-      throw Napi::Error::New(env, "Failed to create tflite interpreter");
+      throw Napi::Error::New(env, "Failed to create tflite interpreter. "
+                             + get_and_clear_error_message());
     }
 
     // Allocate tensors
-    throwIfError(env, "Failed to allocate tensors",
+    throw_if_tflite_error(env, "Failed to allocate tensors",
                 TfLiteInterpreterAllocateTensors(interpreter));
 
     // Get input tensors
@@ -398,6 +408,7 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
   std::vector<uint8_t> modelData;
   std::string delegate_path;
   std::vector<std::pair<std::string, std::string>> options_strings;
+  std::stringstream error_stream;
 
   void apply_options(Napi::Env &env, Napi::Object &options) {
     // Set number of threads from options.
@@ -407,8 +418,6 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
       threads = maybeThreads.ToNumber().Int32Value();
     }
 
-    // Create options for the interpreter.
-    interpreterOptions = TfLiteInterpreterOptionsCreate();
     if (threads > 0) {
       TfLiteInterpreterOptionsSetNumThreads(interpreterOptions, threads);
     }
@@ -443,7 +452,7 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
       auto status = delegate_options.insert(&delegate_options,
                                             option.first.c_str(),
                                             option.second.c_str());
-      throwIfError(env, "Failed to set delegate options", status);
+      throw_if_tflite_error(env, "Failed to set delegate options", status);
     }
   }
 
@@ -515,6 +524,39 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
                                                             tensor_vector);
   }
 
+  /**
+   * This function is passed to tflite as an error reporter. It appends
+   * errors to the stringstream passed to it as error_stream.
+   */
+  static void report_error(void* error_stream, const char* format, va_list args) {
+    std::stringstream *err = (std::stringstream*) error_stream;
+    char err_message_buffer[MAX_ERROR_LEN];
+    std::vsnprintf(err_message_buffer, MAX_ERROR_LEN, format, args);
+    *err << err_message_buffer << std::endl;
+  }
+
+  /**
+   * Get the error messages reported by 'report_error' and clear the error
+   * stream.
+   */
+  std::string get_and_clear_error_message() {
+    std::string error_message = error_stream.str();
+    error_stream.str(std::string());
+    return error_message;
+  }
+
+  /**
+   * Throw an error if the TfLiteStatus is not okay. Includes the 'message' in
+   * error and appends a description of the TfLite error along with any error
+   * messages reported by TfLite.
+   */
+  void throw_if_tflite_error(Napi::Env &env, std::string message, TfLiteStatus status) {
+    if (status != kTfLiteOk) {
+      throw Napi::Error::New(env, message + ": " + decodeStatus(status) + ". "
+                             + get_and_clear_error_message());
+    }
+  }
+
   Napi::Value Infer(const Napi::CallbackInfo &info) {
     Napi::Env env = info.Env();
 
@@ -522,7 +564,8 @@ class Interpreter : public Napi::ObjectWrap<Interpreter> {
       tensor->copyToTflite(env);
     }
 
-    throwIfError(env, "Failed to invoke interpreter", TfLiteInterpreterInvoke(interpreter));
+    throw_if_tflite_error(env, "Failed to invoke interpreter",
+                          TfLiteInterpreterInvoke(interpreter));
 
     for (TensorInfo* tensor : outputTensors) {
       tensor->copyFromTflite(env);
