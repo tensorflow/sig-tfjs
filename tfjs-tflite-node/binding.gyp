@@ -35,9 +35,15 @@
         '<(tflite_include_dir)',
         "<!@(node -p \"require('node-addon-api').include\")"
     ],
+    'defines': [ 'NAPI_CPP_EXCEPTIONS' ],
+    'cflags!': [ '-fno-exceptions' ], # Remove flags that disable exceptions.
+    'cflags_cc!': [ '-fno-exceptions' ],
     'conditions' : [
       [
         'OS=="linux" and ARCH=="x64"', {
+          'cflags+': [ '-std=c++11', '-fexceptions' ],
+          'cflags_c+': [ '-std=c++11', '-fexceptions' ],
+          'cflags_cc+': [ '-std=c++11', '-fexceptions' ],
           'libraries' : [
             '<(module_root_dir)/cc_deps/linux_amd64/libtensorflowlite_c.so',
             '<(module_root_dir)/cc_deps/linux_amd64/libexternal_delegate_obj.so',
@@ -47,6 +53,9 @@
       ],
       [
         'OS=="linux" and ARCH=="arm64"', {
+          'cflags+': [ '-std=c++11', '-fexceptions' ],
+          'cflags_c+': [ '-std=c++11', '-fexceptions' ],
+          'cflags_cc+': [ '-std=c++11', '-fexceptions' ],
           'libraries' : [
             '<(module_root_dir)/cc_deps/linux_arm64/libtensorflowlite_c.so',
             '<(module_root_dir)/cc_deps/linux_arm64/libexternal_delegate_obj.so',
@@ -56,6 +65,15 @@
       ],
       [
         'OS=="mac" and ARCH=="arm64"', {
+          "cflags+": [ "-stdlib=libc++" ],
+          "xcode_settings": {
+            "OTHER_CPLUSPLUSFLAGS" : [ "-std=c++11", "-stdlib=libc++", "-pthread" ],
+            "OTHER_LDFLAGS": [ "-stdlib=libc++" ],
+            "GCC_ENABLE_CPP_EXCEPTIONS": "YES",
+            "MACOSX_DEPLOYMENT_TARGET": "10.7",
+            "CLANG_CXX_LANGUAGE_STANDARD":"c++11",
+            "CLANG_CXX_LIBRARY": "libc++"
+          },
           'libraries' : [
             '<(module_root_dir)/cc_deps/darwin_arm64/libtensorflowlite_c.dylib',
             '<(module_root_dir)/cc_deps/darwin_arm64/libexternal_delegate_obj.dylib',
@@ -86,7 +104,7 @@
       ],
       [
         'OS=="win" and ARCH=="x64"', {
-          'defines': ['COMPILER_MSVC'],
+          'defines': ['COMPILER_MSVC', 'WIN'],
           'libraries': [
             '<(module_root_dir)/cc_deps/windows_amd64/tensorflowlite_c.dll.if.lib',
             '<(module_root_dir)/cc_deps/windows_amd64/external_delegate_obj.dll.if.lib',
@@ -102,6 +120,23 @@
           'variables': {
             'tflite-library-target': 'windows'
           },
+          "msvs_settings": {
+            "defines": [
+              "_HAS_EXCEPTIONS=1"
+            ],
+            "VCCLCompilerTool": {
+              "ExceptionHandling": "2",
+              "DisableSpecificWarnings": [
+                "4244"
+              ],
+            },
+            "VCLinkerTool": {
+              "LinkTimeCodeGeneration": 1,
+              "OptimizeReferences": 2,
+              "EnableCOMDATFolding": 2,
+              "LinkIncremental": 1,
+            }
+          },
           'msvs_disabled_warnings': [
             # Warning	C4190: 'TF_NewWhile' has C-linkage specified, but returns
             # UDT 'TF_WhileParams' which is incompatible with C.
@@ -110,9 +145,6 @@
           ]
         },
       ],
-    ],
-    "defines" : [
-        "NAPI_DISABLE_CPP_EXCEPTIONS"
     ]
   }
   ],
