@@ -87,9 +87,22 @@ async function main() {
 
   // CODELAB part 2: Create the delegate button here.
   let useWebNNDelegate = false;
+  const divElem = document.createElement('div');
+  const toggleWebNNButton = document.createElement('button');
+  function toggleWebNN() {
+    useWebNNDelegate = !useWebNNDelegate;
+    toggleWebNNButton.innerHTML = useWebNNDelegate
+        ? 'Using WebNN. Press to switch to TFLite CPU.'
+        : 'Using TFLite CPU. Press to switch to WebNN.';
+    divElem.hidden = useWebNNDelegate ? false : true;
+  }
+
+  toggleWebNNButton.addEventListener('click', toggleWebNN);
+  toggleWebNN();
+  document.body.appendChild(toggleWebNNButton);
+  document.body.appendChild(divElem);
 
   // Create elements for WebNN device selection
-  const divElem = document.createElement('div');
   divElem.innerHTML = '<br/>WebNN Device: ';
   const selectElem = document.createElement('select');
   divElem.appendChild(selectElem);
@@ -120,26 +133,15 @@ async function main() {
     });
   });
 
-  const toggleWebNNButton = document.createElement('button');
-  function toggleWebNN() {
-    useWebNNDelegate = !useWebNNDelegate;
-    toggleWebNNButton.innerHTML = useWebNNDelegate
-        ? 'Using WebNN. Press to switch to TFLite CPU.'
-        : 'Using TFLite CPU. Press to switch to WebNN.';
-    divElem.hidden = useWebNNDelegate ? false : true;
-  }
-
-  toggleWebNNButton.addEventListener('click', toggleWebNN);
-  toggleWebNN();
-  document.body.appendChild(toggleWebNNButton);
-  document.body.appendChild(divElem);
-
   async function run() {
     // CODELAB part 1: Capture webcam frames here.
     const image = await tensorCam.capture();
     tf.tidy(() => {
       // CODELAB part 1: Preprocess webcam frames here.
       const expanded = tf.expandDims(image, 0);
+      const divided = tf.div(expanded, tf.scalar(127));
+      const normalized = tf.sub(divided, tf.scalar(1));
+
       // CODELAB part 2: Check whether to use the delegate here.
       let model;
       if (useWebNNDelegate) {
@@ -147,8 +149,6 @@ async function main() {
       } else {
         model = cpuModel;
       }
-      const divided = tf.div(expanded, tf.scalar(127));
-      const normalized = tf.sub(divided, tf.scalar(1));
 
       // CODELAB part 1: Run the model and display the results here.
       stats.begin();
