@@ -16,6 +16,7 @@
     "lint": "tslint -p . -t verbose"
   },
   "dependencies": {
+    "@tensorflow/tfjs-tflite": "^0.0.1-alpha.8",
     "bindings": "^1.5.0",
     "node-addon-api": "^4.3.0",
     "node-fetch": "2"
@@ -23,7 +24,6 @@
   "devDependencies": {
     "@tensorflow/tfjs-backend-cpu": "^3.15.0",
     "@tensorflow/tfjs-core": "^3.15.0",
-    "@tensorflow/tfjs-tflite": "^0.0.1-alpha.8",
     "@types/jasmine": "^4.0.0",
     "@types/node": "^17.0.21",
     "@types/node-fetch": "2.x",
