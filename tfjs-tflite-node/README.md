@@ -1,7 +1,7 @@
 # TFLite support for Tensorflow.js Node
 WORK IN PROGRESS
 
-This package enables users to run arbitrary TFLite models in Node.js. To load packages on the web, use [@tensorflow/tfjs-tflite-node](https://github.com/tensorflow/tfjs/tree/master/tfjs-tflite). Users can load a TFLite model from a URL, use TFJS tensors to set the model's input data, run inference, and get the output back in TFJS tensors. Under the hood, the TFLite C++ runtime is packaged into a library and made available via node-api bindings. 
+This package enables users to run arbitrary TFLite models in Node.js. To load packages on the web, use [@tensorflow/tfjs-tflite](https://github.com/tensorflow/tfjs/tree/master/tfjs-tflite). Users can load a TFLite model from a URL, use TFJS tensors to set the model's input data, run inference, and get the output back in TFJS tensors. Under the hood, the TFLite C++ runtime is packaged into a library and made available via node-api bindings. 
 
 # Usage
 ## Import the packages
