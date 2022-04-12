@@ -15,6 +15,6 @@
     "@tensorflow/tfjs": "^3.15.0",
     "stats.js": "^0.17.0",
     "tfjs-tflite-node": "link:../../tfjs-tflite-node",
-    "webnn-tflite-delegate": "link:../../webnn-tflite-delegate"
+    "webnn-tflite-delegate": "^0.0.1"
   }
 }
