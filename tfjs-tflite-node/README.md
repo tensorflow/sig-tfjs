@@ -5,7 +5,7 @@ This package enables users to run arbitrary TFLite models in Node.js. To load pa
 
 # Usage
 ## Import the packages
-To use this package, you will need a TFJS backend installed. We recommend the [CPU backend](https://github.com/tensorflow/tfjs/tree/master/tfjs-backend-cpu), unless you need to do a lot of preprocessing, in which case you might use the [Node.js backend](https://github.com/tensorflow/tfjs/tree/master/tfjs-node) or [webgl backend](https://github.com/tensorflow/tfjs/tree/master/tfjs-backend-webgl).
+To use this package, you will need a TFJS backend installed (in order to pass tensors to and from the library). We recommend the [CPU backend](https://github.com/tensorflow/tfjs/tree/master/tfjs-backend-cpu), unless you need to do a lot of preprocessing, in which case you may want to use the [Node.js backend](https://github.com/tensorflow/tfjs/tree/master/tfjs-node).
 
 ```
 // Adds the CPU backend.
