@@ -44,6 +44,11 @@
     node-fetch "~2.6.1"
     seedrandom "2.4.3"
 
+"@tensorflow/tfjs-tflite@^0.0.1-alpha.8":
+  version "0.0.1-alpha.8"
+  resolved "https://registry.yarnpkg.com/@tensorflow/tfjs-tflite/-/tfjs-tflite-0.0.1-alpha.8.tgz#9fb5907097e090119202c99cf5fc396789bc25d7"
+  integrity sha512-tRVQlZNYriZLQ/+05E7b4CMk478U8lgCVPn5hT95PXd8SEUIKGjEB85Vts+S38H1YrQsOEhV3ngJPDy3gtQhsg==
+
 "@types/jasmine@^4.0.0":
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/@types/jasmine/-/jasmine-4.0.1.tgz#be74714a651bc76e11fbc66c55dcfacae872361f"
@@ -273,7 +278,7 @@ mkdirp@^0.5.3:
   dependencies:
     minimist "^1.2.6"
 
-node-addon-api@^4.2.0:
+node-addon-api@^4.3.0:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-4.3.0.tgz#52a1a0b475193e0928e98e0426a0d1254782b77f"
   integrity sha512-73sE9+3UaLYYFmDsFZnqCInzPyh3MqIwZO9cw58yIqAZhONrrabrYyYe3TuIqtIiOuTXVhsGau8hcrhhwSsDIQ==
@@ -338,9 +343,15 @@ supports-preserve-symlinks-flag@^1.0.0:
   resolved "https://registry.yarnpkg.com/supports-preserve-symlinks-flag/-/supports-preserve-symlinks-flag-1.0.0.tgz#6eda4bd344a3c94aea376d4cc31bc77311039e09"
   integrity sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==
 
-"tfjs-tflite-node@link:../tfjs-tflite-node":
-  version "0.0.0"
-  uid ""
+tfjs-tflite-node@^0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/tfjs-tflite-node/-/tfjs-tflite-node-0.0.2.tgz#35cac2f7ec1d355c111f1c751324845d71d5c299"
+  integrity sha512-Zed9biOz9lkWsekvPwdEmxXnsjXJnZO8iOV0s2Y20QU15cwiPedzFEBYiGbK7smYpkJpQNNY9SukoKmUi9bk9w==
+  dependencies:
+    "@tensorflow/tfjs-tflite" "^0.0.1-alpha.8"
+    bindings "^1.5.0"
+    node-addon-api "^4.3.0"
+    node-fetch "2"
 
 tr46@~0.0.3:
   version "0.0.3"

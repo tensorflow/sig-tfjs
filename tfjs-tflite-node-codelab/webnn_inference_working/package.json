@@ -14,7 +14,7 @@
   "dependencies": {
     "@tensorflow/tfjs": "^3.15.0",
     "stats.js": "^0.17.0",
-    "tfjs-tflite-node": "link:../../tfjs-tflite-node",
+    "tfjs-tflite-node": "^0.0.2",
     "webnn-tflite-delegate": "^0.0.1"
   }
 }
