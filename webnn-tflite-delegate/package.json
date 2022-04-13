@@ -1,12 +1,16 @@
 {
-  "name": "@tensorflow/tflite-webnn-delegate",
-  "version": "0.0.1-alpha.1",
+  "name": "webnn-tflite-delegate",
+  "version": "0.0.1",
   "description": "A tflite delegate based on Web Neural Network API (WebNN API).",
   "main": "dist/index.js",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tensorflow/sig-tfjs/tree/main/webnn-tflite-delegate"
+  },
+  "homepage": "https://github.com/tensorflow/sig-tfjs/blob/main/webnn-tflite-delegate/README.md",
   "scripts": {
     "build": "tsc",
-    "build-deps": "cd ../tfjs-tflite-node && yarn && yarn build",
     "test-dev": "jasmine --config=jasmine.json",
     "test": "yarn build && yarn test-dev",
     "test-integration-dev": "jasmine --config=jasmine-integration.json",
@@ -16,7 +20,7 @@
   "devDependencies": {
     "@tensorflow/tfjs-backend-cpu": "^3.15.0",
     "@tensorflow/tfjs-core": "^3.15.0",
-    "tfjs-tflite-node": "link:../tfjs-tflite-node",
+    "tfjs-tflite-node": "^0.0.2",
     "@types/jasmine": "^4.0.0",
     "@types/node": "^17.0.21",
     "jasmine": "^4.0.2",
