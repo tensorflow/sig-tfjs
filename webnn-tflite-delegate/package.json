@@ -1,6 +1,6 @@
 {
   "name": "webnn-tflite-delegate",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "A tflite delegate based on Web Neural Network API (WebNN API).",
   "main": "dist/index.js",
   "license": "Apache-2.0",
