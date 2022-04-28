@@ -41,5 +41,5 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 
 
-[codelab]: TODO
-[git-issue]: TODO
+[codelab]: https://codelabs.developers.google.com/tensorflowjs-coral-tflite-node#0
+[git-issue]: https://github.com/tensorflow/sig-tfjs/issues/new
