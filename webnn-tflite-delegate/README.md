@@ -1,5 +1,5 @@
 # WebNN Delegate for tfjs-tflite-node
-The `webnn-tflite-delegate` package adds support for [Web Neural Network API](https://www.w3.org/TR/webnn/) (WebNN API) to tfjs-tflite-node.
+The `webnn-tflite-delegate` package adds support for [Web Neural Network API](https://www.w3.org/TR/webnn/) (WebNN API) to [tfjs-tflite-node](https://www.npmjs.com/package/tfjs-tflite-node).
 
 ## Dependencies
 
