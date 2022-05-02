@@ -18,7 +18,7 @@ In this codelab, you'll build an Electron app that classifies images. Your app w
 
 ## Getting started
 
-To get started, check out the [codelab instruction][codelab]
+To get started, check out the [codelab instructions][codelab].
 
 
 ## Feedback
@@ -45,5 +45,5 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 
 
-[codelab]: TODO
-[git-issue]: TODO
+[codelab]: https://codelabs.developers.google.com/tensorflowjs-coral-tflite-node
+[git-issue]: https://github.com/tensorflow/sig-tfjs/issues/new
