@@ -44,6 +44,11 @@
     node-fetch "~2.6.1"
     seedrandom "2.4.3"
 
+"@tensorflow/tfjs-tflite@^0.0.1-alpha.8":
+  version "0.0.1-alpha.8"
+  resolved "https://registry.yarnpkg.com/@tensorflow/tfjs-tflite/-/tfjs-tflite-0.0.1-alpha.8.tgz#9fb5907097e090119202c99cf5fc396789bc25d7"
+  integrity sha512-tRVQlZNYriZLQ/+05E7b4CMk478U8lgCVPn5hT95PXd8SEUIKGjEB85Vts+S38H1YrQsOEhV3ngJPDy3gtQhsg==
+
 "@types/jasmine@^4.0.0":
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/@types/jasmine/-/jasmine-4.0.0.tgz#48bfd99cbe16dcdcde0b7d3bfa62319504d141f9"
@@ -232,9 +237,9 @@ jasmine@^4.0.2:
     jasmine-core "^4.0.0"
 
 jpeg-js@^0.4.3:
-  version "0.4.3"
-  resolved "https://registry.yarnpkg.com/jpeg-js/-/jpeg-js-0.4.3.tgz#6158e09f1983ad773813704be80680550eff977b"
-  integrity sha512-ru1HWKek8octvUHFHvE5ZzQ1yAsJmIvRdGWvSoKV52XKyuyYA437QWDttXT8eZXDSbuMpHlLzPDZUPd6idIz+Q==
+  version "0.4.4"
+  resolved "https://registry.yarnpkg.com/jpeg-js/-/jpeg-js-0.4.4.tgz#a9f1c6f1f9f0fa80cdb3484ed9635054d28936aa"
+  integrity sha512-WZzeDOEtTOBK4Mdsar0IqEU5sMr3vSV2RqkAIzUEV2BHnUfKGyswWFPFwK5EeDo93K3FohSHbLAjj0s1Wzd+dg==
 
 js-tokens@^4.0.0:
   version "4.0.0"
@@ -273,7 +278,7 @@ mkdirp@^0.5.3:
   dependencies:
     minimist "^1.2.6"
 
-node-addon-api@^4.2.0:
+node-addon-api@^4.3.0:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-4.3.0.tgz#52a1a0b475193e0928e98e0426a0d1254782b77f"
   integrity sha512-73sE9+3UaLYYFmDsFZnqCInzPyh3MqIwZO9cw58yIqAZhONrrabrYyYe3TuIqtIiOuTXVhsGau8hcrhhwSsDIQ==
@@ -339,8 +344,12 @@ supports-preserve-symlinks-flag@^1.0.0:
   integrity sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==
 
 "tfjs-tflite-node@link:../tfjs-tflite-node":
-  version "0.0.0"
-  uid ""
+  version "0.0.1-alpha.1"
+  dependencies:
+    "@tensorflow/tfjs-tflite" "^0.0.1-alpha.8"
+    bindings "^1.5.0"
+    node-addon-api "^4.3.0"
+    node-fetch "2"
 
 tr46@~0.0.3:
   version "0.0.3"
