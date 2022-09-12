@@ -78,3 +78,5 @@ yarn test-dev
 yarn build
 npm publish
 ```
+# Supported Platforms
+For a full list of supported platforms, see the [cc_deps](cc_deps/) directory.
