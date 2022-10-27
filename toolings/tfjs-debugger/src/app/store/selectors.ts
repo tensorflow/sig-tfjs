@@ -41,6 +41,17 @@ export const selectConfigValueFromUrl =
           return params[key];
         });
 
+/**
+ * Selector to select the value for the given url parameter key.
+ */
+export const selectValueFromUrl = (paramKey: UrlParamKey) =>
+    createSelector(selectQueryParams, (params) => {
+      if (!params) {
+        return undefined;
+      }
+      return params[paramKey];
+    });
+
 /** Selector to select the currently loaded TFJS releases. */
 export const selectTfjsReleases = createSelector(selectMainState, (state) => {
   return state.tfjsReleases;

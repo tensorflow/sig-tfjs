@@ -16,6 +16,7 @@
  */
 
 import {Configuration} from '../data_model/configuration';
+import {Input} from '../data_model/input';
 import {ErrorMessage, RunStatus} from '../data_model/misc';
 import {ModelTypeId} from '../data_model/model_type';
 import {RunResults} from '../data_model/run_results';
@@ -29,6 +30,7 @@ export interface Configs {
 /** The main app state. */
 export interface AppState {
   configs: Configs;
+  inputs: Input[];
   tfjsReleases: TfjsRelease[];
 
   /**
@@ -68,6 +70,7 @@ export const initialState: AppState = {
       modelType: ModelTypeId.SAME_AS_CONFIG1,
     }
   },
+  inputs: [],
   tfjsReleases: [],
   runResults: {},
 };

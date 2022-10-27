@@ -38,7 +38,7 @@ function layoutModelGraph(modelGraph: ModelGraph): ModelGraphLayout {
     //
     // See more options here:
     // https://github.com/dagrejs/dagre/wiki#configuring-the-layout
-    align: 'DR',
+    align: 'DL',
   });
   // We don't need to show edge labels.
   graph.setDefaultEdgeLabel(() => ({}));

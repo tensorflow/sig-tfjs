@@ -19,7 +19,7 @@ import {createReducer, on} from '@ngrx/store';
 
 import {RunStatus, RunTask, TaskStatus} from '../data_model/misc';
 
-import {clearErrorMessage, fetchTfjsModelJsonFail, fetchTfjsModelJsonSuccess, fetchTfjsReleasesFail, fetchTfjsReleasesSuccess, resetRunStatus, setErrorMessage, setModelType, setTfjsModelUrl, triggerRunCurrentConfigs, updateRunTaskStatus} from './actions';
+import {clearErrorMessage, fetchTfjsModelJsonFail, fetchTfjsModelJsonSuccess, fetchTfjsReleasesFail, fetchTfjsReleasesSuccess, resetRunStatus, setErrorMessage, setInputs, setModelType, setTfjsModelUrl, triggerRunCurrentConfigs, updateRunTaskStatus} from './actions';
 import {Configs, initialState} from './state';
 import {getRunTasksFromConfigs} from './utils';
 
@@ -79,6 +79,12 @@ export const mainReducer = createReducer(
          } else {
            return {...state, configs};
          }
+       }),
+
+    on(setInputs,
+       (state, {inputs}) => {
+         console.log(inputs);
+         return {...state, inputs};
        }),
 
     on(fetchTfjsReleasesSuccess,

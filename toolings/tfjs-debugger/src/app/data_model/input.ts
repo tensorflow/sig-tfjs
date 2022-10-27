@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2021 Google LLC. All Rights Reserved.
+ * Copyright 2022 Google LLC. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,26 +15,21 @@
  * =============================================================================
  */
 
-import {CommonModule} from '@angular/common';
-import {NgModule} from '@angular/core';
+/** Types of how input values are generated. */
+export enum InputValuesType {
+  RANDOM = 'random',
+  SAME_VALUE = 'same value',
+}
 
-import {ConfigSectionModule} from '../config_section/config_section.module';
-import {InputsSectionModule} from '../inputs_section/inputs_section.module';
+/** A single input. */
+export interface Input {
+  shape: number[];
+  inputValuesType: InputValuesType;
 
-import {ConfigsPanel} from './configs_panel.component';
+  // Used when type = random.
+  randomMin?: number;
+  randomMax?: number;
 
-@NgModule({
-  declarations: [
-    ConfigsPanel,
-  ],
-  imports: [
-    CommonModule,
-    ConfigSectionModule,
-    InputsSectionModule,
-  ],
-  exports: [
-    ConfigsPanel,
-  ]
-})
-export class ConfigsPanelModule {
+  // Used when type = same value.
+  sameValue?: number;
 }

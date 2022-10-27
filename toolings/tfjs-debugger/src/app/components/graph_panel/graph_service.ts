@@ -293,6 +293,8 @@ export class GraphService {
     this.clearScene();
 
     // Render nodes.
+    //
+    // TODO(jingjin): use instancedMesh to improve performance.
     let minX = Number.POSITIVE_INFINITY;
     let minZ = Number.POSITIVE_INFINITY;
     let maxX = Number.NEGATIVE_INFINITY;
@@ -500,6 +502,7 @@ export class GraphService {
       return;
     }
     this.renderer.render(this.scene, this.camera);
+    // console.log('call count', this.renderer.info.render.calls);
   }
 
   private centerModelGraph(transitionDuration = 0) {

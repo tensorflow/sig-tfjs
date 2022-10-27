@@ -1,0 +1,83 @@
+<!-- Copyright 2022 Google LLC. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+==============================================================================
+-->
+
+<div class="container">
+  <div class="info-msg">{{infoMsg}}</div>
+  <div class="inputs-container">
+    <div class="input-container" *ngFor="let input of inputs">
+      <div class="input-info-row">
+        <div class="input-index">{{input.index}}:</div>
+        <div class="input-name">{{input.op}}</div>
+        <div class="input-shape">{{input.strShape}}</div>
+      </div>
+      <div class="input-type-chooser">
+        <mat-form-field class="input-type-select"
+                        appearance="outline"
+                        floatLabel="never">
+          <mat-select
+              [(value)]="input.inputValuesType"
+              (selectionChange)="handleInputChanged()">
+            <mat-option *ngFor="let type of inputTypes"
+                [value]="type">
+              {{type}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="input-type-controls"
+              [ngSwitch]="input.inputValuesType">
+
+          <!-- Random -->
+          <ng-container *ngSwitchCase="InputValuesType.RANDOM">
+            <div class="min-max-label">Min</div>
+            <mat-form-field class="min-max-input"
+                            appearance="outline"
+                            floatLabel="never">
+              <input #minInput matInput
+                     [(ngModel)]="input.randomMin"
+                     (focus)="minInput.select()"
+                     (change)="handleInputChanged()">
+            </mat-form-field>
+            <div class="min-max-label">Max</div>
+            <mat-form-field class="min-max-input"
+                            appearance="outline"
+                            floatLabel="never">
+              <input #maxInput matInput
+                     [(ngModel)]="input.randomMax"
+                     (focus)="maxInput.select()"
+                     (change)="handleInputChanged()">
+            </mat-form-field>
+          </ng-container>
+
+          <!-- Same value -->
+          <ng-container *ngSwitchCase="InputValuesType.SAME_VALUE">
+            <div class="same-value-label">Value</div>
+            <mat-form-field class="same-value-input"
+                            appearance="outline"
+                            floatLabel="never">
+              <input #sameValueInput matInput
+                     [(ngModel)]="input.sameValue"
+                     (focus)="sameValueInput.select()"
+                     (change)="handleInputChanged()">
+            </mat-form-field>
+          </ng-container>
+
+          <div *ngSwitchDefault></div>
+        </div>
+
+      </div>
+  </div>
+</div>

@@ -1,0 +1,85 @@
+@use '../../../variables' as var;
+
+.container {
+  padding: 12px;
+
+  .info-msg {
+    color: var.$grey-500;
+  }
+
+  .inputs-container {
+    font-size: 13px;
+
+    .input-container {
+      margin-top: 16px;
+    }
+
+    .input-container:first-child {
+      margin-top: 0;
+    }
+
+    .input-info-row {
+      display: flex;
+      align-items: center;
+
+      .input-index {
+        margin-right: 4px;
+      }
+
+      .input-name {
+        margin-right: 4px;
+      }
+
+      .input-shape {
+        color: var.$grey-500;
+        font-size: 12px;
+      }
+    }
+
+    .input-type-chooser {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 2px;
+      padding-left: 15px;
+      font-size: 12px;
+
+      .input-type-select {
+        width: 100px;
+        margin-right: 8px;
+      }
+
+      .min-max-label {
+        margin: 0 2px 0 4px;
+      }
+
+      .min-max-input,
+      .same-value-input {
+        width: 42px;
+      }
+
+      .same-value-label {
+        margin-right: 2px;
+      }
+
+      ::ng-deep .mat-button-toggle-label-content {
+        line-height: 20px;
+      }
+
+      ::ng-deep .mat-form-field-infix {
+        padding-top: 8px;
+        padding-bottom: 6px;
+      }
+
+      ::ng-deep .mat-select-arrow {
+        margin-top: 2px;
+        margin-right: 0;
+      }
+
+      .input-type-controls {
+        display: flex;
+        align-items: center;
+      }
+    }
+  }
+}

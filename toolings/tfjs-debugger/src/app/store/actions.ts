@@ -18,6 +18,7 @@
 import {HttpErrorResponse} from '@angular/common/http';
 import {createAction, props} from '@ngrx/store';
 
+import {Input} from '../data_model/input';
 import {RunTask, TaskStatus} from '../data_model/misc';
 import {ModelTypeId} from '../data_model/model_type';
 import {ModelGraph} from '../data_model/run_results';
@@ -26,6 +27,7 @@ import {TfjsRelease} from '../data_model/tfjs_release';
 export enum DebuggerAction {
   SET_MODEL_TYPE = '[Conf] Set Model Type',
   SET_TFSJS_MODEL_URL = '[Conf] Set TFJS Model Url',
+  SET_INPUTS = '[Input] Set Inputs',
   FETCH_TFJS_RELEASES = '[Conf] Fetch TFJS Releases',
   FETCH_TFJS_RELEASES_SUCCESS = '[Conf] Fetch TFJS Releases - Success',
   FETCH_TFJS_RELEASES_FAIL = '[Conf] Fetch TFJS Releases - Fail',
@@ -49,6 +51,12 @@ export const setModelType = createAction(
 export const setTfjsModelUrl = createAction(
     DebuggerAction.SET_TFSJS_MODEL_URL,
     props<{configIndex: number, url: string}>(),
+);
+
+/** Sets inputs. */
+export const setInputs = createAction(
+    DebuggerAction.SET_INPUTS,
+    props<{inputs: Input[]}>(),
 );
 
 /** Fetches available TFJS releases. */

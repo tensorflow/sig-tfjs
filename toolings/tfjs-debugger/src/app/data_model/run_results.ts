@@ -1,6 +1,6 @@
 // TODO: update when the types are exported in the new converter release.
 // tslint:disable-next-line:no-imports-from-dist
-import {INodeDef} from '@tensorflow/tfjs-converter/dist/data/compiled_api';
+import {DataType, INodeDef} from '@tensorflow/tfjs-converter/dist/data/compiled_api';
 
 /**
  * Stores the run results.
@@ -63,6 +63,12 @@ export interface ModelGraphNode {
 
   /** Ids of output nodes */
   outputNodeIds: string[];
+
+  /** Data type */
+  dtype: string;
+
+  /** Shape */
+  shape: number[];
 
   /**
    * The width of the node.
@@ -137,10 +143,23 @@ export function modelJsonToModelGraph(json: ModelJson): ModelGraph {
       continue;
     }
     const op = node.op || '';
+    let dtype = '';
+    let shape: number[] = [];
+    if (node.attr) {
+      if (node.attr['dtype']) {
+        dtype = getStrTypeFromDType(node.attr['dtype'].type as {} as string);
+      }
+      if (node.attr['shape']) {
+        shape = (node.attr['shape'].shape?.dim ||
+                 []).map(entry => Number(entry.size!));
+      }
+    }
     modelGraph[node.name] = {
       // Use node name as id since it is unique.
       id: node.name,
       op,
+      dtype,
+      shape,
       width: op.toLowerCase() === 'const' ? 56 : 90,
       height: 28,
       inputNodeIds: node.input || [],
@@ -148,4 +167,17 @@ export function modelJsonToModelGraph(json: ModelJson): ModelGraph {
     };
   }
   return modelGraph;
+}
+
+function getStrTypeFromDType(dataType: string|undefined|null): string {
+  switch (dataType) {
+    case 'DT_FLOAT':
+      return 'float32';
+    case 'DT_BOOL':
+      return 'bool';
+    case 'DT_INT32':
+      return 'int32';
+    default:
+      return '';
+  }
 }

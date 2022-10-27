@@ -24,6 +24,7 @@ export enum UrlParamKey {
   SELECTED_INPUT_TYPE_ID = 'iid',
   SELECTED_BACKEND_ID = 'bi',
   SELECTED_BACKEND_VERSION = 'bv',
+  INPUTS = 'inputs',
 }
 
 /** Valid config index. */

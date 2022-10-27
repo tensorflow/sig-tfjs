@@ -19,7 +19,6 @@
 
 .container {
   box-sizing: border-box;
-  min-height: calc(50% - var.$config-header-height);
   padding: var.$spacing-3x var.$spacing-3x;
 
   .section {
