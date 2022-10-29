@@ -18,16 +18,20 @@
 import {HttpErrorResponse} from '@angular/common/http';
 import {createAction, props} from '@ngrx/store';
 
+import {BackendId} from '../data_model/backend_type';
 import {Input} from '../data_model/input';
 import {RunTask, TaskStatus} from '../data_model/misc';
 import {ModelTypeId} from '../data_model/model_type';
-import {ModelGraph} from '../data_model/run_results';
+import {Diffs, ModelGraph} from '../data_model/run_results';
 import {TfjsRelease} from '../data_model/tfjs_release';
 
 export enum DebuggerAction {
   SET_MODEL_TYPE = '[Conf] Set Model Type',
   SET_TFSJS_MODEL_URL = '[Conf] Set TFJS Model Url',
+  SET_TFJS_BACKEND_ID = '[Conf] Set TFJS Backend Id',
+  SET_TFJS_BACKEND_VERSION = '[Conf] Set TFJS Backend Version',
   SET_INPUTS = '[Input] Set Inputs',
+  SET_DIFFS = '[Run] Set Diffs',
   FETCH_TFJS_RELEASES = '[Conf] Fetch TFJS Releases',
   FETCH_TFJS_RELEASES_SUCCESS = '[Conf] Fetch TFJS Releases - Success',
   FETCH_TFJS_RELEASES_FAIL = '[Conf] Fetch TFJS Releases - Fail',
@@ -51,6 +55,24 @@ export const setModelType = createAction(
 export const setTfjsModelUrl = createAction(
     DebuggerAction.SET_TFSJS_MODEL_URL,
     props<{configIndex: number, url: string}>(),
+);
+
+/** Sets tfjs backend id for the given config. */
+export const setTfjsBackendId = createAction(
+    DebuggerAction.SET_TFJS_BACKEND_ID,
+    props<{configIndex: number, backendId: BackendId}>(),
+);
+
+/** Sets tfjs backend version for the given config. */
+export const setTfjsBackendVersion = createAction(
+    DebuggerAction.SET_TFJS_BACKEND_VERSION,
+    props<{configIndex: number, version: string}>(),
+);
+
+/** Sets diffs. */
+export const setDiffs = createAction(
+    DebuggerAction.SET_DIFFS,
+    props<{diffs: Diffs}>(),
 );
 
 /** Sets inputs. */

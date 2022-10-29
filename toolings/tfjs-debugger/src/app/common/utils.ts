@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {TypedArray} from '../data_model/run_results';
+
 import {UrlParamKey} from './types';
 
 const CONFIG_INDEX_SEP = '__';
@@ -25,4 +27,22 @@ const CONFIG_INDEX_SEP = '__';
  */
 export function appendConfigIndexToKey(paramKey: UrlParamKey, index: number) {
   return `${paramKey}${CONFIG_INDEX_SEP}${index}`;
+}
+
+/**
+ * A helper functino to create a typed array for the given dtype and size.
+ */
+export function getTypedArrayFromInput(
+    dtype: string, shape: number[]): TypedArray {
+  const size = Math.abs(shape.reduce((a, b) => a * b, 1));
+  switch (dtype) {
+    case 'float32':
+      return new Float32Array(size);
+    case 'int32':
+      return new Int32Array(size);
+    case 'int8':
+      return new Uint8Array(size);
+    default:
+      return new Float32Array(size);
+  }
 }

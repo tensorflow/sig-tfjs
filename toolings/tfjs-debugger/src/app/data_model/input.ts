@@ -23,7 +23,10 @@ export enum InputValuesType {
 
 /** A single input. */
 export interface Input {
+  id: string;
   shape: number[];
+  dtype: string;
+
   inputValuesType: InputValuesType;
 
   // Used when type = random.

@@ -19,7 +19,7 @@ import {createReducer, on} from '@ngrx/store';
 
 import {RunStatus, RunTask, TaskStatus} from '../data_model/misc';
 
-import {clearErrorMessage, fetchTfjsModelJsonFail, fetchTfjsModelJsonSuccess, fetchTfjsReleasesFail, fetchTfjsReleasesSuccess, resetRunStatus, setErrorMessage, setInputs, setModelType, setTfjsModelUrl, triggerRunCurrentConfigs, updateRunTaskStatus} from './actions';
+import {clearErrorMessage, fetchTfjsModelJsonFail, fetchTfjsModelJsonSuccess, fetchTfjsReleasesFail, fetchTfjsReleasesSuccess, resetRunStatus, setDiffs, setErrorMessage, setInputs, setModelType, setTfjsBackendId, setTfjsBackendVersion, setTfjsModelUrl, triggerRunCurrentConfigs, updateRunTaskStatus} from './actions';
 import {Configs, initialState} from './state';
 import {getRunTasksFromConfigs} from './utils';
 
@@ -81,9 +81,74 @@ export const mainReducer = createReducer(
          }
        }),
 
+    on(setTfjsBackendId,
+       (state, {configIndex, backendId}) => {
+         let configs: Configs|undefined;
+         if (configIndex === 0) {
+           configs = {
+             ...state.configs,
+             config1: {
+               ...state.configs.config1,
+               backendId,
+             }
+           };
+         } else if (configIndex === 1) {
+           configs = {
+             ...state.configs,
+             config2: {
+               ...state.configs.config2,
+               backendId,
+             }
+           };
+         }
+         if (!configs) {
+           return state;
+         } else {
+           return {...state, configs};
+         }
+       }),
+
+    on(setTfjsBackendVersion,
+       (state, {configIndex, version}) => {
+         let configs: Configs|undefined;
+         if (configIndex === 0) {
+           configs = {
+             ...state.configs,
+             config1: {
+               ...state.configs.config1,
+               backendVersion: version,
+             }
+           };
+         } else if (configIndex === 1) {
+           configs = {
+             ...state.configs,
+             config2: {
+               ...state.configs.config2,
+               backendVersion: version,
+             }
+           };
+         }
+         if (!configs) {
+           return state;
+         } else {
+           return {...state, configs};
+         }
+       }),
+
+    on(setDiffs,
+       (state, {diffs}) => {
+         return {
+           ...state,
+           runResults: {
+             ...state.runResults,
+             diffs,
+           },
+         };
+       }),
+
+
     on(setInputs,
        (state, {inputs}) => {
-         console.log(inputs);
          return {...state, inputs};
        }),
 

@@ -1,6 +1,6 @@
 // TODO: update when the types are exported in the new converter release.
 // tslint:disable-next-line:no-imports-from-dist
-import {DataType, INodeDef} from '@tensorflow/tfjs-converter/dist/data/compiled_api';
+import {INodeDef} from '@tensorflow/tfjs-converter/dist/data/compiled_api';
 
 /**
  * Stores the run results.
@@ -25,17 +25,7 @@ export interface RunResults {
    */
   modelGraph2?: ModelGraph;
 
-  /**
-   * Value results (e.g. tensor output) for configuration 1. Undefined means
-   * the data has not been loaded yet.
-   */
-  valueResult1?: ValueResult;
-
-  /**
-   * Value results (e.g. tensor output) for configuration 2. Undefined means
-   * the data has not been loaded yet.
-   */
-  valueResult2?: ValueResult;
+  diffs?: Diffs;
 
   // TODO: add performance results as needed.
 }
@@ -102,17 +92,24 @@ export interface ModelGraphLayoutEdge {
 export interface ModelGraphLayout {
   nodes: ModelGraphNode[];
   edges: ModelGraphLayoutEdge[];
+  graphWidth: number;
+  graphHeight: number;
 }
 
-/** Stores the value result (e.g. tensor output) indexed by node ids. */
-export interface ValueResult {
-  [nodeId: string]: NodeValueResult;
-}
+export type TypedArray = Float32Array|Int32Array|Uint8Array;
 
-/** Stores the value result for a single node. */
-export interface NodeValueResult {
-  // TODO: add fields.
-}
+export type TensorMap = {
+  [id: string]: {
+    values: TypedArray,
+    shape: number[],
+    dtype: string,
+  };
+};
+
+export type Diffs = {
+  [id: string]: number
+};
+
 
 /** The type that matches the model.json file. */
 export declare interface ModelJson {
@@ -173,10 +170,11 @@ function getStrTypeFromDType(dataType: string|undefined|null): string {
   switch (dataType) {
     case 'DT_FLOAT':
       return 'float32';
-    case 'DT_BOOL':
-      return 'bool';
     case 'DT_INT32':
       return 'int32';
+    case 'DT_INT8':
+    case 'DT_BOOL':
+      return 'int8';
     default:
       return '';
   }

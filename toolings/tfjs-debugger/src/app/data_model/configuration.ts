@@ -15,6 +15,7 @@
  * =============================================================================
  */
 
+import {BackendId} from './backend_type';
 import {ModelTypeId} from './model_type';
 
 export interface Configuration {
@@ -23,4 +24,10 @@ export interface Configuration {
 
   /** The URL of the tfjs model's model.json file. */
   tfjsModelUrl?: string;
+
+  /** Backend. */
+  backendId?: BackendId;
+
+  /** Backend version. */
+  backendVersion?: string;
 }

@@ -73,6 +73,11 @@ export const selectCurrentConfigs = createSelector(selectMainState, (state) => {
   return state.configs;
 });
 
+/** Selector to select current inputs. */
+export const selectCurrentInputs = createSelector(selectMainState, (state) => {
+  return state.inputs;
+});
+
 /** Selector to select model graph for the given config index. */
 export const selectModelGraph = (configIndex: ConfigIndex) =>
     createSelector(selectMainState, (state) => {

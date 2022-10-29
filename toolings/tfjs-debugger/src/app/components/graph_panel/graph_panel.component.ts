@@ -21,7 +21,7 @@ import {combineLatest, filter, withLatestFrom} from 'rxjs';
 import {LayoutRequest, LayoutResponse, WorkerCommand} from 'src/app/common/types';
 import {RunTask, TaskStatus} from 'src/app/data_model/misc';
 import {ModelTypeId} from 'src/app/data_model/model_type';
-import {ModelGraphLayout} from 'src/app/data_model/run_results';
+import {ModelGraph, ModelGraphLayout} from 'src/app/data_model/run_results';
 import {fetchTfjsModelJson, updateRunTaskStatus} from 'src/app/store/actions';
 import {selectCurrentConfigs, selectModelGraph, selectRunCurrentConfigsTrigger} from 'src/app/store/selectors';
 import {AppState, Configs} from 'src/app/store/state';
@@ -47,10 +47,7 @@ export class GraphPanel implements OnInit, AfterViewInit {
   mouseEnteredHelpIcon = false;
 
   private curConfigs?: Configs;
-
-  /** The worker that layouts the model graph. */
-  private readonly layoutWorker = new Worker(new URL(
-      '../../layout_generator/layout_generator.worker', import.meta.url));
+  private layoutResponses: LayoutResponse[] = [];
 
   constructor(
       private readonly changeDetectionRef: ChangeDetectorRef,
@@ -89,36 +86,16 @@ export class GraphPanel implements OnInit, AfterViewInit {
       if (this.curConfigs.config1.modelType === ModelTypeId.TFJS &&
           this.curConfigs.config2.modelType === ModelTypeId.SAME_AS_CONFIG1 &&
           modelGraph1 != null) {
-        const msg: LayoutRequest = {
-          cmd: WorkerCommand.LAYOUT,
-          configIndex: 0,
-          modelGraph: modelGraph1,
-        };
-        this.layoutWorker.postMessage(msg);
+        // Layout graph with two different node alignment, and we will pick the
+        // result with the smaller graph size.
+        //
+        // See:
+        // https://github.com/dagrejs/dagre/wiki#configuring-the-layout.
+        this.layoutResponses = [];
+        this.layoutGraph(0, modelGraph1, 'DL');
+        this.layoutGraph(0, modelGraph1, 'DR');
       }
     });
-
-    // Listen to worker's response after layout is done.
-    this.layoutWorker.onmessage = ({data}) => {
-      const msg = data as LayoutResponse;
-      switch (msg.cmd) {
-        case WorkerCommand.LAYOUT_RESULT:
-          // Render.
-          this.modelGraphLayout = msg.modelGraphLayout;
-          this.graphService.renderGraph(msg.modelGraphLayout);
-          this.changeDetectionRef.markForCheck();
-
-          // Update task status.
-          this.store.dispatch(updateRunTaskStatus({
-            task: RunTask.LAYOUT_AND_RENDER_MODEL_GRAPH,
-            status: TaskStatus.SUCCESS
-          }));
-          break;
-
-        default:
-          break;
-      }
-    };
   }
 
   ngAfterViewInit() {
@@ -141,5 +118,56 @@ export class GraphPanel implements OnInit, AfterViewInit {
             {configIndex: 0, url: this.curConfigs.config1.tfjsModelUrl}));
       }
     }
+  }
+
+  private layoutGraph(
+      configIndex: number, modelGraph: ModelGraph, align: 'DL'|'DR') {
+    const layoutWorker = new Worker(
+        new URL('../../workers/layout_generator.worker', import.meta.url));
+    const msg: LayoutRequest = {
+      cmd: WorkerCommand.LAYOUT,
+      configIndex,
+      modelGraph,
+      align,
+    };
+
+    // Listen to worker's response after layout is done.
+    layoutWorker.onmessage = ({data}) => {
+      const msg = data as LayoutResponse;
+      switch (msg.cmd) {
+        case WorkerCommand.LAYOUT_RESULT:
+          this.layoutResponses.push(msg);
+          if (this.layoutResponses.length === 2) {
+            // Use the layout with the smaller graph size.
+            const width0 = this.layoutResponses[0].modelGraphLayout.graphWidth;
+            const height0 =
+                this.layoutResponses[0].modelGraphLayout.graphHeight;
+            const width1 = this.layoutResponses[1].modelGraphLayout.graphWidth;
+            const height1 =
+                this.layoutResponses[1].modelGraphLayout.graphHeight;
+            let resp = this.layoutResponses[0];
+            if (width1 <= width0 && height1 <= height0) {
+              resp = this.layoutResponses[1];
+            }
+
+            // Render.
+            this.modelGraphLayout = resp.modelGraphLayout;
+            this.graphService.renderGraph(resp.modelGraphLayout);
+            this.changeDetectionRef.markForCheck();
+
+            // Update task status.
+            this.store.dispatch(updateRunTaskStatus({
+              task: RunTask.LAYOUT_AND_RENDER_MODEL_GRAPH,
+              status: TaskStatus.SUCCESS
+            }));
+          }
+          break;
+
+        default:
+          break;
+      }
+    };
+
+    layoutWorker.postMessage(msg);
   }
 }

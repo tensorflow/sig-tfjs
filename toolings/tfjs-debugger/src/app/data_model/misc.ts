@@ -26,6 +26,9 @@ export enum RunTask {
   LOAD_TFJS_MODEL1 = 'Load TJFS model in config 1',
   LOAD_TFJS_MODEL2 = 'Load TJFS model in config 2',
   LAYOUT_AND_RENDER_MODEL_GRAPH = 'Layout and render model graph',
+  RUN_CONFIG1 = 'Run configuration 1',
+  RUN_CONFIG2 = 'Run configuration 2',
+  CALCULATE_DIFFS = 'Calculate diffs',
 }
 
 /** Status for a task. */

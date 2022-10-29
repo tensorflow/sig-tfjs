@@ -23,6 +23,7 @@ import {ConfigIndex, UrlParamKey} from 'src/app/common/types';
 import {appendConfigIndexToKey} from 'src/app/common/utils';
 import {BackendId} from 'src/app/data_model/backend_type';
 import {UrlService} from 'src/app/services/url_service';
+import {setTfjsBackendId} from 'src/app/store/actions';
 import {selectConfigValueFromUrl} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 
@@ -82,7 +83,11 @@ export class BackendSelector implements OnInit, OnDestroy {
           this.selectedBackendId = backendId;
           this.changeDetectorRef.markForCheck();
 
-          // TODO: update configs in store.
+          // Update store.
+          this.store.dispatch(setTfjsBackendId({
+            configIndex: this.configIndex,
+            backendId,
+          }));
         });
   }
 

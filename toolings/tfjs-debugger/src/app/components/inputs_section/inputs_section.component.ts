@@ -124,7 +124,9 @@ export class InputsSection implements OnInit, OnDestroy {
                       .map((input, index) => {
                         return {
                           index,
+                          id: input.id,
                           shape: input.shape,
+                          dtype: input.dtype,
                           op: input.op,
                           strShape: `${input.dtype}[${input.shape.join(', ')}]`,
                           inputValuesType: InputValuesType.RANDOM,

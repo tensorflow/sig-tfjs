@@ -29,6 +29,9 @@ export function getRunTasksFromConfigs(configs: Configs): RunTask[] {
     return [
       RunTask.LOAD_TFJS_MODEL1,
       RunTask.LAYOUT_AND_RENDER_MODEL_GRAPH,
+      RunTask.RUN_CONFIG1,
+      RunTask.RUN_CONFIG2,
+      RunTask.CALCULATE_DIFFS,
     ];
   }
   return [];

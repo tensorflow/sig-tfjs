@@ -23,6 +23,7 @@ import {ConfigIndex, UrlParamKey} from 'src/app/common/types';
 import {appendConfigIndexToKey} from 'src/app/common/utils';
 import {TfjsRelease} from 'src/app/data_model/tfjs_release';
 import {UrlService} from 'src/app/services/url_service';
+import {setTfjsBackendVersion} from 'src/app/store/actions';
 import {selectConfigValueFromUrl, selectTfjsReleases} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 
@@ -118,7 +119,11 @@ export class BackendVersionSelector implements OnInit, OnDestroy {
             this.changeDetectorRef.markForCheck();
           }
 
-          // TODO: update configs in store.
+          // Update store.
+          this.store.dispatch(setTfjsBackendVersion({
+            configIndex: this.configIndex,
+            version,
+          }));
         });
   }
 

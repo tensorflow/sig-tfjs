@@ -10,7 +10,7 @@ addEventListener('message', ({data}) => {
   switch (msg.cmd) {
     case WorkerCommand.LAYOUT:
       const req = msg as LayoutRequest;
-      const layout = layoutModelGraph(req.modelGraph);
+      const layout = layoutModelGraph(req.modelGraph, req.align);
       const resp: LayoutResponse = {
         cmd: WorkerCommand.LAYOUT_RESULT,
         configIndex: req.configIndex,
@@ -28,17 +28,14 @@ addEventListener('message', ({data}) => {
  * coordinates) will be stored directly inside each ModelGraphNode in
  * ModelGraph.
  */
-function layoutModelGraph(modelGraph: ModelGraph): ModelGraphLayout {
+function layoutModelGraph(
+    modelGraph: ModelGraph, align: string): ModelGraphLayout {
   const graph = new dagre.graphlib.Graph<ModelGraphNode>();
   // Separation between nodes.
   graph.setGraph({
     nodesep: 20,
     ranksep: 40,
-    // This could make certain layouts more "straight".
-    //
-    // See more options here:
-    // https://github.com/dagrejs/dagre/wiki#configuring-the-layout
-    align: 'DL',
+    align,
   });
   // We don't need to show edge labels.
   graph.setDefaultEdgeLabel(() => ({}));
@@ -69,8 +66,20 @@ function layoutModelGraph(modelGraph: ModelGraph): ModelGraphLayout {
       controlPoints: graph.edge(edge).points,
     });
   }
+  let minNodeX = Number.MAX_VALUE;
+  let minNodeY = Number.MAX_VALUE;
+  let maxNodeX = Number.NEGATIVE_INFINITY;
+  let maxNodeY = Number.NEGATIVE_INFINITY;
+  nodes.forEach(node => {
+    minNodeX = Math.min(node.x!, minNodeX);
+    minNodeY = Math.min(node.y!, minNodeY);
+    maxNodeX = Math.max(node.x!, maxNodeX);
+    maxNodeY = Math.max(node.y!, maxNodeY);
+  });
   return {
     nodes,
     edges,
+    graphWidth: maxNodeX - minNodeX,
+    graphHeight: maxNodeY - minNodeY,
   };
 }
