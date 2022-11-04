@@ -27,11 +27,10 @@ export function getRunTasksFromConfigs(configs: Configs): RunTask[] {
   if (configs.config1.modelType === ModelTypeId.TFJS &&
       configs.config2.modelType === ModelTypeId.SAME_AS_CONFIG1) {
     return [
-      RunTask.LOAD_TFJS_MODEL1,
-      RunTask.LAYOUT_AND_RENDER_MODEL_GRAPH,
-      RunTask.RUN_CONFIG1,
-      RunTask.RUN_CONFIG2,
-      RunTask.CALCULATE_DIFFS,
+      RunTask.LOAD_TFJS_MODEL1, RunTask.LAYOUT_AND_RENDER_MODEL_GRAPH,
+      // RunTask.RUN_CONFIG1,
+      // RunTask.RUN_CONFIG2,
+      // RunTask.CALCULATE_DIFFS,
     ];
   }
   return [];

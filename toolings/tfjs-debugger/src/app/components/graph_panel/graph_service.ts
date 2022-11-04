@@ -21,7 +21,7 @@ import * as d3 from 'd3';
 import {filter} from 'rxjs/operators';
 import {CONST_NODE_WIDTH, DEFAULT_BAD_NODE_THRESHOLD, NODE_HEIGHT, NON_CONST_NODE_WIDTH} from 'src/app/common/consts';
 import {Diffs, ModelGraphLayout, ModelGraphNode} from 'src/app/data_model/run_results';
-import {setSeelctedNodeId} from 'src/app/store/actions';
+import {setSeelctedNodeId as setSelectedNodeId} from 'src/app/store/actions';
 import {selectDiffs} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 import * as THREE from 'three';
@@ -33,10 +33,10 @@ const NODE_RECT_CORNER_RADIUS = 6;
 const EDGE_TUBE_RADIUS = 0.5;
 const EDGE_NUM_SEGMENTATIONS = 64;
 const BORDER_WIDTH = 3;
-const NODE_Y = 10;
+const NODE_Y = 11;
 const EDGE_Y = 8;
-const NODE_HIGHLIGHTER_ACTIVE_Y = 9;
-const NODE_HIGHLIGHTER_INACTIVE_Y = 7;
+const NODE_HIGHLIGHTER_Y = 9;
+const NODE_SELECTION_Y = 10;
 
 // Color for "Const" nodes.
 const COLOR_CONST_NODE = new THREE.Color(0xcccccc);
@@ -50,13 +50,15 @@ const COLOR_LN_GREEN = new THREE.Color(0x79bd9a);
 // Color for output nodes.
 const COLOR_LN_BROWN = new THREE.Color(0xf9c0ad);
 
-// Colod for bad nodes.
+// Color for bad nodes.
 const COLOR_BAD_NODE = new THREE.Color(0xf02311);
 
-// Color for highlighter.
-const COLOR_INACTIVE_HIGHLIGTER = new THREE.Color(0xffffff);
-const COLOR_ACTIVE_HIGHLIGTER = new THREE.Color(0xfdda91);
-const COLOR_SELECTED_HIGHLIGTER = new THREE.Color(0xfbb829);
+// Material for hover highlighter.
+const HOVER_HIGHLIGHTER_MATERIAL =
+    new THREE.MeshBasicMaterial({color: 0xfdda91});
+
+// Material for node selection.
+const NODE_SELECTION_MATERIAL = new THREE.MeshBasicMaterial({color: 0xfbb829});
 
 // Material for edges.
 const EDGE_MATERIAL = new THREE.MeshBasicMaterial({color: 0xdddddd});
@@ -107,13 +109,11 @@ export class GraphService {
   private renderer?: THREE.WebGLRenderer;
   private constNodesInstancedMesh?: THREE.InstancedMesh;
   private nonConstNodesInstancedMesh?: THREE.InstancedMesh;
-  private constNodeHighlighterInstancedMesh?: THREE.InstancedMesh;
-  private nonConstNodeHighlighterInstancedMesh?: THREE.InstancedMesh;
+  private hoverHighlighterMesh?: THREE.Mesh;
+  private nodeSelectionMesh?: THREE.Mesh;
   private dummy = new THREE.Object3D();
   private mousePos = new THREE.Vector2();
   private raycaster = new THREE.Raycaster();
-  private prevHighlightedInstanceId = -1;
-  private prevInstancedMesh?: THREE.InstancedMesh;
   private nodeIdToInstancedMeshInfo: {[id: string]: InstancedMeshInfo} = {};
   private nonConstInstanceIdToNodeId: {[id: number]: string} = {};
   private constInstanceIdToNodeId: {[id: number]: string} = {};
@@ -132,12 +132,14 @@ export class GraphService {
 
   private inputNodes: ModelGraphNode[] = [];
   private outputNodes: ModelGraphNode[] = [];
-  private activeNodeInfo?: InstancedMeshInfo;
-  private selectedNodeInfo?: InstancedMeshInfo;
+  private curHoveredNodeId = '';
+  private curSelectedNodeId = '';
+  private prevHoveredNodeId = '';
 
   private container?: HTMLElement;
 
-  private currentModelGraphLayout?: ModelGraphLayout;
+  private curModelGraphLayout?: ModelGraphLayout;
+  private curNodesMap: {[id: string]: ModelGraphNode} = {};
 
   constructor(
       private readonly store: Store<AppState>,
@@ -269,7 +271,7 @@ export class GraphService {
         .filter((event) => {
           // Don't process zoom related events when the model graph layout has
           // not been loaded.
-          if (!this.currentModelGraphLayout) {
+          if (!this.curModelGraphLayout) {
             return false;
           }
 
@@ -329,7 +331,7 @@ export class GraphService {
     document.addEventListener('keydown', (event) => {
       if (event.key === ' ') {
         // Don't handle it when the model graph layout has not been loaded.
-        if (!this.currentModelGraphLayout) {
+        if (!this.curModelGraphLayout) {
           return;
         }
 
@@ -363,73 +365,78 @@ export class GraphService {
     this.mousePos.x = (e.offsetX / this.container!.offsetWidth) * 2 - 1;
     this.mousePos.y = -(e.offsetY / this.container!.offsetHeight) * 2 + 1;
     this.raycaster.setFromCamera(this.mousePos, this.camera);
-    const constNodeHighlighterIntersection =
-        this.raycaster.intersectObject(this.constNodeHighlighterInstancedMesh!);
-    const nonConstNodeHighlighterintersection = this.raycaster.intersectObject(
-        this.nonConstNodeHighlighterInstancedMesh!);
-    if (constNodeHighlighterIntersection.length > 0 ||
-        nonConstNodeHighlighterintersection.length > 0) {
-      const instanceId = constNodeHighlighterIntersection.length > 0 ?
-          constNodeHighlighterIntersection[0].instanceId :
-          nonConstNodeHighlighterintersection[0].instanceId;
-      if (instanceId != null && instanceId !== this.prevHighlightedInstanceId) {
-        const instancedMesh = constNodeHighlighterIntersection.length > 0 ?
-            this.constNodeHighlighterInstancedMesh! :
-            this.nonConstNodeHighlighterInstancedMesh!;
-        if (!this.isSelectedNode(instanceId, instancedMesh)) {
-          this.setHighlighterActive(instancedMesh, instanceId, true);
-        }
-        if (constNodeHighlighterIntersection.length > 0) {
-          this.activeNodeInfo = {
-            instancedMesh: this.constNodeHighlighterInstancedMesh!,
-            instanceId,
-          };
-        } else {
-          this.activeNodeInfo = {
-            instancedMesh: this.nonConstNodeHighlighterInstancedMesh!,
-            instanceId,
-          };
-        }
-        if (this.prevHighlightedInstanceId >= 0) {
-          this.setHighlighterActive(
-              this.prevInstancedMesh!, this.prevHighlightedInstanceId, false);
-        }
+    const intersections = this.raycaster.intersectObjects(
+        [this.constNodesInstancedMesh, this.nonConstNodesInstancedMesh]);
+    if (intersections.length > 0) {
+      const intersection = intersections[0];
+      const intersectWithConstNode =
+          intersections[0].object === this.constNodesInstancedMesh;
+      const instanceId = intersection.instanceId!;
+      const instanceIdToNodeId = intersectWithConstNode ?
+          this.constInstanceIdToNodeId :
+          this.nonConstInstanceIdToNodeId;
+      const hoveredNodeId = instanceIdToNodeId[instanceId];
+      if (hoveredNodeId !== this.prevHoveredNodeId) {
+        this.prevHoveredNodeId = hoveredNodeId;
+        this.curHoveredNodeId = hoveredNodeId;
+        this.showNodeHighlighter(this.curHoveredNodeId);
         this.render();
         this.container!.style.cursor = 'pointer';
-
-        this.prevInstancedMesh = instancedMesh;
-        this.prevHighlightedInstanceId = instanceId;
       }
-    } else if (this.prevHighlightedInstanceId >= 0 && this.prevInstancedMesh) {
-      if (!this.isSelectedNode(
-              this.prevHighlightedInstanceId, this.prevInstancedMesh)) {
-        this.setHighlighterActive(
-            this.prevInstancedMesh, this.prevHighlightedInstanceId, false);
-        this.render();
-      }
+    } else if (this.prevHoveredNodeId) {
+      this.removeNodeHighlighter();
+      this.curHoveredNodeId = '';
+      this.prevHoveredNodeId = '';
+      this.render();
       this.container!.style.cursor = 'default';
-      this.activeNodeInfo = undefined;
-
-      this.prevInstancedMesh = undefined;
-      this.prevHighlightedInstanceId = -1;
     }
   }
 
-  private isSelectedNode(
-      instanceId: number, instancedMesh: THREE.InstancedMesh): boolean {
-    return this.selectedNodeInfo != null &&
-        this.selectedNodeInfo.instancedMesh === instancedMesh &&
-        this.selectedNodeInfo.instanceId === instanceId;
+  private showNodeHighlighter(nodeId: string) {
+    if (!this.curModelGraphLayout) {
+      return;
+    }
+
+    const node = this.curNodesMap[nodeId];
+    const geometry = this.createRoundedRectGeometry(
+        node.width + BORDER_WIDTH * 2, node.height + BORDER_WIDTH * 2);
+    this.hoverHighlighterMesh =
+        new THREE.Mesh(geometry, HOVER_HIGHLIGHTER_MATERIAL);
+    this.hoverHighlighterMesh.position.set(
+        node.x! - node.width / 2 - BORDER_WIDTH, NODE_HIGHLIGHTER_Y,
+        node.y! + node.height / 2 + BORDER_WIDTH);
+    this.scene!.add(this.hoverHighlighterMesh);
   }
 
-  private setHighlighterActive(
-      instancedMesh: THREE.InstancedMesh, index: number, active: boolean) {
-    const posY =
-        active ? NODE_HIGHLIGHTER_ACTIVE_Y : NODE_HIGHLIGHTER_INACTIVE_Y;
-    const color = active ? COLOR_ACTIVE_HIGHLIGTER : COLOR_INACTIVE_HIGHLIGTER;
-    this.setInstancedMeshPositionY(instancedMesh, index, posY);
-    instancedMesh.setColorAt(index, color);
-    instancedMesh.instanceColor!.needsUpdate = true;
+  private removeNodeHighlighter() {
+    if (this.hoverHighlighterMesh) {
+      this.scene!.remove(this.hoverHighlighterMesh);
+      this.hoverHighlighterMesh.geometry.dispose();
+      this.hoverHighlighterMesh = undefined;
+    }
+  }
+
+  private showNodeSelection(nodeId: string) {
+    if (!this.curModelGraphLayout) {
+      return;
+    }
+
+    const node = this.curNodesMap[nodeId];
+    const geometry = this.createRoundedRectGeometry(
+        node.width + BORDER_WIDTH * 2, node.height + BORDER_WIDTH * 2);
+    this.nodeSelectionMesh = new THREE.Mesh(geometry, NODE_SELECTION_MATERIAL);
+    this.nodeSelectionMesh.position.set(
+        node.x! - node.width / 2 - BORDER_WIDTH, NODE_SELECTION_Y,
+        node.y! + node.height / 2 + BORDER_WIDTH);
+    this.scene!.add(this.nodeSelectionMesh);
+  }
+
+  private removeNodeSelection() {
+    if (this.nodeSelectionMesh) {
+      this.scene!.remove(this.nodeSelectionMesh);
+      this.nodeSelectionMesh.geometry.dispose();
+      this.nodeSelectionMesh = undefined;
+    }
   }
 
   private handleClick(e: MouseEvent) {
@@ -438,37 +445,26 @@ export class GraphService {
     }
 
     // Unselect the previous node if existed.
-    if (this.selectedNodeInfo) {
-      this.selectedNodeInfo.instancedMesh.setColorAt(
-          this.selectedNodeInfo.instanceId, COLOR_INACTIVE_HIGHLIGTER);
-      this.selectedNodeInfo.instancedMesh.instanceColor!.needsUpdate = true;
+    if (this.curSelectedNodeId) {
+      this.curSelectedNodeId = '';
+      this.removeNodeSelection();
     }
 
     // Set current selection.
-    if (this.activeNodeInfo) {
-      this.activeNodeInfo.instancedMesh.setColorAt(
-          this.activeNodeInfo.instanceId, COLOR_SELECTED_HIGHLIGTER);
-      this.activeNodeInfo.instancedMesh.instanceColor!.needsUpdate = true;
-      this.selectedNodeInfo = {...this.activeNodeInfo};
-
-      let nodeId = '';
-      if (this.selectedNodeInfo.instancedMesh ===
-          this.constNodeHighlighterInstancedMesh) {
-        nodeId = this.constInstanceIdToNodeId[this.selectedNodeInfo.instanceId];
-      } else {
-        nodeId =
-            this.nonConstInstanceIdToNodeId[this.selectedNodeInfo.instanceId];
-      }
-      this.store.dispatch(setSeelctedNodeId({nodeId}));
+    if (this.curHoveredNodeId) {
+      this.curSelectedNodeId = this.curHoveredNodeId;
+      this.showNodeSelection(this.curHoveredNodeId);
     } else {
-      this.store.dispatch(setSeelctedNodeId({nodeId: ''}));
+      this.curSelectedNodeId = '';
+      this.removeNodeSelection();
     }
 
+    this.store.dispatch(setSelectedNodeId({nodeId: this.curSelectedNodeId}));
     this.render();
   }
 
   renderGraph(modelGraphLayout: ModelGraphLayout, doneCallbackFn: () => void) {
-    this.currentModelGraphLayout = modelGraphLayout;
+    this.curModelGraphLayout = modelGraphLayout;
 
     if (!this.scene) {
       return;
@@ -481,16 +477,6 @@ export class GraphService {
     let minZ = Number.POSITIVE_INFINITY;
     let maxX = Number.NEGATIVE_INFINITY;
     let maxZ = Number.NEGATIVE_INFINITY;
-
-    // Create instanced mesh for node highlighter. Each instance is a slightly
-    // larger rectangle that sits below the actual node rect, and it visually
-    // looks like a border around the actual node.
-    this.constNodeHighlighterInstancedMesh = this.createNodesInstancedMesh(
-        CONST_NODE_WIDTH + BORDER_WIDTH * 2, NODE_HEIGHT + BORDER_WIDTH * 2,
-        modelGraphLayout.numConstNodes);
-    this.nonConstNodeHighlighterInstancedMesh = this.createNodesInstancedMesh(
-        NON_CONST_NODE_WIDTH + BORDER_WIDTH * 2, NODE_HEIGHT + BORDER_WIDTH * 2,
-        modelGraphLayout.numNonConstNodes);
 
     // Create instanced mesh for all const nodes
     this.constNodesInstancedMesh = this.createNodesInstancedMesh(
@@ -507,12 +493,12 @@ export class GraphService {
     let constNodeIndex = 0;
     let nonConstNodeIndex = 0;
     let numSyncedText = 0;
-    const nodesMap: {[id: string]: ModelGraphNode} = {};
+    this.curNodesMap = {};
     this.nodeIdToInstancedMeshInfo = {};
     this.constInstanceIdToNodeId = {};
     this.nonConstInstanceIdToNodeId = {};
     for (const node of modelGraphLayout.nodes) {
-      nodesMap[node.id] = node;
+      this.curNodesMap[node.id] = node;
 
       const isConstNode = node.op.toLowerCase() === 'const';
 
@@ -530,12 +516,6 @@ export class GraphService {
         };
         this.nonConstInstanceIdToNodeId[nonConstNodeIndex] = node.id;
       }
-
-      // Set colors for highlighter.
-      this.constNodeHighlighterInstancedMesh.setColorAt(
-          constNodeIndex, COLOR_INACTIVE_HIGHLIGTER);
-      this.nonConstNodeHighlighterInstancedMesh.setColorAt(
-          nonConstNodeIndex, COLOR_INACTIVE_HIGHLIGTER);
 
       // Set colors for const nodes.
       this.constNodesInstancedMesh.setColorAt(constNodeIndex, COLOR_CONST_NODE);
@@ -566,19 +546,11 @@ export class GraphService {
       if (isConstNode) {
         this.setInstancedMeshPosition(
             this.constNodesInstancedMesh, constNodeIndex, posX, NODE_Y, posZ);
-        this.setInstancedMeshPosition(
-            this.constNodeHighlighterInstancedMesh, constNodeIndex,
-            posX - BORDER_WIDTH, NODE_HIGHLIGHTER_INACTIVE_Y,
-            posZ + BORDER_WIDTH);
         constNodeIndex++;
       } else {
         this.setInstancedMeshPosition(
             this.nonConstNodesInstancedMesh, nonConstNodeIndex, posX, NODE_Y,
             posZ);
-        this.setInstancedMeshPosition(
-            this.nonConstNodeHighlighterInstancedMesh, nonConstNodeIndex,
-            posX - BORDER_WIDTH, NODE_HIGHLIGHTER_INACTIVE_Y,
-            posZ + BORDER_WIDTH);
         nonConstNodeIndex++;
       }
 
@@ -608,8 +580,6 @@ export class GraphService {
       minZ = Math.min(minZ, posZ);
       maxZ = Math.max(maxZ, posZ + node.height);
     }
-    this.scene.add(this.constNodeHighlighterInstancedMesh);
-    this.scene.add(this.nonConstNodeHighlighterInstancedMesh);
     this.scene.add(this.constNodesInstancedMesh);
     this.scene.add(this.nonConstNodesInstancedMesh);
     this.currentMinX = minX;
@@ -625,7 +595,7 @@ export class GraphService {
       // (CatmullRomCurve3), and render it with a TubeGeometry which we can
       // easily control thickness. With the OrthographicCamera, the tubes look
       // like arrow lines.
-      const toNode = nodesMap[edge.toNodeId];
+      const toNode = this.curNodesMap[edge.toNodeId];
       if (edge.controlPoints.some(
               pt =>
                   pt.x == null || isNaN(pt.x) || pt.y == null || isNaN(pt.y))) {
@@ -699,11 +669,18 @@ export class GraphService {
   private createNodesInstancedMesh(
       nodeWidth: number, nodeHeight: number,
       count: number): THREE.InstancedMesh {
+    return new THREE.InstancedMesh(
+        this.createRoundedRectGeometry(nodeWidth, nodeHeight), undefined,
+        count);
+  }
+
+  private createRoundedRectGeometry(nodeWidth: number, nodeHeight: number):
+      THREE.ShapeGeometry {
     const shape = this.createRoundedRectangleShape(
         0, 0, nodeWidth, nodeHeight, NODE_RECT_CORNER_RADIUS);
     const geometry = new THREE.ShapeGeometry(shape);
     geometry.rotateX(-Math.PI / 2);
-    return new THREE.InstancedMesh(geometry, undefined, count);
+    return geometry;
   }
 
   private createRoundedRectangleShape(

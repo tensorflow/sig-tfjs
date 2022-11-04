@@ -54,8 +54,8 @@ export class TfjsService {
           if (!modelGraph || !config1.tfjsModelUrl) {
             return;
           }
-          this.runConfigs(
-              curConfigs, curInputs, modelGraph, config1.tfjsModelUrl);
+          // this.runConfigs(
+          //     curConfigs, curInputs, modelGraph, config1.tfjsModelUrl);
         });
   }
 
