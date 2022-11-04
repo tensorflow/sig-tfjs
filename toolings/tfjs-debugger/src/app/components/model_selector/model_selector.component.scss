@@ -25,7 +25,30 @@
     line-height: 11px;
   }
 
+  .model-selector-label {
+    width: fit-content;
+    margin-top: 8px;
+    border-bottom: 1px dotted #555;
+    cursor: pointer;
+    opacity: 80%;
+
+    &:hover {
+      opacity: 100%;
+    }
+  }
+
   mat-form-field {
     width: 100%;
   }
+
+  .show-const-checkbox {
+    margin-top: 10px;
+    font-size: 13px;
+  }
+}
+
+::ng-deep .mat-menu-item {
+  height: 28px !important;
+  font-size: 13px;
+  line-height: 28px !important;
 }

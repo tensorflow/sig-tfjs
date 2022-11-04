@@ -43,6 +43,7 @@ export enum DebuggerAction {
   TRIGGER_RUN_CURRENT_CONFIGS = '[App] Trigger to Run Current Configs',
   UPDATE_RUN_TASK_STATUS = '[App] Update Run Task Status',
   RESET_RUN_STATUS = '[App] Reset Run Status',
+  SET_SELECTED_NODE_ID = '[App] Set Selected Node Id',
 }
 
 /** Sets model type for the given config. */
@@ -133,6 +134,12 @@ export const triggerRunCurrentConfigs =
 export const updateRunTaskStatus = createAction(
     DebuggerAction.UPDATE_RUN_TASK_STATUS,
     props<{task: RunTask, status: TaskStatus}>(),
+);
+
+/** Sets the selected node id. */
+export const setSeelctedNodeId = createAction(
+    DebuggerAction.SET_SELECTED_NODE_ID,
+    props<{nodeId: string}>(),
 );
 
 /** Resets run status. */

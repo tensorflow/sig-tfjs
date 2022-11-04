@@ -17,10 +17,9 @@ addEventListener('message', ({data}) => {
 
 async function runTfjsModel(req: RunTfjsModelRequest) {
   // Node ids for getting results for.
-  const nodeIds =
-      Object.values(req.modelGraph)
-          .filter(node => node.op !== 'Const' && !node.id.includes('/cond'))
-          .map(node => node.id);
+  const nodeIds = Object.values(req.modelGraph)
+                      .filter(node => !node.id.includes('/cond'))
+                      .map(node => node.id);
 
   // Load packages.
   const version = req.config.backendVersion!;

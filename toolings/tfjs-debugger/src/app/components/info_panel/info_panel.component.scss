@@ -19,10 +19,158 @@
 
 .container {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
   width: 300px;
   height: 100%;
+  overflow-x: hidden;
+  overflow-y: visible;
   background-color: var.$grey-50;
   border-left: 1px solid var.$grey-200;
+
+  .rows-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    height: var.$config-header-height;
+    padding: 0 var.$spacing-3x;
+    color: var.$grey-800;
+    font-weight: 500;
+    font-size: var.$font-size-normal;
+    background-color: var.$grey-200;
+
+    &.selected-node {
+      background-color: #ffe494;
+    }
+  }
+
+  .overview-container {
+    display: flex;
+    flex-direction: column;
+
+    .numbers-container {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+
+      .number-block {
+        display: flex;
+        flex-direction: column;
+        margin-right: 36px;
+
+        .title {
+          color: var.$grey-600;
+          font-size: 13px;
+        }
+
+        .value {
+          color: var.$grey-800;
+          font-size: 32px;
+
+          &.bad {
+            color: var.$red;
+          }
+
+          &.no-bad-nodes {
+            color: #0a0 !important;
+          }
+        }
+      }
+    }
+
+    .threshold-input-container {
+      padding: 0 12px 12px;
+
+      .threshold-input {
+        width: 100%;
+        font-size: 12px;
+
+        ::ng-deep .mat-form-field-infix {
+          padding-top: 8px;
+          padding-bottom: 6px;
+        }
+      }
+
+      .label {
+        color: var.$grey-600;
+        font-size: 12px;
+      }
+    }
+  }
+
+  .node-container {
+    display: flex;
+    padding: 12px;
+    font-size: 12px;
+    border-bottom: 1px solid var.$grey-300;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .index-container {
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      margin-top: 4px;
+      margin-right: 12px;
+      font-size: 11px;
+      border-radius: 3px;
+
+      &.input {
+        color: white;
+        background-color: #79bd9a;
+      }
+
+      &.output {
+        color: white;
+        background-color: #f9c0ad;
+      }
+
+      &.bad {
+        color: white;
+        background-color: var.$red;
+      }
+    }
+
+    .node-info-container {
+      overflow: hidden;
+
+      .node-item {
+        display: flex;
+        align-items: flex-start;
+        padding-bottom: 2px;
+        overflow: hidden;
+
+        .item-name {
+          flex-shrink: 0;
+          width: 42px;
+          color: var.$grey-600;
+        }
+
+        .item-value {
+          color: var.$grey-800;
+        }
+      }
+    }
+  }
+
+  .empty-msg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var.$grey-500;
+    font-size: 13px;
+  }
 }

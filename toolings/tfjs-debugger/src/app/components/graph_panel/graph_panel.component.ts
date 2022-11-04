@@ -23,7 +23,7 @@ import {RunTask, TaskStatus} from 'src/app/data_model/misc';
 import {ModelTypeId} from 'src/app/data_model/model_type';
 import {ModelGraph, ModelGraphLayout} from 'src/app/data_model/run_results';
 import {fetchTfjsModelJson, updateRunTaskStatus} from 'src/app/store/actions';
-import {selectCurrentConfigs, selectModelGraph, selectRunCurrentConfigsTrigger} from 'src/app/store/selectors';
+import {selectCurrentConfigs, selectDiffs, selectModelGraph, selectRunCurrentConfigsTrigger} from 'src/app/store/selectors';
 import {AppState, Configs} from 'src/app/store/state';
 
 import {GraphService} from './graph_service';
@@ -47,13 +47,17 @@ export class GraphPanel implements OnInit, AfterViewInit {
   mouseEnteredHelpIcon = false;
 
   private curConfigs?: Configs;
-  private layoutResponses: LayoutResponse[] = [];
+
+  private layoutWorker = new Worker(
+      new URL('../../workers/layout_generator.worker', import.meta.url));
 
   constructor(
       private readonly changeDetectionRef: ChangeDetectorRef,
       private readonly store: Store<AppState>,
       private readonly graphService: GraphService,
-  ) {}
+  ) {
+    this.setupWorkers();
+  }
 
   ngOnInit() {
     // Fetch model.json file (if the model type is tfjs model) when the "Run"
@@ -91,10 +95,14 @@ export class GraphPanel implements OnInit, AfterViewInit {
         //
         // See:
         // https://github.com/dagrejs/dagre/wiki#configuring-the-layout.
-        this.layoutResponses = [];
-        this.layoutGraph(0, modelGraph1, 'DL');
-        this.layoutGraph(0, modelGraph1, 'DR');
+        console.log('!!!!!!!!!!!', Object.keys(modelGraph1).length);
+        this.layoutGraph(0, modelGraph1);
       }
+    });
+
+    // Update the graph to visualize diffs.
+    this.store.select(selectDiffs).subscribe(diffs => {
+      console.log(diffs);
     });
   }
 
@@ -120,54 +128,34 @@ export class GraphPanel implements OnInit, AfterViewInit {
     }
   }
 
-  private layoutGraph(
-      configIndex: number, modelGraph: ModelGraph, align: 'DL'|'DR') {
-    const layoutWorker = new Worker(
-        new URL('../../workers/layout_generator.worker', import.meta.url));
-    const msg: LayoutRequest = {
-      cmd: WorkerCommand.LAYOUT,
-      configIndex,
-      modelGraph,
-      align,
-    };
-
-    // Listen to worker's response after layout is done.
-    layoutWorker.onmessage = ({data}) => {
-      const msg = data as LayoutResponse;
-      switch (msg.cmd) {
+  private setupWorkers() {
+    this.layoutWorker.onmessage = ({data}: MessageEvent<LayoutResponse>) => {
+      switch (data.cmd) {
         case WorkerCommand.LAYOUT_RESULT:
-          this.layoutResponses.push(msg);
-          if (this.layoutResponses.length === 2) {
-            // Use the layout with the smaller graph size.
-            const width0 = this.layoutResponses[0].modelGraphLayout.graphWidth;
-            const height0 =
-                this.layoutResponses[0].modelGraphLayout.graphHeight;
-            const width1 = this.layoutResponses[1].modelGraphLayout.graphWidth;
-            const height1 =
-                this.layoutResponses[1].modelGraphLayout.graphHeight;
-            let resp = this.layoutResponses[0];
-            if (width1 <= width0 && height1 <= height0) {
-              resp = this.layoutResponses[1];
-            }
-
-            // Render.
-            this.modelGraphLayout = resp.modelGraphLayout;
-            this.graphService.renderGraph(resp.modelGraphLayout);
-            this.changeDetectionRef.markForCheck();
-
-            // Update task status.
+          // Render.
+          this.modelGraphLayout = data.modelGraphLayout;
+          this.graphService.renderGraph(this.modelGraphLayout, () => {
+            // Update task status when done.
             this.store.dispatch(updateRunTaskStatus({
               task: RunTask.LAYOUT_AND_RENDER_MODEL_GRAPH,
               status: TaskStatus.SUCCESS
             }));
-          }
+          });
+          this.changeDetectionRef.markForCheck();
           break;
 
         default:
           break;
       }
     };
+  }
 
-    layoutWorker.postMessage(msg);
+  private layoutGraph(configIndex: number, modelGraph: ModelGraph) {
+    const msg: LayoutRequest = {
+      cmd: WorkerCommand.LAYOUT,
+      configIndex,
+      modelGraph,
+    };
+    this.layoutWorker.postMessage(msg);
   }
 }

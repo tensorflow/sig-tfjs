@@ -16,10 +16,13 @@ limitations under the License.
 
 <div class="container">
   <!-- Drop down select -->
-  <mat-form-field appearance="outline" floatLabel="never">
+  <mat-form-field appearance="outline" floatLabel="never"
+                  matTooltip="WIP"
+                  matTooltipPosition="right">
     <mat-select
         [(value)]="selectedModelTypeId"
         [class.same-as-config1-selected]="isSameAsConfig1Selected"
+        disabled
         (selectionChange)="handleSelectionChange($event)">
       <mat-option *ngFor="let option of modelTypes"
           [value]="option.id"
@@ -43,8 +46,27 @@ limitations under the License.
                placeholder="URL for model.json"
                class="tfjs-model-url-input"
                [(ngModel)]="tfjsModelUrl"
+               (focus)="tfjsModelUrlInput.select()"
                (change)="handleTfjsModelUrlChanged()">
       </mat-form-field>
+
+      <div class="title model-selector-label"
+           [matMenuTriggerFor]="menu">
+        Or select a published model
+      </div>
+      <mat-menu #menu="matMenu">
+        <button mat-menu-item *ngFor="let item of publishedModels"
+                (click)="handleClickPublishedModel(item.url)">
+          {{item.label}}
+        </button>
+      </mat-menu>
+
+      <mat-checkbox disabled color="primary" disableRipple="true"
+                    class="show-const-checkbox"
+                    matTooltip="WIP"
+                    matTooltipPosition="right">
+        Show Const nodes
+      </mat-checkbox>
     </div>
 
     <div *ngSwitchDefault></div>

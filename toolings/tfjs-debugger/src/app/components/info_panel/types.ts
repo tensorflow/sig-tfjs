@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2021 Google LLC. All Rights Reserved.
+ * Copyright 2022 Google LLC. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,21 +15,17 @@
  * =============================================================================
  */
 
-import {BackendId} from './backend_type';
-import {ModelTypeId} from './model_type';
+export interface NodeInfo {
+  id: string;
+  y: number;
+  op: string;
+  dtypeAndShape: string;
+  diff?: string;
+  diffValue?: number;
+  values?: Value[];
+}
 
-export interface Configuration {
-  /** The type of the model, e.g. TFJS, TFLite, etc. */
-  modelType: ModelTypeId;
-
-  /** The URL of the tfjs model's model.json file. */
-  tfjsModelUrl?: string;
-
-  /** Backend. */
-  backendId?: BackendId;
-
-  /** Backend version. */
-  backendVersion?: string;
-
-  /** Show const nodes */
+export interface Value {
+  v1: number;
+  v2: number;
 }

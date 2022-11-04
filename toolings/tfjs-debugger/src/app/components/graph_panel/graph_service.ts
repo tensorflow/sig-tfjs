@@ -15,35 +15,58 @@
  * =============================================================================
  */
 
+import {Injectable} from '@angular/core';
+import {Store} from '@ngrx/store';
 import * as d3 from 'd3';
-import {ModelGraphLayout, ModelGraphNode} from 'src/app/data_model/run_results';
+import {filter} from 'rxjs/operators';
+import {CONST_NODE_WIDTH, DEFAULT_BAD_NODE_THRESHOLD, NODE_HEIGHT, NON_CONST_NODE_WIDTH} from 'src/app/common/consts';
+import {Diffs, ModelGraphLayout, ModelGraphNode} from 'src/app/data_model/run_results';
+import {setSeelctedNodeId} from 'src/app/store/actions';
+import {selectDiffs} from 'src/app/store/selectors';
+import {AppState} from 'src/app/store/state';
 import * as THREE from 'three';
-import {Material} from 'three';
 import {preloadFont, Text as ThreeText} from 'troika-three-text';
 
 const DEFAULT_FRUSTUM_SIZE = 500;
 const DEFAULT_CAMERA_Y = 50;
 const NODE_RECT_CORNER_RADIUS = 6;
-const EDGE_TUBE_RADIUS = 1;
-const EDGE_NUM_SEGMENTATIONS = 16;
+const EDGE_TUBE_RADIUS = 0.5;
+const EDGE_NUM_SEGMENTATIONS = 64;
+const BORDER_WIDTH = 3;
+const NODE_Y = 10;
+const EDGE_Y = 8;
+const NODE_HIGHLIGHTER_ACTIVE_Y = 9;
+const NODE_HIGHLIGHTER_INACTIVE_Y = 7;
 
-// Material for "Const" nodes.
-const CONST_NODE_MATERIAL = new THREE.MeshBasicMaterial({color: 0xcccccc});
+// Color for "Const" nodes.
+const COLOR_CONST_NODE = new THREE.Color(0xcccccc);
 
-// Material for op nodes.
-const LN_BLUE = 0x6999d5;
-const OP_NODE_MATERIAL = new THREE.MeshBasicMaterial({color: LN_BLUE});
+// Color for op nodes.
+const COLOR_LN_BLUE = new THREE.Color(0x6999d5);
 
-// Material for input nodes.
-const LN_GREEN = 0x79bd9a;
-const INPUT_NODE_MATERIAL = new THREE.MeshBasicMaterial({color: LN_GREEN});
+// Color for input nodes.
+const COLOR_LN_GREEN = new THREE.Color(0x79bd9a);
 
-// Material for output nodes.
-const LN_BROWN = 0xe08e79;
-const OUTPUT_NODE_MATERIAL = new THREE.MeshBasicMaterial({color: LN_BROWN});
+// Color for output nodes.
+const COLOR_LN_BROWN = new THREE.Color(0xf9c0ad);
+
+// Colod for bad nodes.
+const COLOR_BAD_NODE = new THREE.Color(0xf02311);
+
+// Color for highlighter.
+const COLOR_INACTIVE_HIGHLIGTER = new THREE.Color(0xffffff);
+const COLOR_ACTIVE_HIGHLIGTER = new THREE.Color(0xfdda91);
+const COLOR_SELECTED_HIGHLIGTER = new THREE.Color(0xfbb829);
 
 // Material for edges.
 const EDGE_MATERIAL = new THREE.MeshBasicMaterial({color: 0xdddddd});
+
+// Material for text.
+const CONST_TEXT_MATERIAL = new THREE.MeshBasicMaterial({color: 'black'});
+const NON_CONST_TEXT_MATERIAL = new THREE.MeshBasicMaterial({color: 'white'});
+
+// Edges and labels will be hidden when zoom level is below this threshold.
+const ZOOM_LEVEL_THRESHOLD_FOR_SHOWING_DETAILS = 0.3;
 
 // Fonts that will be used in the scene.
 enum Font {
@@ -68,12 +91,32 @@ interface TextProperties {
   lineHeight?: number|string;  // Default to 'normal'
 }
 
+interface InstancedMeshInfo {
+  instanceId: number;
+  instancedMesh: THREE.InstancedMesh;
+}
+
 /** Handles tasks related to graph rendering. */
+@Injectable({
+  providedIn: 'root',
+})
 export class GraphService {
   // THREE.js related.
   private scene?: THREE.Scene;
   private camera?: THREE.OrthographicCamera;
   private renderer?: THREE.WebGLRenderer;
+  private constNodesInstancedMesh?: THREE.InstancedMesh;
+  private nonConstNodesInstancedMesh?: THREE.InstancedMesh;
+  private constNodeHighlighterInstancedMesh?: THREE.InstancedMesh;
+  private nonConstNodeHighlighterInstancedMesh?: THREE.InstancedMesh;
+  private dummy = new THREE.Object3D();
+  private mousePos = new THREE.Vector2();
+  private raycaster = new THREE.Raycaster();
+  private prevHighlightedInstanceId = -1;
+  private prevInstancedMesh?: THREE.InstancedMesh;
+  private nodeIdToInstancedMeshInfo: {[id: string]: InstancedMeshInfo} = {};
+  private nonConstInstanceIdToNodeId: {[id: number]: string} = {};
+  private constInstanceIdToNodeId: {[id: number]: string} = {};
 
   // D3 related.
   private zoom = d3.zoom();
@@ -89,12 +132,16 @@ export class GraphService {
 
   private inputNodes: ModelGraphNode[] = [];
   private outputNodes: ModelGraphNode[] = [];
+  private activeNodeInfo?: InstancedMeshInfo;
+  private selectedNodeInfo?: InstancedMeshInfo;
 
   private container?: HTMLElement;
 
   private currentModelGraphLayout?: ModelGraphLayout;
 
-  constructor() {
+  constructor(
+      private readonly store: Store<AppState>,
+  ) {
     // Preload fonts for text rendering in the THREE.js scene.
     //
     // This will be done in webworkers without blocking the main UI.
@@ -107,6 +154,13 @@ export class GraphService {
           },
           () => {});
     }
+
+    // Update graph to show nodes with large diffs.
+    this.store.select(selectDiffs)
+        .pipe(filter(diffs => diffs != null))
+        .subscribe(diffs => {
+          this.handleDiffs(diffs!);
+        });
   }
 
   init(container: HTMLElement, canvas: HTMLElement) {
@@ -114,6 +168,14 @@ export class GraphService {
 
     this.setupThreeJs(canvas);
     this.setupPanAndZoom();
+
+    container.addEventListener('mousemove', (e) => {
+      this.hanldeMouseMove(e);
+    });
+
+    container.addEventListener('click', (e) => {
+      this.handleClick(e);
+    });
   }
 
   /** Sets up THREE.js scene with camera, renderer, resize observer, etc. */
@@ -236,15 +298,22 @@ export class GraphService {
           return true;
         })
         .on('zoom', (event) => {
+          this.currentZoom = Number(event.transform.k);
+          this.currentTranslatX = Number(event.transform.x);
+          this.currentTranslatY = Number(event.transform.y);
+
+          // Hide edges and texts when zoom level is below the threshold.
+          const belowThreshold =
+              this.currentZoom < ZOOM_LEVEL_THRESHOLD_FOR_SHOWING_DETAILS;
+          EDGE_MATERIAL.visible = !belowThreshold;
+          CONST_TEXT_MATERIAL.visible = !belowThreshold;
+          NON_CONST_TEXT_MATERIAL.visible = !belowThreshold;
+
           // Wrap in RAF for smoothness.
           requestAnimationFrame(() => {
             if (!this.camera) {
               return;
             }
-
-            this.currentZoom = Number(event.transform.k);
-            this.currentTranslatX = Number(event.transform.x);
-            this.currentTranslatY = Number(event.transform.y);
 
             this.setCameraFrustum();
             this.render();
@@ -283,7 +352,122 @@ export class GraphService {
     });
   }
 
-  renderGraph(modelGraphLayout: ModelGraphLayout) {
+  private hanldeMouseMove(e: MouseEvent) {
+    if (!this.nonConstNodesInstancedMesh || !this.camera ||
+        !this.constNodesInstancedMesh) {
+      return;
+    }
+
+    // Figure out which node highlighter mesh instance is under the current
+    // mouse cursor, and change it color.
+    this.mousePos.x = (e.offsetX / this.container!.offsetWidth) * 2 - 1;
+    this.mousePos.y = -(e.offsetY / this.container!.offsetHeight) * 2 + 1;
+    this.raycaster.setFromCamera(this.mousePos, this.camera);
+    const constNodeHighlighterIntersection =
+        this.raycaster.intersectObject(this.constNodeHighlighterInstancedMesh!);
+    const nonConstNodeHighlighterintersection = this.raycaster.intersectObject(
+        this.nonConstNodeHighlighterInstancedMesh!);
+    if (constNodeHighlighterIntersection.length > 0 ||
+        nonConstNodeHighlighterintersection.length > 0) {
+      const instanceId = constNodeHighlighterIntersection.length > 0 ?
+          constNodeHighlighterIntersection[0].instanceId :
+          nonConstNodeHighlighterintersection[0].instanceId;
+      if (instanceId != null && instanceId !== this.prevHighlightedInstanceId) {
+        const instancedMesh = constNodeHighlighterIntersection.length > 0 ?
+            this.constNodeHighlighterInstancedMesh! :
+            this.nonConstNodeHighlighterInstancedMesh!;
+        if (!this.isSelectedNode(instanceId, instancedMesh)) {
+          this.setHighlighterActive(instancedMesh, instanceId, true);
+        }
+        if (constNodeHighlighterIntersection.length > 0) {
+          this.activeNodeInfo = {
+            instancedMesh: this.constNodeHighlighterInstancedMesh!,
+            instanceId,
+          };
+        } else {
+          this.activeNodeInfo = {
+            instancedMesh: this.nonConstNodeHighlighterInstancedMesh!,
+            instanceId,
+          };
+        }
+        if (this.prevHighlightedInstanceId >= 0) {
+          this.setHighlighterActive(
+              this.prevInstancedMesh!, this.prevHighlightedInstanceId, false);
+        }
+        this.render();
+        this.container!.style.cursor = 'pointer';
+
+        this.prevInstancedMesh = instancedMesh;
+        this.prevHighlightedInstanceId = instanceId;
+      }
+    } else if (this.prevHighlightedInstanceId >= 0 && this.prevInstancedMesh) {
+      if (!this.isSelectedNode(
+              this.prevHighlightedInstanceId, this.prevInstancedMesh)) {
+        this.setHighlighterActive(
+            this.prevInstancedMesh, this.prevHighlightedInstanceId, false);
+        this.render();
+      }
+      this.container!.style.cursor = 'default';
+      this.activeNodeInfo = undefined;
+
+      this.prevInstancedMesh = undefined;
+      this.prevHighlightedInstanceId = -1;
+    }
+  }
+
+  private isSelectedNode(
+      instanceId: number, instancedMesh: THREE.InstancedMesh): boolean {
+    return this.selectedNodeInfo != null &&
+        this.selectedNodeInfo.instancedMesh === instancedMesh &&
+        this.selectedNodeInfo.instanceId === instanceId;
+  }
+
+  private setHighlighterActive(
+      instancedMesh: THREE.InstancedMesh, index: number, active: boolean) {
+    const posY =
+        active ? NODE_HIGHLIGHTER_ACTIVE_Y : NODE_HIGHLIGHTER_INACTIVE_Y;
+    const color = active ? COLOR_ACTIVE_HIGHLIGTER : COLOR_INACTIVE_HIGHLIGTER;
+    this.setInstancedMeshPositionY(instancedMesh, index, posY);
+    instancedMesh.setColorAt(index, color);
+    instancedMesh.instanceColor!.needsUpdate = true;
+  }
+
+  private handleClick(e: MouseEvent) {
+    if (!this.nonConstNodesInstancedMesh || !this.constNodesInstancedMesh) {
+      return;
+    }
+
+    // Unselect the previous node if existed.
+    if (this.selectedNodeInfo) {
+      this.selectedNodeInfo.instancedMesh.setColorAt(
+          this.selectedNodeInfo.instanceId, COLOR_INACTIVE_HIGHLIGTER);
+      this.selectedNodeInfo.instancedMesh.instanceColor!.needsUpdate = true;
+    }
+
+    // Set current selection.
+    if (this.activeNodeInfo) {
+      this.activeNodeInfo.instancedMesh.setColorAt(
+          this.activeNodeInfo.instanceId, COLOR_SELECTED_HIGHLIGTER);
+      this.activeNodeInfo.instancedMesh.instanceColor!.needsUpdate = true;
+      this.selectedNodeInfo = {...this.activeNodeInfo};
+
+      let nodeId = '';
+      if (this.selectedNodeInfo.instancedMesh ===
+          this.constNodeHighlighterInstancedMesh) {
+        nodeId = this.constInstanceIdToNodeId[this.selectedNodeInfo.instanceId];
+      } else {
+        nodeId =
+            this.nonConstInstanceIdToNodeId[this.selectedNodeInfo.instanceId];
+      }
+      this.store.dispatch(setSeelctedNodeId({nodeId}));
+    } else {
+      this.store.dispatch(setSeelctedNodeId({nodeId: ''}));
+    }
+
+    this.render();
+  }
+
+  renderGraph(modelGraphLayout: ModelGraphLayout, doneCallbackFn: () => void) {
     this.currentModelGraphLayout = modelGraphLayout;
 
     if (!this.scene) {
@@ -293,71 +477,141 @@ export class GraphService {
     this.clearScene();
 
     // Render nodes.
-    //
-    // TODO(jingjin): use instancedMesh to improve performance.
     let minX = Number.POSITIVE_INFINITY;
     let minZ = Number.POSITIVE_INFINITY;
     let maxX = Number.NEGATIVE_INFINITY;
     let maxZ = Number.NEGATIVE_INFINITY;
-    for (const node of modelGraphLayout.nodes) {
-      const isConstNode = node.op.toLowerCase() === 'const';
-      let material = isConstNode ? CONST_NODE_MATERIAL : OP_NODE_MATERIAL;
 
+    // Create instanced mesh for node highlighter. Each instance is a slightly
+    // larger rectangle that sits below the actual node rect, and it visually
+    // looks like a border around the actual node.
+    this.constNodeHighlighterInstancedMesh = this.createNodesInstancedMesh(
+        CONST_NODE_WIDTH + BORDER_WIDTH * 2, NODE_HEIGHT + BORDER_WIDTH * 2,
+        modelGraphLayout.numConstNodes);
+    this.nonConstNodeHighlighterInstancedMesh = this.createNodesInstancedMesh(
+        NON_CONST_NODE_WIDTH + BORDER_WIDTH * 2, NODE_HEIGHT + BORDER_WIDTH * 2,
+        modelGraphLayout.numNonConstNodes);
+
+    // Create instanced mesh for all const nodes
+    this.constNodesInstancedMesh = this.createNodesInstancedMesh(
+        CONST_NODE_WIDTH, NODE_HEIGHT, modelGraphLayout.numConstNodes);
+    // Store instanceId (index) -> node in mesh's userData.
+    this.constNodesInstancedMesh.userData = {};
+
+    // Create instanced mesh for all non-const nodes
+    this.nonConstNodesInstancedMesh = this.createNodesInstancedMesh(
+        NON_CONST_NODE_WIDTH, NODE_HEIGHT, modelGraphLayout.numNonConstNodes);
+    // Store instanceId (index) -> node in mesh's userData.
+    this.nonConstNodesInstancedMesh.userData = {};
+
+    let constNodeIndex = 0;
+    let nonConstNodeIndex = 0;
+    let numSyncedText = 0;
+    const nodesMap: {[id: string]: ModelGraphNode} = {};
+    this.nodeIdToInstancedMeshInfo = {};
+    this.constInstanceIdToNodeId = {};
+    this.nonConstInstanceIdToNodeId = {};
+    for (const node of modelGraphLayout.nodes) {
+      nodesMap[node.id] = node;
+
+      const isConstNode = node.op.toLowerCase() === 'const';
+
+      // Index the instanced mesh info for the node.
+      if (isConstNode) {
+        this.nodeIdToInstancedMeshInfo[node.id] = {
+          instanceId: constNodeIndex,
+          instancedMesh: this.constNodesInstancedMesh,
+        };
+        this.constInstanceIdToNodeId[constNodeIndex] = node.id;
+      } else {
+        this.nodeIdToInstancedMeshInfo[node.id] = {
+          instanceId: nonConstNodeIndex,
+          instancedMesh: this.nonConstNodesInstancedMesh,
+        };
+        this.nonConstInstanceIdToNodeId[nonConstNodeIndex] = node.id;
+      }
+
+      // Set colors for highlighter.
+      this.constNodeHighlighterInstancedMesh.setColorAt(
+          constNodeIndex, COLOR_INACTIVE_HIGHLIGTER);
+      this.nonConstNodeHighlighterInstancedMesh.setColorAt(
+          nonConstNodeIndex, COLOR_INACTIVE_HIGHLIGTER);
+
+      // Set colors for const nodes.
+      this.constNodesInstancedMesh.setColorAt(constNodeIndex, COLOR_CONST_NODE);
+
+      // Set colors for non-const nodes.
+      this.nonConstNodesInstancedMesh.setColorAt(
+          nonConstNodeIndex, COLOR_LN_BLUE);
+
+      // Set special colors for input and output nodes.
+      //
       // Input nodes.
       if (node.inputNodeIds.length === 0 && node.op.toLowerCase() !== 'const') {
         this.inputNodes.push(node);
-        material = INPUT_NODE_MATERIAL;
+        this.nonConstNodesInstancedMesh.setColorAt(
+            nonConstNodeIndex, COLOR_LN_GREEN);
       }
       // Output nodes.
       if (node.outputNodeIds.length === 0) {
         this.outputNodes.push(node);
-        material = OUTPUT_NODE_MATERIAL;
+        this.nonConstNodesInstancedMesh.setColorAt(
+            nonConstNodeIndex, COLOR_LN_BROWN);
+      }
+      // TODO: add a plane to make it easy to find input/output nodes.
+
+      // Position each node instance.
+      const posX = (node.x || 0) - node.width / 2;
+      const posZ = (node.y || 0) + node.height / 2;
+      if (isConstNode) {
+        this.setInstancedMeshPosition(
+            this.constNodesInstancedMesh, constNodeIndex, posX, NODE_Y, posZ);
+        this.setInstancedMeshPosition(
+            this.constNodeHighlighterInstancedMesh, constNodeIndex,
+            posX - BORDER_WIDTH, NODE_HIGHLIGHTER_INACTIVE_Y,
+            posZ + BORDER_WIDTH);
+        constNodeIndex++;
+      } else {
+        this.setInstancedMeshPosition(
+            this.nonConstNodesInstancedMesh, nonConstNodeIndex, posX, NODE_Y,
+            posZ);
+        this.setInstancedMeshPosition(
+            this.nonConstNodeHighlighterInstancedMesh, nonConstNodeIndex,
+            posX - BORDER_WIDTH, NODE_HIGHLIGHTER_INACTIVE_Y,
+            posZ + BORDER_WIDTH);
+        nonConstNodeIndex++;
       }
 
-      // Create a ShapeGeometry with rounded rectangle.
-      const nodeShape = this.createRoundedRectangleShape(
-          0, 0, node.width, node.height, NODE_RECT_CORNER_RADIUS);
-      const geometry = new THREE.ShapeGeometry(nodeShape);
-
-      // Create a mesh with the above geometry.
-      const mesh = new THREE.Mesh(geometry, material);
-
-      // Set mesh's position using the data in the layout result.
-      //
-      // Note that node.x and node.y store the center point of the node in the
-      // layout, while the anchor point of the mesh is its bottom-left corner.
-      // To render it correctly, we offset it by (-node.width/2, node.height/2).
-      mesh.position.set(
-          (node.x || 0) - node.width / 2, 10, (node.y || 0) + node.height / 2);
-
-      // By default, the mesh is on the x-y plane. Rotate it to make its front
-      // to face the camera.
-      mesh.rotateX(-Math.PI / 2);
-
-      // Add to scene.
-      this.scene.add(mesh);
-
       // Add text for op name.
-      const opNameText = this.createText(node.op, {
-        font: Font.GoogleSansMedium,
-        fontSize: node.op.length > 15 ? 8 : 11,
-        color: isConstNode ? 0x000000 : 0xffffff,
-        maxWidth: node.width - 4,
-        lineHeight: 1,
-      });
+      const opNameText = this.createText(
+          node.op, {
+            font: Font.GoogleSansMedium,
+            fontSize: node.op.length > 15 ? 8 : 11,
+            maxWidth: node.width - 4,
+            lineHeight: 1,
+          },
+          isConstNode ? CONST_TEXT_MATERIAL : NON_CONST_TEXT_MATERIAL);
       opNameText.position.set(node.x || 0, 20, node.y || 0);
       this.scene.add(opNameText);
-      // This is required to render the text.
+      // Wait for all texts are ready (happens in web workers) then render them.
       opNameText.sync(() => {
-        this.render();
+        numSyncedText++;
+        if (numSyncedText === modelGraphLayout.nodes.length) {
+          this.render();
+          doneCallbackFn();
+        }
       });
 
       // Update graph's range.
-      minX = Math.min(minX, mesh.position.x);
-      maxX = Math.max(maxX, mesh.position.x + node.width);
-      minZ = Math.min(minZ, mesh.position.z);
-      maxZ = Math.max(maxZ, mesh.position.z + node.height);
+      minX = Math.min(minX, posX);
+      maxX = Math.max(maxX, posX + node.width);
+      minZ = Math.min(minZ, posZ);
+      maxZ = Math.max(maxZ, posZ + node.height);
     }
+    this.scene.add(this.constNodeHighlighterInstancedMesh);
+    this.scene.add(this.nonConstNodeHighlighterInstancedMesh);
+    this.scene.add(this.constNodesInstancedMesh);
+    this.scene.add(this.nonConstNodesInstancedMesh);
     this.currentMinX = minX;
     this.currentMaxX = maxX;
     this.currentMinZ = minZ;
@@ -371,17 +625,29 @@ export class GraphService {
       // (CatmullRomCurve3), and render it with a TubeGeometry which we can
       // easily control thickness. With the OrthographicCamera, the tubes look
       // like arrow lines.
+      const toNode = nodesMap[edge.toNodeId];
+      if (edge.controlPoints.some(
+              pt =>
+                  pt.x == null || isNaN(pt.x) || pt.y == null || isNaN(pt.y))) {
+        continue;
+      }
       const controlPointsVectors: THREE.Vector3[] =
-          edge.controlPoints.map(pt => {
+          edge.controlPoints.map((pt, index) => {
+            // if (index === edge.controlPoints.length - 1) {
+            //   return new THREE.Vector3(toNode.x, 0, toNode.y! - NODE_HEIGHT /
+            //   2);
+            // }
             return new THREE.Vector3(pt.x, 0, pt.y);
           });
-      const curve = new THREE.CatmullRomCurve3(controlPointsVectors);
+      const curve =
+          new THREE.CatmullRomCurve3(controlPointsVectors, false, 'chordal');
       const tubeGeometry = new THREE.TubeGeometry(
           curve,
           EDGE_NUM_SEGMENTATIONS,
           EDGE_TUBE_RADIUS,
       );
       const curveObject = new THREE.Mesh(tubeGeometry, EDGE_MATERIAL);
+      curveObject.position.y = EDGE_Y;
       this.scene.add(curveObject);
     }
 
@@ -430,6 +696,16 @@ export class GraphService {
     }
   }
 
+  private createNodesInstancedMesh(
+      nodeWidth: number, nodeHeight: number,
+      count: number): THREE.InstancedMesh {
+    const shape = this.createRoundedRectangleShape(
+        0, 0, nodeWidth, nodeHeight, NODE_RECT_CORNER_RADIUS);
+    const geometry = new THREE.ShapeGeometry(shape);
+    geometry.rotateX(-Math.PI / 2);
+    return new THREE.InstancedMesh(geometry, undefined, count);
+  }
+
   private createRoundedRectangleShape(
       x: number, y: number, width: number, height: number,
       radius: number): THREE.Shape {
@@ -448,12 +724,15 @@ export class GraphService {
   }
 
   // tslint:disable-next-line:no-any
-  private createText(content: string, properties: TextProperties): any {
+  private createText(
+      content: string, properties: TextProperties,
+      material: THREE.Material): any {
     const text = new ThreeText();
     text.text = content;
     text.font = properties.font;
     text.fontSize = properties.fontSize;
-    text.color = properties.color || 0x000000;
+    text.material = material;
+    // text.color = properties.color || 0x000000;
     text.anchorX = properties.anchorX || 'center';
     text.anchorY = properties.anchorY || 'middle';
     text.textAlign = properties.textAlign || 'center';
@@ -483,7 +762,7 @@ export class GraphService {
         obj.geometry.dispose();
       }
       if (obj.material) {
-        (obj.material as Material).dispose();
+        (obj.material as THREE.Material).dispose();
       }
       this.scene.remove(obj);
     }
@@ -502,7 +781,7 @@ export class GraphService {
       return;
     }
     this.renderer.render(this.scene, this.camera);
-    // console.log('call count', this.renderer.info.render.calls);
+    console.log('call count', this.renderer.info.render.calls);
   }
 
   private centerModelGraph(transitionDuration = 0) {
@@ -559,6 +838,21 @@ export class GraphService {
     }
   }
 
+  private handleDiffs(diffs: Diffs) {
+    Object.keys(diffs).forEach(id => {
+      const diff = diffs[id];
+      if (diff > DEFAULT_BAD_NODE_THRESHOLD) {
+        const instancedMeshInfo = this.nodeIdToInstancedMeshInfo[id];
+        if (instancedMeshInfo) {
+          instancedMeshInfo.instancedMesh.setColorAt(
+              instancedMeshInfo.instanceId, COLOR_BAD_NODE);
+          instancedMeshInfo.instancedMesh.instanceColor!.needsUpdate = true;
+        }
+      }
+    });
+    this.render();
+  }
+
   private cameraLeftToD3Translate(targetCameraLeft: number): number {
     if (!this.container) {
       return 0;
@@ -572,5 +866,24 @@ export class GraphService {
     return targetCameraLeft /
         (DEFAULT_FRUSTUM_SIZE / this.currentZoom * aspect) / -2 *
         containerWidth;
+  }
+
+  private setInstancedMeshPosition(
+      instancedMesh: THREE.InstancedMesh, index: number, x: number, y: number,
+      z: number) {
+    this.dummy.position.set(x, y, z);
+    this.dummy.updateMatrix();
+    instancedMesh.setMatrixAt(index, this.dummy.matrix);
+    instancedMesh.instanceMatrix.needsUpdate = true;
+  }
+
+  private setInstancedMeshPositionY(
+      instancedMesh: THREE.InstancedMesh, index: number, y: number) {
+    const curMatrix = new THREE.Matrix4();
+    instancedMesh.getMatrixAt(index, curMatrix);
+    const elements = curMatrix.toArray();
+    curMatrix.setPosition(elements[12], y, elements[14]);
+    instancedMesh.setMatrixAt(index, curMatrix);
+    instancedMesh.instanceMatrix.needsUpdate = true;
   }
 }

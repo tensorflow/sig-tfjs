@@ -17,15 +17,21 @@
 
 import {CommonModule} from '@angular/common';
 import {NgModule} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatInputModule} from '@angular/material/input';
 
 import {InfoPanel} from './info_panel.component';
+import {NodeInfoPanel} from './node_info_panel.component';
 
 @NgModule({
   declarations: [
     InfoPanel,
+    NodeInfoPanel,
   ],
   imports: [
     CommonModule,
+    FormsModule,
+    MatInputModule,
   ],
   exports: [
     InfoPanel,

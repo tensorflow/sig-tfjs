@@ -51,6 +51,9 @@ export interface AppState {
    */
   runStatus?: RunStatus;
 
+  /** Stores the currently selected node id. */
+  selectedNodeId?: string;
+
   /**
    * The current error message occurred in the app.
    *

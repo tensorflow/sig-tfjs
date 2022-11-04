@@ -15,5 +15,88 @@ limitations under the License.
 -->
 
 <div class="container">
-  Info panel
+  <!-- Overview (e.g. number of nodes, inputs, outputs, etc) -->
+  <div class="overview-container" *ngIf="showOverview()">
+    <div class="header">Overview</div>
+    <div class="rows-container">
+      <div class="numbers-container">
+        <div class="number-block">
+          <div class="title">
+            Total nodes
+          </div>
+          <div class="value">
+            {{overview!.numTotalNodes}}
+          </div>
+        </div>
+        <div class="number-block">
+          <div class="title">
+            Bad nodes
+          </div>
+          <div class="value bad" [class.no-bad-nodes]="!hasBadNodes()">
+            {{overview!.numBadNodes}}
+          </div>
+        </div>
+      </div>
+      <div class="threshold-input-container">
+        <div class="label">Threshold for bad nodes</div>
+        <mat-form-field class="threshold-input"
+                        appearance="outline"
+                        floatLabel="never">
+          <input #minInput matInput
+                  [(ngModel)]="threshold"
+                  (focus)="minInput.select()"
+                  (change)="handleThresholdChanged()">
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="header">
+      {{getNodeSectionTitle('Input', overview!.inputNodes)}}
+    </div>
+    <div class="node-container" *ngFor="let node of overview!.inputNodes; let i = index">
+      <div class="index-container input">{{i + 1}}</div>
+      <node-info-panel [nodeInfo]="node"></node-info-panel>
+    </div>
+
+    <div class="header">
+      {{getNodeSectionTitle('Output', overview!.outputNodes)}}
+    </div>
+    <div class="node-container" *ngFor="let node of overview!.outputNodes; let i = index">
+      <div class="index-container output">{{i + 1}}</div>
+      <node-info-panel [nodeInfo]="node"></node-info-panel>
+    </div>
+
+    <ng-container *ngIf="hasBadNodes()">
+      <div class="header">
+        {{getNodeSectionTitle('Bad', overview!.badNodes)}}
+      </div>
+      <div class="node-container" *ngFor="let node of overview!.badNodes; let i = index">
+        <div class="index-container bad">{{i + 1}}</div>
+        <node-info-panel [nodeInfo]="node"></node-info-panel>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Show details for selected node. -->
+  <div class="details-container" *ngIf="showDetails()">
+    <div class="header selected-node">Selected node</div>
+    <div class="node-container">
+      <node-info-panel [nodeInfo]="getSelectedNodeInfo()"></node-info-panel>
+    </div>
+
+    <div class="header">{{getNodeSectionTitle('Input', getSelectedNodeInputs())}}</div>
+    <div class="node-container" *ngFor="let node of getSelectedNodeInputs()">
+      <node-info-panel [nodeInfo]="node"></node-info-panel>
+    </div>
+
+    <div class="header">{{getNodeSectionTitle('Output', getSelectedNodeOutputs())}}</div>
+    <div class="node-container" *ngFor="let node of getSelectedNodeOutputs()">
+      <node-info-panel [nodeInfo]="node"></node-info-panel>
+    </div>
+  </div>
+
+  <div class="empty-msg" *ngIf="showEmptyMessage()">
+    Nothing to inspect
+  </div>
+
 </div>

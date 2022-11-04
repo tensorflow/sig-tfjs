@@ -23,6 +23,9 @@
   }
 
   .loading {
+    display: flex;
+    align-items: center;
+    height: 32px;
     margin-top: var.$spacing-1x;
     color: var.$grey-400;
     font-size: var.$font-size-smaller;

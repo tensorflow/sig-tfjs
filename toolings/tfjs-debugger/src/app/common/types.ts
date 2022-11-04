@@ -16,7 +16,7 @@
  */
 
 import {Configuration} from '../data_model/configuration';
-import {Diffs, ModelGraph, ModelGraphLayout, TensorMap} from '../data_model/run_results';
+import {Diffs, ModelGraph, ModelGraphLayout, ModelGraphLayoutEdge, ModelGraphNode, TensorMap} from '../data_model/run_results';
 
 /** URL parameter keys. */
 export enum UrlParamKey {
@@ -40,7 +40,6 @@ export interface LayoutRequest extends WorkerMessage {
   configIndex: number;
   /** The model graph to calculate layout for. */
   modelGraph: ModelGraph;
-  align: 'DL'|'DR';
 }
 
 export interface LayoutResponse extends WorkerMessage {
@@ -49,10 +48,25 @@ export interface LayoutResponse extends WorkerMessage {
   modelGraphLayout: ModelGraphLayout;
 }
 
+export interface LayoutBatchRequest extends WorkerMessage {
+  nodes: ModelGraphNode[];
+  align: 'DL'|'DR';
+  batchIndex: number;
+}
+
+export interface LayoutBatchResponse extends WorkerMessage {
+  nodes: ModelGraphNode[];
+  edges: ModelGraphLayoutEdge[];
+  align: 'DL'|'DR';
+  batchIndex: number;
+}
+
 /** Possible commands for the msg. */
 export enum WorkerCommand {
   LAYOUT = 'layout',
   LAYOUT_RESULT = 'layout_result',
+  LAYOUT_BATCH = 'layout_batch',
+  LAYOUT_BATCH_RESULT = 'layout_batch_result',
   RUN_TFJS_MODEL = 'run_tfjs_model',
   RUN_TFJS_MODEL_RESULT = 'run_tfjs_model_result',
   CALCULATE_DIFFS = 'calculate_diffs',
@@ -77,4 +91,6 @@ export interface CalculateDiffsRequest extends WorkerMessage {
 
 export interface CalculateDiffsResponse extends WorkerMessage {
   diffs: Diffs;
+  results1: TensorMap;
+  results2: TensorMap;
 }

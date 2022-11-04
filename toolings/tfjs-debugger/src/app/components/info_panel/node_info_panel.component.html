@@ -1,0 +1,49 @@
+<!-- Copyright 2022 Google LLC. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+==============================================================================
+-->
+
+<div class="container" *ngIf="nodeInfo">
+  <div class="node-item">
+    <div class="item-name">op</div>
+    <div class="item-value main">{{nodeInfo!.op}}</div>
+  </div>
+  <div class="node-item">
+    <div class="item-name">id</div>
+    <div class="item-value">{{nodeInfo!.id}}</div>
+  </div>
+  <div class="node-item">
+    <div class="item-name">shape</div>
+    <div class="item-value">{{nodeInfo!.dtypeAndShape}}</div>
+  </div>
+  <div class="node-item" *ngIf="nodeInfo!.diff">
+    <div class="item-name">diff</div>
+    <div class="item-value diff" [class.bad]="isNodeBad()">{{nodeInfo!.diff}}</div>
+  </div>
+  <div class="node-item column" *ngIf="showValues()">
+    <div class="item-name values">First {{nodeInfo!.values!.length}} values</div>
+    <div class="values-container">
+      <div class="values-header">
+        <div class="config-header">Config1</div>
+        <div class="config-header">Config2</div>
+        <div class="diff-header">Diff</div>
+      </div>
+      <div class="values-row" *ngFor="let v of nodeInfo.values">
+        <div class="value">{{v.v1}}</div>
+        <div class="value">{{v.v2}}</div>
+        <div class="diff-value">{{getDiff(v)}}</div>
+      </div>
+    </div>
+  </div>
+</div>

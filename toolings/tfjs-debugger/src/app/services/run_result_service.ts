@@ -1,6 +1,5 @@
 import {Injectable} from '@angular/core';
 import {Store} from '@ngrx/store';
-import {index} from 'd3';
 
 import {CalculateDiffsRequest, CalculateDiffsResponse, WorkerCommand, WorkerMessage} from '../common/types';
 import {RunTask, TaskStatus} from '../data_model/misc';
@@ -15,23 +14,22 @@ import {AppState} from '../store/state';
   providedIn: 'root',
 })
 export class RunResultService {
+  private diffCalculatorWorker =
+      new Worker(new URL('../workers/diff_calculator.worker', import.meta.url));
+
+  private curResult1?: TensorMap;
+  private curResult2?: TensorMap;
+
   constructor(
       private readonly store: Store<AppState>,
-  ) {}
-
-  setResultsAndCalculateDiffs(result1: TensorMap, result2: TensorMap) {
-    // Create worker to calculate diffs.
-    const diffCalculatorWorker = new Worker(
-        new URL('../workers/diff_calculator.worker', import.meta.url));
-    const req: CalculateDiffsRequest = {
-      cmd: WorkerCommand.CALCULATE_DIFFS,
-      result1,
-      result2,
-    };
-    diffCalculatorWorker.onmessage = ({data}) => {
+  ) {
+    this.diffCalculatorWorker.onmessage = ({data}) => {
       const msg = data as WorkerMessage;
       if (msg.cmd === WorkerCommand.CALCULATE_DIFFS_RESULT) {
-        const diffs = (msg as CalculateDiffsResponse).diffs;
+        const resp = msg as CalculateDiffsResponse;
+        const diffs = resp.diffs;
+        this.curResult1 = resp.results1;
+        this.curResult2 = resp.results2;
 
         // Update store.
         this.store.dispatch(setDiffs({diffs}));
@@ -43,9 +41,30 @@ export class RunResultService {
         }));
       }
     };
-    diffCalculatorWorker.postMessage(req, [
+  }
+
+  setResultsAndCalculateDiffs(result1: TensorMap, result2: TensorMap) {
+    // Store results.
+    this.curResult1 = result1;
+    this.curResult2 = result2;
+
+    // Create worker to calculate diffs.
+    const req: CalculateDiffsRequest = {
+      cmd: WorkerCommand.CALCULATE_DIFFS,
+      result1,
+      result2,
+    };
+    this.diffCalculatorWorker.postMessage(req, [
       ...Object.values(result1).map(v => v.values.buffer),
       ...Object.values(result2).map(v => v.values.buffer),
     ]);
+  }
+
+  get result1() {
+    return this.curResult1;
+  }
+
+  get result2() {
+    return this.curResult2;
   }
 }

@@ -39,7 +39,7 @@ export class InputsSection implements OnInit, OnDestroy {
   private inputsFromUrl: DecodedInputItem[] = [];
 
   InputValuesType = InputValuesType;
-  infoMsg = '';
+  infoMsg = 'No model loaded';
   inputs: InputItem[] = [];
   inputTypes = [InputValuesType.RANDOM, InputValuesType.SAME_VALUE];
 
@@ -117,24 +117,25 @@ export class InputsSection implements OnInit, OnDestroy {
     }
 
     // Extract the input nodes.
-    this.inputs = Object.values(modelGraph)
-                      .filter(
-                          node => node.op.toLowerCase() !== 'const' &&
-                              node.inputNodeIds.length === 0)
-                      .map((input, index) => {
-                        return {
-                          index,
-                          id: input.id,
-                          shape: input.shape,
-                          dtype: input.dtype,
-                          op: input.op,
-                          strShape: `${input.dtype}[${input.shape.join(', ')}]`,
-                          inputValuesType: InputValuesType.RANDOM,
-                          randomMin: 0,
-                          randomMax: 1,
-                          sameValue: 0,
-                        };
-                      });
+    this.inputs =
+        Object.values(modelGraph)
+            .filter(
+                node => node.op.toLowerCase() !== 'const' &&
+                    node.inputNodeIds.length === 0 && node.dtype !== 'resource')
+            .map((input, index) => {
+              return {
+                index,
+                id: input.id,
+                shape: input.shape,
+                dtype: input.dtype,
+                op: input.op,
+                strShape: `${input.dtype}[${input.shape.join(', ')}]`,
+                inputValuesType: InputValuesType.RANDOM,
+                randomMin: 0,
+                randomMax: 1,
+                sameValue: 0,
+              };
+            });
     this.mergeDecodedInputsAndModelInputs();
     this.changeDetectorRef.markForCheck();
 

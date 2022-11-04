@@ -51,7 +51,6 @@ export class TfjsService {
                      {config1, config2},
                    ]) => {
           // TODO(jingjin): only support setting tfjs url in config 1.
-          console.log(modelGraph, config1.tfjsModelUrl);
           if (!modelGraph || !config1.tfjsModelUrl) {
             return;
           }
@@ -76,8 +75,6 @@ export class TfjsService {
   private runConfigs(
       configs: Configs, inputs: Input[], modelGraph: ModelGraph,
       modelUrl: string) {
-    console.log(configs, inputs, modelGraph, modelUrl);
-
     // Generate input values.
     const inputTensorMap1: TensorMap = {};
     const inputTensorMap2: TensorMap = {};

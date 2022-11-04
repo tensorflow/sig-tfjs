@@ -16,10 +16,10 @@ limitations under the License.
 
 <div class="container">
   <div class="info-msg">{{infoMsg}}</div>
-  <div class="inputs-container">
+  <div class="inputs-container" *ngIf="!infoMsg">
     <div class="input-container" *ngFor="let input of inputs">
       <div class="input-info-row">
-        <div class="input-index">{{input.index}}:</div>
+        <div class="input-index">{{input.index + 1}}:</div>
         <div class="input-name">{{input.op}}</div>
         <div class="input-shape">{{input.strShape}}</div>
       </div>

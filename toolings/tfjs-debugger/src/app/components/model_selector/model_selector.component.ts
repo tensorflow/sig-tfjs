@@ -52,6 +52,19 @@ export class ModelSelector implements OnInit, OnDestroy {
   // Used by template.
   ModelTypeId = ModelTypeId;
 
+  publishedModels = [
+    {
+      label: 'Mobilenet V2',
+      url:
+          'https://tfhub.dev/google/tfjs-model/imagenet/mobilenet_v2_100_224/classification/3/default/1',
+    },
+    {
+      label: 'Mobilenet V3',
+      url:
+          'https://tfhub.dev/google/tfjs-model/imagenet/mobilenet_v3_large_100_224/classification/5/default/1',
+    }
+  ];
+
   /** All supported model types.  */
   readonly modelTypes: ModelTypeOption[] = [
     {
@@ -82,6 +95,9 @@ export class ModelSelector implements OnInit, OnDestroy {
 
   /** Stores the current tfjs model url */
   tfjsModelUrl = '';
+
+  /** Stores whether to show the const nodes in graph. */
+  showConstNodes = true;
 
   private active = true;
 
@@ -180,6 +196,11 @@ export class ModelSelector implements OnInit, OnDestroy {
       [appendConfigIndexToKey(UrlParamKey.TFJS_MODEL_URL, this.configIndex)]:
           `${this.tfjsModelUrl}`,
     });
+  }
+
+  handleClickPublishedModel(url: string) {
+    this.tfjsModelUrl = url;
+    this.handleTfjsModelUrlChanged();
   }
 
   get isSameAsConfig1Selected(): boolean {

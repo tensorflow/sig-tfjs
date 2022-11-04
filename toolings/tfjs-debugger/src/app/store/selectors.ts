@@ -93,3 +93,13 @@ export const selectModelGraph = (configIndex: ConfigIndex) =>
 export const selectRunStatus = createSelector(selectMainState, (state) => {
   return state.runStatus;
 });
+
+/** Selector to select current diffs. */
+export const selectDiffs = createSelector(selectMainState, (state) => {
+  return state.runResults.diffs;
+});
+
+/** Selector to select currently selected node id. */
+export const selectSelectedNodeId = createSelector(selectMainState, (state) => {
+  return state.selectedNodeId;
+});
