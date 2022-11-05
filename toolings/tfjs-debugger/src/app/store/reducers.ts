@@ -19,7 +19,7 @@ import {createReducer, on} from '@ngrx/store';
 
 import {RunStatus, RunTask, TaskStatus} from '../data_model/misc';
 
-import {clearErrorMessage, fetchTfjsModelJsonFail, fetchTfjsModelJsonSuccess, fetchTfjsReleasesFail, fetchTfjsReleasesSuccess, resetRunStatus, setConfigEnabled, setDiffs, setErrorMessage, setInputs, setModelType, setNodeIdToLocate, setSelectedEdgeId, setSelectedNodeId, setTfjsBackendId, setTfjsBackendVersion, setTfjsModelUrl, triggerRunCurrentConfigs, updateRunTaskStatus} from './actions';
+import {clearErrorMessage, fetchTfjsModelJsonFail, fetchTfjsModelJsonSuccess, fetchTfjsReleasesFail, fetchTfjsReleasesSuccess, resetRunStatus, setBadNodesThreshold, setConfigEnabled, setDiffs, setErrorMessage, setInputs, setModelType, setNodeIdToLocate, setSelectedEdgeId, setSelectedNodeId, setTfjsBackendId, setTfjsBackendVersion, setTfjsModelUrl, triggerRunCurrentConfigs, updateRunTaskStatus} from './actions';
 import {Configs, initialState} from './state';
 import {getRunTasksFromConfigs} from './utils';
 
@@ -160,6 +160,14 @@ export const mainReducer = createReducer(
          } else {
            return {...state, configs};
          }
+       }),
+
+    on(setBadNodesThreshold,
+       (state, {threshold}) => {
+         return {
+           ...state,
+           badNodeThreshold: threshold,
+         };
        }),
 
     on(setDiffs,

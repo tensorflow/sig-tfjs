@@ -119,3 +119,9 @@ export const selecteSelectedEdgeId =
     createSelector(selectMainState, (state) => {
       return state.selectedEdgeId;
     });
+
+/** Selector to select bad nodes threshold. */
+export const selectBadNodesThreshold =
+    createSelector(selectMainState, (state) => {
+      return state.badNodeThreshold;
+    });

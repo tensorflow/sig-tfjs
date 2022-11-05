@@ -15,11 +15,12 @@
  * =============================================================================
  */
 
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit} from '@angular/core';
 import {Store} from '@ngrx/store';
-import {DEFAULT_BAD_NODE_THRESHOLD} from 'src/app/common/consts';
+import {takeWhile} from 'rxjs';
 import {calculateRelativeDiff, getPctDiffString} from 'src/app/common/utils';
 import {setNodeIdToLocate} from 'src/app/store/actions';
+import {selectBadNodesThreshold} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 
 import {NodeInfo, Value} from './types';
@@ -30,15 +31,29 @@ import {NodeInfo, Value} from './types';
   styleUrls: ['./node_info_panel.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NodeInfoPanel implements OnInit {
+export class NodeInfoPanel implements OnInit, OnDestroy {
   @Input() nodeInfo?: NodeInfo;
+
+  private active = true;
+  private threshold = -1;
 
   constructor(
       private readonly changeDetectionRef: ChangeDetectorRef,
       private readonly store: Store<AppState>,
   ) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.store.select(selectBadNodesThreshold)
+        .pipe(takeWhile(() => this.active))
+        .subscribe(threshold => {
+          this.threshold = threshold;
+          this.changeDetectionRef.markForCheck();
+        });
+  }
+
+  ngOnDestroy() {
+    this.active = false;
+  }
 
   handleClickLocateNode() {
     if (!this.nodeInfo) {
@@ -52,8 +67,7 @@ export class NodeInfoPanel implements OnInit {
     if (!this.nodeInfo) {
       return false;
     }
-    return Math.abs((this.nodeInfo.diffValue || 0)) >
-        DEFAULT_BAD_NODE_THRESHOLD;
+    return Math.abs((this.nodeInfo.diffValue || 0)) > this.threshold;
   }
 
   showValues() {
@@ -74,6 +88,6 @@ export class NodeInfoPanel implements OnInit {
     if (v.v2 === 0) {
       diff = v.v1 === 0 ? 0 : Infinity;
     }
-    return Math.abs(diff) >= DEFAULT_BAD_NODE_THRESHOLD;
+    return Math.abs(diff) >= this.threshold;
   }
 }

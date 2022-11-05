@@ -19,11 +19,12 @@ import ForceGraph3D from '3d-force-graph';
 import {Injectable} from '@angular/core';
 import {Store} from '@ngrx/store';
 import * as d3 from 'd3';
-import {filter} from 'rxjs/operators';
-import {CONST_NODE_WIDTH, DEFAULT_BAD_NODE_THRESHOLD, NODE_HEIGHT, NON_CONST_NODE_WIDTH} from 'src/app/common/consts';
+import {filter, skip, withLatestFrom} from 'rxjs/operators';
+import {CONST_NODE_WIDTH, NODE_HEIGHT, NON_CONST_NODE_WIDTH} from 'src/app/common/consts';
+import {getPctDiffString} from 'src/app/common/utils';
 import {Diffs, ModelGraphLayout, ModelGraphLayoutEdge, ModelGraphNode} from 'src/app/data_model/run_results';
 import {setSelectedEdgeId, setSelectedNodeId as setSelectedNodeId} from 'src/app/store/actions';
-import {selectDiffs, selecteSelectedEdgeId, selectNodeIdToLocate, selectSelectedNodeId} from 'src/app/store/selectors';
+import {selectBadNodesThreshold, selectDiffs, selecteSelectedEdgeId, selectNodeIdToLocate, selectSelectedNodeId} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 import * as THREE from 'three';
 import {preloadFont, Text as ThreeText} from 'troika-three-text';
@@ -82,6 +83,7 @@ const EDGE_SELECTION_MATERIAL =
 // Material for text.
 const CONST_TEXT_MATERIAL = new THREE.MeshBasicMaterial({color: 'black'});
 const NON_CONST_TEXT_MATERIAL = new THREE.MeshBasicMaterial({color: 'white'});
+const BAD_NODE_TEXT_MATERIAL = new THREE.MeshBasicMaterial({color: 0xf02311});
 
 // Edges and labels will be hidden when zoom level is below this threshold.
 const ZOOM_LEVEL_THRESHOLD_FOR_SHOWING_DETAILS = 0.3;
@@ -144,6 +146,7 @@ export class GraphService {
   private nodeIdToInstancedMeshInfo: {[id: string]: InstancedMeshInfo} = {};
   private nonConstInstanceIdToNodeId: {[id: number]: string} = {};
   private constInstanceIdToNodeId: {[id: number]: string} = {};
+  private curDiffTextMeshes: THREE.Mesh[] = [];
 
   // D3 related.
   private zoom = d3.zoom();
@@ -170,6 +173,7 @@ export class GraphService {
 
   private container?: HTMLElement;
 
+  private curDiffs?: Diffs;
   private curModelGraphLayout?: ModelGraphLayout;
   private curNodesMap: {[id: string]: ModelGraphNode} = {};
   private curEdgesMap: {[id: string]: ModelGraphLayoutEdge} = {};
@@ -192,9 +196,22 @@ export class GraphService {
 
     // Update graph to show nodes with large diffs.
     this.store.select(selectDiffs)
-        .pipe(filter(diffs => diffs != null))
-        .subscribe(diffs => {
-          this.handleDiffs(diffs!);
+        .pipe(
+            filter(diffs => diffs != null),
+            withLatestFrom(this.store.select(selectBadNodesThreshold)))
+        .subscribe(([diffs, threshold]) => {
+          this.curDiffs = diffs;
+          this.handleDiffs(diffs!, threshold);
+        });
+
+    // Update graph for threhold changes.
+    this.store.select(selectBadNodesThreshold)
+        .pipe(skip(1))
+        .subscribe(threshold => {
+          if (!this.curDiffs) {
+            return;
+          }
+          this.handleDiffs(this.curDiffs, threshold);
         });
 
     // Update UI for selected node.
@@ -498,7 +515,8 @@ export class GraphService {
 
     const node = this.curNodesMap[nodeId];
     const geometry = this.createRoundedRectGeometry(
-        node.width + BORDER_WIDTH * 2, node.height + BORDER_WIDTH * 2);
+        node.width + BORDER_WIDTH * 2, node.height + BORDER_WIDTH * 2,
+        NODE_RECT_CORNER_RADIUS + 4);
     this.hoverHighlighterMesh =
         new THREE.Mesh(geometry, HOVER_HIGHLIGHTER_MATERIAL);
     this.hoverHighlighterMesh.position.set(
@@ -524,7 +542,8 @@ export class GraphService {
 
     const node = this.curNodesMap[nodeId];
     const geometry = this.createRoundedRectGeometry(
-        node.width + BORDER_WIDTH * 2, node.height + BORDER_WIDTH * 2);
+        node.width + BORDER_WIDTH * 2, node.height + BORDER_WIDTH * 2,
+        NODE_RECT_CORNER_RADIUS + 4);
     this.nodeSelectionMesh = new THREE.Mesh(geometry, NODE_SELECTION_MATERIAL);
     this.nodeSelectionMesh.position.set(
         node.x! - node.width / 2 - BORDER_WIDTH, NODE_SELECTION_Y,
@@ -820,10 +839,11 @@ export class GraphService {
         count);
   }
 
-  private createRoundedRectGeometry(nodeWidth: number, nodeHeight: number):
-      THREE.ShapeGeometry {
-    const shape = this.createRoundedRectangleShape(
-        0, 0, nodeWidth, nodeHeight, NODE_RECT_CORNER_RADIUS);
+  private createRoundedRectGeometry(
+      nodeWidth: number, nodeHeight: number,
+      radius = NODE_RECT_CORNER_RADIUS): THREE.ShapeGeometry {
+    const shape =
+        this.createRoundedRectangleShape(0, 0, nodeWidth, nodeHeight, radius);
     const geometry = new THREE.ShapeGeometry(shape);
     geometry.rotateX(-Math.PI / 2);
     return geometry;
@@ -961,19 +981,56 @@ export class GraphService {
     }
   }
 
-  private handleDiffs(diffs: Diffs) {
+  private handleDiffs(diffs: Diffs, threshold: number) {
+    // Reset.
+    this.removeDiffTexts();
+    Object.values(this.nodeIdToInstancedMeshInfo).forEach(info => {
+      info.instancedMesh.setColorAt(
+          info.instanceId,
+          info.instancedMesh === this.constNodesInstancedMesh ?
+              COLOR_CONST_NODE :
+              COLOR_LN_BLUE);
+      info.instancedMesh.instanceColor!.needsUpdate = true;
+    });
+
     Object.keys(diffs).forEach(id => {
       const diff = diffs[id];
-      if (diff > DEFAULT_BAD_NODE_THRESHOLD) {
+      if (Math.abs(diff) > threshold) {
         const instancedMeshInfo = this.nodeIdToInstancedMeshInfo[id];
         if (instancedMeshInfo) {
           instancedMeshInfo.instancedMesh.setColorAt(
               instancedMeshInfo.instanceId, COLOR_BAD_NODE);
           instancedMeshInfo.instancedMesh.instanceColor!.needsUpdate = true;
         }
+
+        const node = this.curNodesMap[id];
+        const diffText = this.createText(
+            getPctDiffString(diff), {
+              font: Font.GoogleSansMedium,
+              fontSize: 8,
+              lineHeight: 1,
+              anchorX: 'right',
+            },
+            BAD_NODE_TEXT_MATERIAL);
+        diffText.position.set(
+            node.x! + node.width / 2, 20,
+            node.y! + node.height / 2 + BORDER_WIDTH + 6);
+        this.scene!.add(diffText);
+        diffText.sync(() => {
+          this.render();
+        });
+        this.curDiffTextMeshes.push(diffText);
       }
     });
     this.render();
+  }
+
+  private removeDiffTexts() {
+    this.curDiffTextMeshes.forEach(mesh => {
+      mesh.geometry.dispose();
+      this.scene!.remove(mesh);
+    });
+    this.curDiffTextMeshes = [];
   }
 
   private handleSelectedNodeIdUpdated(nodeId: string) {

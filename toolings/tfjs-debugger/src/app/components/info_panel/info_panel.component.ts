@@ -17,12 +17,15 @@
 
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {Store} from '@ngrx/store';
-import {withLatestFrom} from 'rxjs';
+import {skip, withLatestFrom} from 'rxjs';
 import {DEFAULT_BAD_NODE_THRESHOLD} from 'src/app/common/consts';
+import {UrlParamKey} from 'src/app/common/types';
 import {getPctDiffString} from 'src/app/common/utils';
 import {Diffs, ModelGraph, ModelGraphNode} from 'src/app/data_model/run_results';
 import {RunResultService} from 'src/app/services/run_result_service';
-import {selectDiffs, selecteSelectedEdgeId, selectModelGraph, selectSelectedNodeId} from 'src/app/store/selectors';
+import {UrlService} from 'src/app/services/url_service';
+import {setBadNodesThreshold} from 'src/app/store/actions';
+import {selectBadNodesThreshold, selectDiffs, selecteSelectedEdgeId, selectModelGraph, selectSelectedNodeId, selectValueFromUrl} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 
 import {GraphService} from '../graph_panel/graph_service';
@@ -54,23 +57,26 @@ export class InfoPanel implements OnInit {
   selectedNodeId?: string;
   selectedEdgeId?: string;
   overview?: Overview;
-  threshold = DEFAULT_BAD_NODE_THRESHOLD;
+  threshold = -1;
 
   constructor(
       private readonly graphService: GraphService,
       private readonly runResultService: RunResultService,
+      private readonly urlService: UrlService,
       private readonly changeDetectionRef: ChangeDetectorRef,
       private readonly store: Store<AppState>,
   ) {}
 
   ngOnInit() {
     this.store.select(selectDiffs)
-        .pipe(withLatestFrom(this.store.select(selectModelGraph(0))))
-        .subscribe(([diffs, modelGraph]) => {
+        .pipe(withLatestFrom(
+            this.store.select(selectModelGraph(0)),
+            this.store.select(selectBadNodesThreshold)))
+        .subscribe(([diffs, modelGraph, threshold]) => {
           if (!modelGraph) {
             return;
           }
-          this.handleGetRunResult(diffs, modelGraph);
+          this.handleGetRunResult(diffs, modelGraph, threshold);
         });
 
     this.store.select(selectSelectedNodeId).subscribe((nodeId) => {
@@ -80,6 +86,29 @@ export class InfoPanel implements OnInit {
     this.store.select(selecteSelectedEdgeId).subscribe((edgeId) => {
       this.handleEdgeSelected(edgeId);
     });
+
+    // Update currently selected backend from URL.
+    this.store.select(selectValueFromUrl(UrlParamKey.BAD_NODES_THRESHOLD))
+        .subscribe((strThreshold) => {
+          let threshold: number = Number(strThreshold);
+          if (isNaN(threshold)) {
+            threshold = DEFAULT_BAD_NODE_THRESHOLD;
+          }
+          this.threshold = threshold;
+
+          // Update store.
+          this.store.dispatch(setBadNodesThreshold({threshold}));
+        });
+
+    // Handle threshold changes.
+    this.store.select(selectBadNodesThreshold)
+        .pipe(skip(1))
+        .subscribe(threshold => {
+          if (this.curModelGraph) {
+            this.handleGetRunResult(
+                this.curDiffs, this.curModelGraph, threshold);
+          }
+        });
   }
 
   noBadNodes(): boolean {
@@ -117,7 +146,9 @@ export class InfoPanel implements OnInit {
   }
 
   handleThresholdChanged() {
-    console.log(this.threshold);
+    // Update url with selected backend id.
+    this.urlService.updateUrlParameters(
+        {[UrlParamKey.BAD_NODES_THRESHOLD]: this.threshold});
   }
 
   getSelectedNodeInfo(): NodeInfo|undefined {
@@ -187,7 +218,8 @@ export class InfoPanel implements OnInit {
     this.graphService.fitEdge();
   }
 
-  private handleGetRunResult(diffs: Diffs|undefined, modelGraph: ModelGraph) {
+  private handleGetRunResult(
+      diffs: Diffs|undefined, modelGraph: ModelGraph, threshold: number) {
     this.curModelGraph = modelGraph;
     this.curDiffs = diffs;
 
@@ -198,8 +230,8 @@ export class InfoPanel implements OnInit {
     let numBadNodes = 0;
     let badNodes: ModelGraphNode[] = [];
     if (diffs && Object.keys(diffs).length > 0) {
-      const badNodeIds = Object.keys(diffs).filter(
-          key => diffs[key] >= DEFAULT_BAD_NODE_THRESHOLD);
+      const badNodeIds =
+          Object.keys(diffs).filter(key => Math.abs(diffs[key]) >= threshold);
       badNodes = badNodeIds.map(id => modelGraph[id]);
       numBadNodes = badNodes.length;
     } else {

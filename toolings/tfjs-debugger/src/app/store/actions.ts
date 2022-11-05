@@ -31,6 +31,7 @@ export enum DebuggerAction {
   SET_TFJS_BACKEND_ID = '[Conf] Set TFJS Backend Id',
   SET_TFJS_BACKEND_VERSION = '[Conf] Set TFJS Backend Version',
   SET_CONFIG_ENABLED = '[Conf] Set Config Enabled',
+  SET_BAD_NODES_THRESHOLD = '[Conf] Set Bad Nodes Threshold',
   SET_INPUTS = '[Input] Set Inputs',
   SET_DIFFS = '[Run] Set Diffs',
   FETCH_TFJS_RELEASES = '[Conf] Fetch TFJS Releases',
@@ -77,6 +78,12 @@ export const setTfjsBackendVersion = createAction(
 export const setConfigEnabled = createAction(
     DebuggerAction.SET_CONFIG_ENABLED,
     props<{configIndex: number, enabled: boolean}>(),
+);
+
+/** Sets bad nodes threshold. */
+export const setBadNodesThreshold = createAction(
+    DebuggerAction.SET_BAD_NODES_THRESHOLD,
+    props<{threshold: number}>(),
 );
 
 /** Sets diffs. */

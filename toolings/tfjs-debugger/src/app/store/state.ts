@@ -15,6 +15,7 @@
  * =============================================================================
  */
 
+import {DEFAULT_BAD_NODE_THRESHOLD} from '../common/consts';
 import {Configuration} from '../data_model/configuration';
 import {Input} from '../data_model/input';
 import {ErrorMessage, RunStatus} from '../data_model/misc';
@@ -60,6 +61,9 @@ export interface AppState {
   /** Stores the id of the node to locate. */
   nodeIdToLocate?: {id: string};
 
+  /** Threshold for bad nodes. */
+  badNodeThreshold: number;
+
   /**
    * The current error message occurred in the app.
    *
@@ -84,4 +88,5 @@ export const initialState: AppState = {
   inputs: [],
   tfjsReleases: [],
   runResults: {},
+  badNodeThreshold: DEFAULT_BAD_NODE_THRESHOLD,
 };

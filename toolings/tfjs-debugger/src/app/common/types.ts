@@ -27,6 +27,7 @@ export enum UrlParamKey {
   SELECTED_BACKEND_VERSION = 'bv',
   CONFIG_ENABLED = 'ce',
   INPUTS = 'inputs',
+  BAD_NODES_THRESHOLD = 'bnt',
 }
 
 /** Valid config index. */
