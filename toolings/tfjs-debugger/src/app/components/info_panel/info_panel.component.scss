@@ -166,6 +166,26 @@
     }
   }
 
+  .edge-overview {
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  .fit-edge {
+    width: fit-content;
+    margin: 0 12px 12px;
+    color: var.$grey-600;
+    font-size: 12px;
+    border-bottom: 1px dotted #555;
+    cursor: pointer;
+    opacity: 80%;
+    user-select: none;
+
+    &:hover {
+      opacity: 100%;
+    }
+  }
+
   .empty-msg {
     display: flex;
     align-items: center;

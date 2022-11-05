@@ -17,6 +17,8 @@
 
 import {CommonModule} from '@angular/common';
 import {NgModule} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 
 import {ConfigSectionModule} from '../config_section/config_section.module';
 import {InputsSectionModule} from '../inputs_section/inputs_section.module';
@@ -30,7 +32,9 @@ import {ConfigsPanel} from './configs_panel.component';
   imports: [
     CommonModule,
     ConfigSectionModule,
+    FormsModule,
     InputsSectionModule,
+    MatSlideToggleModule,
   ],
   exports: [
     ConfigsPanel,

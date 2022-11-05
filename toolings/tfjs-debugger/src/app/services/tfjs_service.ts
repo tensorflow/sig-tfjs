@@ -25,6 +25,7 @@ const DEFAULT_MODEL_NAME = 'model.json';
 export class TfjsService {
   private modelJsonCache: {[url: string]: Observable<ModelJson>} = {};
   private finishedRunCount = 0;
+  private targetRunCount = 0;
   private result1?: TensorMap;
   private result2?: TensorMap;
 
@@ -100,10 +101,13 @@ export class TfjsService {
 
     // Send to runners to run two configs with the generated inputs.
     this.finishedRunCount = 0;
+    this.targetRunCount = configs.config2.enabled ? 2 : 1;
     this.result1 = undefined;
     this.result2 = undefined;
     this.runModel(0, configs.config1, inputTensorMap1, modelGraph, modelUrl);
-    this.runModel(1, configs.config2, inputTensorMap2, modelGraph, modelUrl);
+    if (this.targetRunCount === 2) {
+      this.runModel(1, configs.config2, inputTensorMap2, modelGraph, modelUrl);
+    }
   }
 
   private runModel(
@@ -134,7 +138,7 @@ export class TfjsService {
         }
 
         // Update store when all results are sent back from runners.
-        if (this.finishedRunCount === 2) {
+        if (this.finishedRunCount === this.targetRunCount) {
           this.runResultService.setResultsAndCalculateDiffs(
               this.result1!, this.result2!);
         }

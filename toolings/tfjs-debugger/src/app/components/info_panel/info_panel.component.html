@@ -28,7 +28,7 @@ limitations under the License.
             {{overview!.numTotalNodes}}
           </div>
         </div>
-        <div class="number-block">
+        <div class="number-block" *ngIf="overview!.numBadNodes>=0">
           <div class="title">
             Bad nodes
           </div>
@@ -37,7 +37,7 @@ limitations under the License.
           </div>
         </div>
       </div>
-      <div class="threshold-input-container">
+      <div class="threshold-input-container" *ngIf="overview!.numBadNodes>=0">
         <div class="label">Threshold for bad nodes</div>
         <mat-form-field class="threshold-input"
                         appearance="outline"
@@ -78,7 +78,7 @@ limitations under the License.
   </div>
 
   <!-- Show details for selected node. -->
-  <div class="details-container" *ngIf="showDetails()">
+  <div class="details-container" *ngIf="showNodeDetails()">
     <div class="header selected-node">Selected node</div>
     <div class="node-container">
       <node-info-panel [nodeInfo]="getSelectedNodeInfo()"></node-info-panel>
@@ -96,6 +96,25 @@ limitations under the License.
     </div>
     <div class="node-container" *ngFor="let node of getSelectedNodeOutputs()">
       <node-info-panel [nodeInfo]="node"></node-info-panel>
+    </div>
+  </div>
+
+  <!-- Show details for selected edge. -->
+  <div class="details-container" *ngIf="showEdgeDetails()">
+    <div class="header selected-node">Selected edge</div>
+    <div class="edge-overview">{{getEdgeOverview()}}</div>
+    <div class="fit-edge" (click)="handleClickFitEdgeToView()">
+      Fit edge to view
+    </div>
+
+    <div class="header">Source node</div>
+    <div class="node-container">
+      <node-info-panel [nodeInfo]="getEdgeSourceNode()"></node-info-panel>
+    </div>
+
+    <div class="header">Target node</div>
+    <div class="node-container">
+      <node-info-panel [nodeInfo]="getEdgeTargetNode()"></node-info-panel>
     </div>
   </div>
 

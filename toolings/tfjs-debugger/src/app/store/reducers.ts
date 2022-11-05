@@ -19,7 +19,7 @@ import {createReducer, on} from '@ngrx/store';
 
 import {RunStatus, RunTask, TaskStatus} from '../data_model/misc';
 
-import {clearErrorMessage, fetchTfjsModelJsonFail, fetchTfjsModelJsonSuccess, fetchTfjsReleasesFail, fetchTfjsReleasesSuccess, resetRunStatus, setDiffs, setErrorMessage, setInputs, setModelType, setNodeIdToLocate, setSelectedNodeId, setTfjsBackendId, setTfjsBackendVersion, setTfjsModelUrl, triggerRunCurrentConfigs, updateRunTaskStatus} from './actions';
+import {clearErrorMessage, fetchTfjsModelJsonFail, fetchTfjsModelJsonSuccess, fetchTfjsReleasesFail, fetchTfjsReleasesSuccess, resetRunStatus, setConfigEnabled, setDiffs, setErrorMessage, setInputs, setModelType, setNodeIdToLocate, setSelectedEdgeId, setSelectedNodeId, setTfjsBackendId, setTfjsBackendVersion, setTfjsModelUrl, triggerRunCurrentConfigs, updateRunTaskStatus} from './actions';
 import {Configs, initialState} from './state';
 import {getRunTasksFromConfigs} from './utils';
 
@@ -125,6 +125,33 @@ export const mainReducer = createReducer(
              config2: {
                ...state.configs.config2,
                backendVersion: version,
+             }
+           };
+         }
+         if (!configs) {
+           return state;
+         } else {
+           return {...state, configs};
+         }
+       }),
+
+    on(setConfigEnabled,
+       (state, {configIndex, enabled}) => {
+         let configs: Configs|undefined;
+         if (configIndex === 0) {
+           configs = {
+             ...state.configs,
+             config1: {
+               ...state.configs.config1,
+               enabled,
+             }
+           };
+         } else if (configIndex === 1) {
+           configs = {
+             ...state.configs,
+             config2: {
+               ...state.configs.config2,
+               enabled,
              }
            };
          }
@@ -254,6 +281,7 @@ export const mainReducer = createReducer(
            runStatus,
            // Reset.
            selectedNodeId: '',
+           selectedEdgeId: '',
            nodeIdToLocate: {id: ''},
          };
        }),
@@ -285,12 +313,21 @@ export const mainReducer = createReducer(
          };
        }),
 
+    on(setSelectedEdgeId,
+       (state, {edgeId}) => {
+         return {
+           ...state,
+           selectedEdgeId: edgeId,
+         };
+       }),
+
     on(setNodeIdToLocate,
        (state, {nodeId}) => {
          return {
            ...state,
            nodeIdToLocate: {id: nodeId},
            selectedNodeId: nodeId,
+           selectedEdgeId: '',
          };
        }),
 );

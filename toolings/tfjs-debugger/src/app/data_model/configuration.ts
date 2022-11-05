@@ -32,4 +32,7 @@ export interface Configuration {
   backendVersion?: string;
 
   /** Show const nodes */
+
+  /** Enabled */
+  enabled: boolean;
 }

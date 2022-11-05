@@ -14,8 +14,11 @@ limitations under the License.
 ==============================================================================
 -->
 
-<div class="container">
-  <div class="info-msg">{{infoMsg}}</div>
+<div class="container" *ngIf="inputs.length > 0">
+  <div class="config-header">
+    Inputs
+  </div>
+  <div class="info-msg" *ngIf="infoMsg">{{infoMsg}}</div>
   <div class="inputs-container" *ngIf="!infoMsg">
     <div class="input-container" *ngFor="let input of inputs">
       <div class="input-info-row">

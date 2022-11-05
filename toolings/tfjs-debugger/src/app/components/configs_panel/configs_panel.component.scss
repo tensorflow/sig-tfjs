@@ -37,5 +37,33 @@
     font-weight: 500;
     font-size: var.$font-size-normal;
     background-color: #e7edf7;
+
+    &.config2 {
+      justify-content: space-between;
+    }
+
+    ::ng-deep .mat-slide-toggle-bar {
+      transform: scale(0.7);
+    }
+
+    ::ng-deep .mat-slide-toggle-content {
+      margin-left: -8px;
+      color: var.$grey-500;
+      font-weight: 400;
+      font-size: 12px;
+    }
+
+    .mat-slide-toggle.mat-checked ::ng-deep .mat-slide-toggle-content {
+      color: var.$grey-800;
+    }
+  }
+
+  config-section {
+    transition: opacity 200ms ease-out;
+
+    &.disabled {
+      opacity: 30%;
+      pointer-events: none;
+    }
   }
 }

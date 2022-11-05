@@ -46,3 +46,31 @@ export function getTypedArrayFromInput(
       return new Float32Array(size);
   }
 }
+
+/**
+ * A helper function to calculate relative diff between two numbers.
+ */
+export function calculateRelativeDiff(v1: number, v2: number): number {
+  let diff = v1 / v2;
+  if (Math.abs(v2) < 1e-7) {
+    diff = (Math.abs(v1) < 1e-7) ? 0 : Infinity;
+  }
+  return diff;
+}
+
+/**
+ * A helper function to get the diff string in pct.
+ */
+export function getPctDiffString(diff: number): string {
+  if (diff === 0) {
+    return '0%';
+  }
+  if (diff === Infinity) {
+    return 'Inf';
+  }
+  let str = `${(diff * 100).toFixed(2)}%`;
+  if (str === '0.00%' || str == '-0.00%') {
+    str = '0%';
+  }
+  return str;
+}

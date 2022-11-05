@@ -54,6 +54,9 @@ export interface AppState {
   /** Stores the currently selected node id. */
   selectedNodeId?: string;
 
+  /** Stores the currently selected edge id. */
+  selectedEdgeId?: string;
+
   /** Stores the id of the node to locate. */
   nodeIdToLocate?: {id: string};
 
@@ -71,9 +74,11 @@ export const initialState: AppState = {
   configs: {
     config1: {
       modelType: ModelTypeId.TFJS,
+      enabled: true,
     },
     config2: {
       modelType: ModelTypeId.SAME_AS_CONFIG1,
+      enabled: true,
     }
   },
   inputs: [],

@@ -85,6 +85,8 @@ export class InputsSection implements OnInit, OnDestroy {
 
   private handleTfjsUrlChanged(url: string) {
     if (!url) {
+      this.inputs = [];
+      this.changeDetectorRef.markForCheck();
       return;
     }
 

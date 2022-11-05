@@ -15,22 +15,26 @@
  * =============================================================================
  */
 
+import ForceGraph3D from '3d-force-graph';
 import {Injectable} from '@angular/core';
 import {Store} from '@ngrx/store';
 import * as d3 from 'd3';
 import {filter} from 'rxjs/operators';
 import {CONST_NODE_WIDTH, DEFAULT_BAD_NODE_THRESHOLD, NODE_HEIGHT, NON_CONST_NODE_WIDTH} from 'src/app/common/consts';
-import {Diffs, ModelGraphLayout, ModelGraphNode} from 'src/app/data_model/run_results';
-import {setSelectedNodeId as setSelectedNodeId} from 'src/app/store/actions';
-import {selectDiffs, selectNodeIdToLocate, selectSelectedNodeId} from 'src/app/store/selectors';
+import {Diffs, ModelGraphLayout, ModelGraphLayoutEdge, ModelGraphNode} from 'src/app/data_model/run_results';
+import {setSelectedEdgeId, setSelectedNodeId as setSelectedNodeId} from 'src/app/store/actions';
+import {selectDiffs, selecteSelectedEdgeId, selectNodeIdToLocate, selectSelectedNodeId} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 import * as THREE from 'three';
 import {preloadFont, Text as ThreeText} from 'troika-three-text';
+
+import {ForceGraph3DGenericInstance} from './3d-force-graph';
 
 const DEFAULT_FRUSTUM_SIZE = 500;
 const DEFAULT_CAMERA_Y = 100;
 const NODE_RECT_CORNER_RADIUS = 6;
 const EDGE_TUBE_RADIUS = 0.5;
+const EDGE_HIGHLIGHTER_TUBE_RADIUS = 1;
 const EDGE_NUM_SEGMENTATIONS = 64;
 const BORDER_WIDTH = 5;
 const NODE_Y = 11;
@@ -53,15 +57,27 @@ const COLOR_LN_BROWN = new THREE.Color(0xf9c0ad);
 // Color for bad nodes.
 const COLOR_BAD_NODE = new THREE.Color(0xf02311);
 
+// Color for node/edge hover.
+const COLOR_HIGHLIGHTER = new THREE.Color(0xfdda91);
+
+// Color for node/edge selection.
+const COLOR_SELECTION = new THREE.Color(0xfbb829);
+
 // Material for hover highlighter.
 const HOVER_HIGHLIGHTER_MATERIAL =
-    new THREE.MeshBasicMaterial({color: 0xfdda91});
+    new THREE.MeshBasicMaterial({color: COLOR_HIGHLIGHTER});
 
 // Material for node selection.
-const NODE_SELECTION_MATERIAL = new THREE.MeshBasicMaterial({color: 0xfbb829});
+const NODE_SELECTION_MATERIAL =
+    new THREE.MeshBasicMaterial({color: COLOR_SELECTION});
 
 // Material for edges.
 const EDGE_MATERIAL = new THREE.MeshBasicMaterial({color: 0xdddddd});
+const EDGE_BG_MATERIAL = new THREE.MeshBasicMaterial({color: 0xffffff});
+const EDGE_HIGHLIGHTER_MATERIAL =
+    new THREE.MeshBasicMaterial({color: COLOR_HIGHLIGHTER});
+const EDGE_SELECTION_MATERIAL =
+    new THREE.MeshBasicMaterial({color: COLOR_SELECTION});
 
 // Material for text.
 const CONST_TEXT_MATERIAL = new THREE.MeshBasicMaterial({color: 'black'});
@@ -73,6 +89,15 @@ const ZOOM_LEVEL_THRESHOLD_FOR_SHOWING_DETAILS = 0.3;
 // Fonts that will be used in the scene.
 enum Font {
   GoogleSansMedium = 'assets/GoogleSans-Medium.ttf',
+}
+
+enum ObjectType {
+  CONST_NODES = 'constNodes',
+  NON_CONST_NODES = 'nonConstNodes',
+  EDGE = 'edge',
+  EDGE_BG = 'edgeBg',
+  EDGE_HIGHLIGHTER = 'edgeHighlighter',
+  EDGE_SELECTION = 'edgeSelection',
 }
 
 // See
@@ -111,6 +136,8 @@ export class GraphService {
   private nonConstNodesInstancedMesh?: THREE.InstancedMesh;
   private hoverHighlighterMesh?: THREE.Mesh;
   private nodeSelectionMesh?: THREE.Mesh;
+  private edgeHighligterMesh?: THREE.Mesh;
+  private edgeSelectionMesh?: THREE.Mesh;
   private dummy = new THREE.Object3D();
   private mousePos = new THREE.Vector2();
   private raycaster = new THREE.Raycaster();
@@ -132,14 +159,20 @@ export class GraphService {
 
   private inputNodes: ModelGraphNode[] = [];
   private outputNodes: ModelGraphNode[] = [];
+
   private curHoveredNodeId = '';
   private curSelectedNodeId = '';
   private prevHoveredNodeId = '';
+
+  private curHoveredEdgeId = '';
+  private curSelectedEdgeId = '';
+  private prevHoveredEdgeId = '';
 
   private container?: HTMLElement;
 
   private curModelGraphLayout?: ModelGraphLayout;
   private curNodesMap: {[id: string]: ModelGraphNode} = {};
+  private curEdgesMap: {[id: string]: ModelGraphLayoutEdge} = {};
 
   constructor(
       private readonly store: Store<AppState>,
@@ -173,6 +206,15 @@ export class GraphService {
       this.handleSelectedNodeIdUpdated(nodeId);
     });
 
+    // Update UI for selected edge.
+    this.store.select(selecteSelectedEdgeId).subscribe(edgeId => {
+      if (edgeId == null) {
+        return;
+      }
+
+      this.handleSelectedEdgeIdUpdated(edgeId);
+    });
+
     // Zoom and translate graph to locate the given node.
     this.store.select(selectNodeIdToLocate).subscribe(nodeId => {
       if (!nodeId || !nodeId.id) {
@@ -180,7 +222,7 @@ export class GraphService {
       }
 
       this.handleLocateNodeId(nodeId.id);
-    })
+    });
   }
 
   init(container: HTMLElement, canvas: HTMLElement) {
@@ -313,6 +355,11 @@ export class GraphService {
             this.render();
             event.preventDefault();
             return false;
+          } else if (event.type === 'dblclick') {
+            if (this.curSelectedEdgeId) {
+              this.fitEdge();
+              return false;
+            }
           }
 
           return true;
@@ -326,6 +373,7 @@ export class GraphService {
           const belowThreshold =
               this.currentZoom < ZOOM_LEVEL_THRESHOLD_FOR_SHOWING_DETAILS;
           EDGE_MATERIAL.visible = !belowThreshold;
+          EDGE_BG_MATERIAL.visible = !belowThreshold;
           CONST_TEXT_MATERIAL.visible = !belowThreshold;
           NON_CONST_TEXT_MATERIAL.visible = !belowThreshold;
 
@@ -382,17 +430,21 @@ export class GraphService {
       return;
     }
 
-    // Figure out which node highlighter mesh instance is under the current
-    // mouse cursor, and change it color.
+    // Find the node/edge under the mouse curosr using ray casting.
     this.mousePos.x = (e.offsetX / this.container!.offsetWidth) * 2 - 1;
     this.mousePos.y = -(e.offsetY / this.container!.offsetHeight) * 2 + 1;
     this.raycaster.setFromCamera(this.mousePos, this.camera);
-    const intersections = this.raycaster.intersectObjects(
-        [this.constNodesInstancedMesh, this.nonConstNodesInstancedMesh]);
-    if (intersections.length > 0) {
-      const intersection = intersections[0];
+
+    const intersections = this.raycaster.intersectObject(this.scene!);
+    const nodeIntersections = intersections.filter(intersect => {
+      const type = intersect.object.userData['type'];
+      return type === ObjectType.CONST_NODES ||
+          type === ObjectType.NON_CONST_NODES;
+    });
+    if (nodeIntersections.length > 0) {
+      const intersection = nodeIntersections[0];
       const intersectWithConstNode =
-          intersections[0].object === this.constNodesInstancedMesh;
+          intersection.object === this.constNodesInstancedMesh;
       const instanceId = intersection.instanceId!;
       const instanceIdToNodeId = intersectWithConstNode ?
           this.constInstanceIdToNodeId :
@@ -412,12 +464,37 @@ export class GraphService {
       this.render();
       this.container!.style.cursor = 'default';
     }
+
+    const edgeIntersections = intersections.filter(intersect => {
+      const type = intersect.object.userData['type'];
+      return type === ObjectType.EDGE_BG;
+    });
+    if (edgeIntersections.length > 0) {
+      const edge =
+          edgeIntersections[0].object.userData['edge'] as ModelGraphLayoutEdge;
+      const edgeId = this.edgeId(edge);
+      if (edgeId !== this.prevHoveredEdgeId) {
+        this.prevHoveredEdgeId = edgeId;
+        this.curHoveredEdgeId = edgeId;
+        this.showEdgeHighlighter(edge);
+        this.render();
+        this.container!.style.cursor = 'pointer';
+      }
+    } else if (this.prevHoveredEdgeId) {
+      this.removeEdgeHighlighter();
+      this.prevHoveredEdgeId = '';
+      this.curHoveredEdgeId = '';
+      this.render();
+      this.container!.style.cursor = 'default';
+    }
   }
 
   private showNodeHighlighter(nodeId: string) {
     if (!this.curModelGraphLayout) {
       return;
     }
+
+    this.removeNodeHighlighter();
 
     const node = this.curNodesMap[nodeId];
     const geometry = this.createRoundedRectGeometry(
@@ -443,6 +520,8 @@ export class GraphService {
       return;
     }
 
+    this.removeNodeSelection();
+
     const node = this.curNodesMap[nodeId];
     const geometry = this.createRoundedRectGeometry(
         node.width + BORDER_WIDTH * 2, node.height + BORDER_WIDTH * 2);
@@ -461,12 +540,70 @@ export class GraphService {
     }
   }
 
+  private showEdgeHighlighter(edge: ModelGraphLayoutEdge) {
+    this.removeEdgeHighlighter();
+
+    this.edgeHighligterMesh = this.createEdge(
+        edge, EDGE_HIGHLIGHTER_MATERIAL, EDGE_HIGHLIGHTER_TUBE_RADIUS,
+        EDGE_Y + 1, ObjectType.EDGE_HIGHLIGHTER);
+    this.scene!.add(this.edgeHighligterMesh);
+  }
+
+  private removeEdgeHighlighter() {
+    if (this.edgeHighligterMesh) {
+      this.scene!.remove(this.edgeHighligterMesh);
+      this.edgeHighligterMesh.geometry.dispose();
+      this.edgeHighligterMesh = undefined;
+    }
+  }
+
+  private showEdgeSelection(edgeId: string) {
+    if (!this.curModelGraphLayout) {
+      return;
+    }
+
+    this.removeEdgeSelection();
+    const edge = this.curEdgesMap[edgeId];
+    this.edgeSelectionMesh = this.createEdge(
+        edge, EDGE_SELECTION_MATERIAL, EDGE_HIGHLIGHTER_TUBE_RADIUS, EDGE_Y + 1,
+        ObjectType.EDGE_SELECTION);
+    this.scene!.add(this.edgeSelectionMesh);
+  }
+
+  private removeEdgeSelection() {
+    if (this.edgeSelectionMesh) {
+      this.scene!.remove(this.edgeSelectionMesh);
+      this.edgeSelectionMesh.geometry.dispose();
+      this.edgeSelectionMesh = undefined;
+    }
+  }
+
   private handleClick(e: MouseEvent) {
     if (!this.nonConstNodesInstancedMesh || !this.constNodesInstancedMesh) {
       return;
     }
 
     this.store.dispatch(setSelectedNodeId({nodeId: this.curHoveredNodeId}));
+    this.store.dispatch(setSelectedEdgeId({edgeId: this.curHoveredEdgeId}));
+  }
+
+  renderGraph2(modelGraphLayout: ModelGraphLayout, doneCallbackFn: () => void) {
+    // Random tree
+    const N = 300;
+    const gData = {
+      nodes: [...Array(N).keys()].map(i => ({id: i})),
+      links: [...Array(N).keys()].filter(id => id).map(
+          id => ({source: id, target: Math.round(Math.random() * (id - 1))}))
+    };
+
+    const gData2 = {
+      nodes: modelGraphLayout.nodes,
+      links: modelGraphLayout.edges.map(
+          edge => ({source: edge.fromNodeId, target: edge.toNodeId})),
+    };
+
+    const graph = ForceGraph3D()(this.container!).graphData(gData2);
+    doneCallbackFn();
   }
 
   renderGraph(modelGraphLayout: ModelGraphLayout, doneCallbackFn: () => void) {
@@ -487,14 +624,15 @@ export class GraphService {
     // Create instanced mesh for all const nodes
     this.constNodesInstancedMesh = this.createNodesInstancedMesh(
         CONST_NODE_WIDTH, NODE_HEIGHT, modelGraphLayout.numConstNodes);
-    // Store instanceId (index) -> node in mesh's userData.
-    this.constNodesInstancedMesh.userData = {};
+    this.constNodesInstancedMesh.userData = {'type': ObjectType.CONST_NODES};
 
     // Create instanced mesh for all non-const nodes
     this.nonConstNodesInstancedMesh = this.createNodesInstancedMesh(
         NON_CONST_NODE_WIDTH, NODE_HEIGHT, modelGraphLayout.numNonConstNodes);
     // Store instanceId (index) -> node in mesh's userData.
-    this.nonConstNodesInstancedMesh.userData = {};
+    this.nonConstNodesInstancedMesh.userData = {
+      'type': ObjectType.NON_CONST_NODES
+    };
 
     let constNodeIndex = 0;
     let nonConstNodeIndex = 0;
@@ -596,39 +734,41 @@ export class GraphService {
     // Render edges.
     //
     // TODO: render arrows at the end of the edges.
+    this.curEdgesMap = {};
     for (const edge of modelGraphLayout.edges) {
-      // For each edge, use its control points to create a curve
-      // (CatmullRomCurve3), and render it with a TubeGeometry which we can
-      // easily control thickness. With the OrthographicCamera, the tubes look
-      // like arrow lines.
-      const toNode = this.curNodesMap[edge.toNodeId];
-      if (edge.controlPoints.some(
-              pt =>
-                  pt.x == null || isNaN(pt.x) || pt.y == null || isNaN(pt.y))) {
-        continue;
-      }
-      const controlPointsVectors: THREE.Vector3[] =
-          edge.controlPoints.map((pt, index) => {
-            // if (index === edge.controlPoints.length - 1) {
-            //   return new THREE.Vector3(toNode.x, 0, toNode.y! - NODE_HEIGHT /
-            //   2);
-            // }
-            return new THREE.Vector3(pt.x, 0, pt.y);
-          });
-      const curve =
-          new THREE.CatmullRomCurve3(controlPointsVectors, false, 'chordal');
-      const tubeGeometry = new THREE.TubeGeometry(
-          curve,
-          EDGE_NUM_SEGMENTATIONS,
-          EDGE_TUBE_RADIUS,
-      );
-      const curveObject = new THREE.Mesh(tubeGeometry, EDGE_MATERIAL);
-      curveObject.position.y = EDGE_Y;
-      this.scene.add(curveObject);
+      this.curEdgesMap[this.edgeId(edge)] = edge;
+      this.scene.add(this.createEdge(
+          edge, EDGE_BG_MATERIAL, EDGE_TUBE_RADIUS * 10, 1,
+          ObjectType.EDGE_BG));
+      this.scene.add(this.createEdge(edge, EDGE_MATERIAL, EDGE_TUBE_RADIUS));
     }
 
     this.render();
     this.centerModelGraph();
+  }
+
+  private createEdge(
+      edge: ModelGraphLayoutEdge, material: THREE.Material, width: number,
+      posY: number = EDGE_Y, type: ObjectType = ObjectType.EDGE): THREE.Mesh {
+    // For each edge, use its control points to create a curve
+    // (CatmullRomCurve3), and render it with a TubeGeometry which we can
+    // easily control thickness. With the OrthographicCamera, the tubes look
+    // like arrow lines.
+    const controlPointsVectors: THREE.Vector3[] =
+        edge.controlPoints.map((pt, index) => {
+          return new THREE.Vector3(pt.x, 0, pt.y);
+        });
+    const curve =
+        new THREE.CatmullRomCurve3(controlPointsVectors, false, 'chordal');
+    const tubeGeometry = new THREE.TubeGeometry(
+        curve,
+        EDGE_NUM_SEGMENTATIONS,
+        width,
+    );
+    const curveObject = new THREE.Mesh(tubeGeometry, material);
+    curveObject.userData = {'type': type, 'edge': edge};
+    curveObject.position.y = posY;
+    return curveObject;
   }
 
   private setCameraFrustum() {
@@ -836,7 +976,7 @@ export class GraphService {
     this.render();
   }
 
-  handleSelectedNodeIdUpdated(nodeId: string) {
+  private handleSelectedNodeIdUpdated(nodeId: string) {
     // Unselect the previous node if existed.
     if (this.curSelectedNodeId) {
       this.curSelectedNodeId = '';
@@ -852,39 +992,101 @@ export class GraphService {
     this.render();
   }
 
-  handleLocateNodeId(nodeId: string) {
-    const zoomLevel = this.currentZoom;
+  private handleLocateNodeId(nodeId: string) {
+    this.locateNode(nodeId, 400);
+  }
+
+  private handleSelectedEdgeIdUpdated(edgeId: string) {
+    // Unselect the previous node if existed.
+    if (this.curSelectedEdgeId) {
+      this.curSelectedEdgeId = '';
+      this.removeEdgeSelection();
+    }
+
+    this.curSelectedEdgeId = edgeId;
+    if (this.curSelectedEdgeId) {
+      this.showEdgeSelection(this.curSelectedEdgeId);
+    } else {
+      this.removeEdgeSelection();
+    }
+    this.render();
+  }
+
+  private locateNode(nodeId: string, transitionDuration = 0) {
+    if (!this.container) {
+      return;
+    }
+
     this.currentTranslatX = 0;
     this.currentTranslatY = 0;
     this.currentZoom = 1;
-    this.locateNode(nodeId, zoomLevel, 300);
+
+    const scale = 1.5;
+    const node = this.curNodesMap[nodeId];
+    const x = node.x!;
+    const y = node.y!;
+
+    this.centerViewAt(x, y, scale, transitionDuration);
   }
 
-  private locateNode(
-      nodeId: string, zoomLevel: number, transitionDuration = 0) {
+  fitEdge() {
+    if (!this.curSelectedEdgeId || !this.container) {
+      return;
+    }
+
+    this.currentTranslatX = 0;
+    this.currentTranslatY = 0;
+    this.currentZoom = 1;
+
+    const [fromNodeId, toNodeId] = this.curSelectedEdgeId.split('___');
+    const fromNode = this.curNodesMap[fromNodeId];
+    const toNode = this.curNodesMap[toNodeId];
+    const x = (fromNode.x! + toNode.x!) / 2;
+    const y = (fromNode.y! + toNode.y!) / 2;
+    const w = Math.max(fromNode.x! + fromNode.width, toNode.x! + toNode.width) -
+        Math.min(fromNode.x!, toNode.x!);
+    const h =
+        Math.max(fromNode.y! + fromNode.height, toNode.y! + toNode.height) -
+        Math.min(fromNode.y!, toNode.y!);
+    const areaAspect = w / h;
+    const containerAspect =
+        this.container.clientWidth / this.container.clientHeight;
+    let scale = areaAspect > containerAspect ?
+        (this.container.clientWidth / w) :
+        (this.container.clientHeight / h);
+    scale = Math.max(0.4, Math.min(scale, 1.5));
+
+    this.centerViewAt(x, y, scale);
+  }
+
+  private centerViewAt(
+      centerX: number, centerY: number, scale: number,
+      transitionDuration = 400) {
     if (!this.container) {
       return;
     }
 
     const containerWidth = this.container.clientWidth;
     const containerHeight = this.container.clientHeight;
-    const scale = zoomLevel;
-    const node = this.curNodesMap[nodeId];
-    const x = node.x!;
-    const y = node.y!;
+
     // Apply transform (translation + scale) through d3.zoom.
     const aspect = containerWidth / containerHeight;
     const targetCameraLeft =
-        (-2 * DEFAULT_FRUSTUM_SIZE * aspect / 2 / scale + x);
-    const targetCameraTop = -y + DEFAULT_FRUSTUM_SIZE / scale;
+        (-2 * DEFAULT_FRUSTUM_SIZE * aspect / 2 / scale + centerX);
+    const targetCameraTop = -centerY + DEFAULT_FRUSTUM_SIZE / scale;
     const transform = d3.zoomIdentity.scale(scale).translate(
         this.cameraLeftToD3Translate(targetCameraLeft),
         this.cameraTopToD3Translate(targetCameraTop));
     const view = d3.select(this.container as Element);
-    view.transition()
-        .duration(transitionDuration)
-        .ease(d3.easeCubicInOut)
-        .call(this.zoom.transform, transform);
+    if (transitionDuration === 0) {
+      // tslint:disable-next-line:no-any
+      (view as any).call(this.zoom.transform, transform);
+    } else {
+      view.transition()
+          .duration(transitionDuration)
+          .ease(d3.easeExpInOut)
+          .call(this.zoom.transform, transform);
+    }
   }
 
   private cameraLeftToD3Translate(targetCameraLeft: number): number {
@@ -937,5 +1139,9 @@ export class GraphService {
     curMatrix.setPosition(elements[12], y, elements[14]);
     instancedMesh.setMatrixAt(index, curMatrix);
     instancedMesh.instanceMatrix.needsUpdate = true;
+  }
+
+  private edgeId(edge: ModelGraphLayoutEdge): string {
+    return `${edge.fromNodeId}___${edge.toNodeId}`;
   }
 }

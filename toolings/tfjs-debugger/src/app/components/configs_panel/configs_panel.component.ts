@@ -15,7 +15,16 @@
  * =============================================================================
  */
 
-import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit} from '@angular/core';
+import {MatSlideToggleChange} from '@angular/material/slide-toggle';
+import {Store} from '@ngrx/store';
+import {takeWhile} from 'rxjs';
+import {UrlParamKey} from 'src/app/common/types';
+import {appendConfigIndexToKey} from 'src/app/common/utils';
+import {UrlService} from 'src/app/services/url_service';
+import {setConfigEnabled, setTfjsBackendId} from 'src/app/store/actions';
+import {selectConfigValueFromUrl} from 'src/app/store/selectors';
+import {AppState} from 'src/app/store/state';
 
 /**
  * The configs panel located at the left of the screen where users set up 2
@@ -31,7 +40,34 @@ import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConfigsPanel implements OnInit {
-  constructor() {}
+  config2Enabled = true;
 
-  ngOnInit() {}
+  constructor(
+      private readonly changeDetectorRef: ChangeDetectorRef,
+      private readonly store: Store<AppState>,
+      private readonly urlService: UrlService,
+  ) {}
+
+  ngOnInit() {
+    // Update config2's enabled/disabled status.
+    this.store.select(selectConfigValueFromUrl(1, UrlParamKey.CONFIG_ENABLED))
+        .subscribe((strEnabled) => {
+          this.config2Enabled = strEnabled === 'true';
+          this.changeDetectorRef.markForCheck();
+
+          // Update store.
+          this.store.dispatch(setConfigEnabled({
+            configIndex: 1,
+            enabled: this.config2Enabled,
+          }));
+        });
+  }
+
+  handleConfig2Toggled(event: MatSlideToggleChange) {
+    // Update url with selected backend id.
+    this.urlService.updateUrlParameters({
+      [appendConfigIndexToKey(UrlParamKey.CONFIG_ENABLED, 1)]:
+          `${event.checked}`
+    });
+  }
 }

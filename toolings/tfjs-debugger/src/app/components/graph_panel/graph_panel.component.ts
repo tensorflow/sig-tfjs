@@ -32,8 +32,6 @@ import {GraphService} from './graph_service';
   selector: 'graph-panel',
   templateUrl: './graph_panel.component.html',
   styleUrls: ['./graph_panel.component.scss'],
-  // GraphService is only available for GraphPanel.
-  providers: [GraphService],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GraphPanel implements OnInit, AfterViewInit {

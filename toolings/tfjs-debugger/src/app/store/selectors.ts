@@ -89,6 +89,11 @@ export const selectModelGraph = (configIndex: ConfigIndex) =>
       return undefined;
     });
 
+/** Selector to select whether config2 is enabled or not. */
+export const selectConfig2Enabled = createSelector(selectMainState, (state) => {
+  return state.configs.config2.enabled;
+});
+
 /** Selector to select run status. */
 export const selectRunStatus = createSelector(selectMainState, (state) => {
   return state.runStatus;
@@ -108,3 +113,9 @@ export const selectSelectedNodeId = createSelector(selectMainState, (state) => {
 export const selectNodeIdToLocate = createSelector(selectMainState, (state) => {
   return state.nodeIdToLocate;
 });
+
+/** Selector to select currently selected edge id. */
+export const selecteSelectedEdgeId =
+    createSelector(selectMainState, (state) => {
+      return state.selectedEdgeId;
+    });

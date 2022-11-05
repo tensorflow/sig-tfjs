@@ -62,7 +62,19 @@ export class ModelSelector implements OnInit, OnDestroy {
       label: 'Mobilenet V3',
       url:
           'https://tfhub.dev/google/tfjs-model/imagenet/mobilenet_v3_large_100_224/classification/5/default/1',
-    }
+    },
+    {
+      label: 'Movenet single pose lightning',
+      url: 'https://tfhub.dev/google/tfjs-model/movenet/singlepose/lightning/4',
+    },
+    {
+      label: 'Movenet single pose thunder',
+      url: 'https://tfhub.dev/google/tfjs-model/movenet/singlepose/thunder/4',
+    },
+    {
+      label: 'Movenet multipose lightning',
+      url: 'https://tfhub.dev/google/tfjs-model/movenet/multipose/lightning/1',
+    },
   ];
 
   /** All supported model types.  */

@@ -27,14 +27,16 @@ limitations under the License.
   <config-section [configIndex]="0"></config-section>
 
   <!-- Configuration 2 -->
-  <div class="config-header">
-    Configuration 2
+  <div class="config-header config2">
+    <div>Configuration 2</div>
+    <mat-slide-toggle disableRipple="true" [(ngModel)]="config2Enabled"
+                      (change)="handleConfig2Toggled($event)">
+      Enable
+    </mat-slide-toggle>
   </div>
-  <config-section [configIndex]="1"></config-section>
+  <config-section [configIndex]="1" [class.disabled]="!config2Enabled">
+  </config-section>
 
   <!-- Inputs -->
-  <div class="config-header">
-    Inputs
-  </div>
   <inputs-section></inputs-section>
 </div>

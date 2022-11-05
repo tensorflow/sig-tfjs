@@ -34,7 +34,6 @@ for (let i = 0; i < navigator.hardwareConcurrency / 2; i++) {
   workers.push(worker);
   worker.onmessage = ({data}: MessageEvent<LayoutBatchResponse>) => {
     curResults.push(data);
-    console.log(curResults.length, curTasks.length);
 
     if (curTaskIndex <= curTasks.length - 1) {
       dispatchTaskToWorker(worker);
@@ -100,13 +99,11 @@ function layoutModelGraph(modelGraph: ModelGraph, configIndex: number) {
 }
 
 function dispatchTaskToWorker(worker: Worker) {
-  console.log('dispatching task ' + curTaskIndex + ' to worker');
   worker.postMessage(curTasks[curTaskIndex]);
   curTaskIndex++;
 }
 
 function processResults() {
-  console.log(curResults);
   const layoutResultsDL: LayoutBatchResponse[] = [];
   const layoutResultsDR: LayoutBatchResponse[] = [];
   for (const result of curResults) {

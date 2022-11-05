@@ -19,10 +19,13 @@ import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit} from '@an
 import {Store} from '@ngrx/store';
 import {withLatestFrom} from 'rxjs';
 import {DEFAULT_BAD_NODE_THRESHOLD} from 'src/app/common/consts';
+import {getPctDiffString} from 'src/app/common/utils';
 import {Diffs, ModelGraph, ModelGraphNode} from 'src/app/data_model/run_results';
 import {RunResultService} from 'src/app/services/run_result_service';
-import {selectDiffs, selectModelGraph, selectSelectedNodeId} from 'src/app/store/selectors';
+import {selectDiffs, selecteSelectedEdgeId, selectModelGraph, selectSelectedNodeId} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
+
+import {GraphService} from '../graph_panel/graph_service';
 
 import {NodeInfo, Value} from './types';
 
@@ -49,10 +52,12 @@ export class InfoPanel implements OnInit {
   private curDiffs?: Diffs;
 
   selectedNodeId?: string;
+  selectedEdgeId?: string;
   overview?: Overview;
   threshold = DEFAULT_BAD_NODE_THRESHOLD;
 
   constructor(
+      private readonly graphService: GraphService,
       private readonly runResultService: RunResultService,
       private readonly changeDetectionRef: ChangeDetectorRef,
       private readonly store: Store<AppState>,
@@ -62,7 +67,7 @@ export class InfoPanel implements OnInit {
     this.store.select(selectDiffs)
         .pipe(withLatestFrom(this.store.select(selectModelGraph(0))))
         .subscribe(([diffs, modelGraph]) => {
-          if (!diffs || !modelGraph) {
+          if (!modelGraph) {
             return;
           }
           this.handleGetRunResult(diffs, modelGraph);
@@ -70,6 +75,10 @@ export class InfoPanel implements OnInit {
 
     this.store.select(selectSelectedNodeId).subscribe((nodeId) => {
       this.handleNodeSelected(nodeId);
+    });
+
+    this.store.select(selecteSelectedEdgeId).subscribe((edgeId) => {
+      this.handleEdgeSelected(edgeId);
     });
   }
 
@@ -82,11 +91,16 @@ export class InfoPanel implements OnInit {
 
   showOverview(): boolean {
     return this.overview != null &&
-        (this.selectedNodeId == null || this.selectedNodeId === '');
+        (this.selectedNodeId == null || this.selectedNodeId === '') &&
+        (this.selectedEdgeId == null || this.selectedEdgeId === '');
   }
 
-  showDetails(): boolean {
+  showNodeDetails(): boolean {
     return this.selectedNodeId != null && this.selectedNodeId !== '';
+  }
+
+  showEdgeDetails(): boolean {
+    return this.selectedEdgeId != null && this.selectedEdgeId !== '';
   }
 
   showEmptyMessage(): boolean {
@@ -138,7 +152,42 @@ export class InfoPanel implements OnInit {
         .map(id => this.nodeToNodeInfo(this.curModelGraph![id], this.curDiffs));
   }
 
-  private handleGetRunResult(diffs: Diffs, modelGraph: ModelGraph) {
+  getEdgeOverview(): string {
+    if (!this.selectedEdgeId || !this.curModelGraph) {
+      return '';
+    }
+
+    const [fromNodeId, toNodeId] = this.selectedEdgeId.split('___');
+    const fromNode = this.curModelGraph[fromNodeId];
+    const toNode = this.curModelGraph[toNodeId];
+    return `${fromNode.op} → ${toNode.op}`;
+  }
+
+  getEdgeSourceNode(): NodeInfo|undefined {
+    if (!this.selectedEdgeId || !this.curModelGraph) {
+      return undefined;
+    }
+
+    const fromNodeId = this.selectedEdgeId.split('___')[0];
+    const fromNode = this.curModelGraph[fromNodeId];
+    return this.nodeToNodeInfo(fromNode, this.curDiffs);
+  }
+
+  getEdgeTargetNode(): NodeInfo|undefined {
+    if (!this.selectedEdgeId || !this.curModelGraph) {
+      return undefined;
+    }
+
+    const toNodeId = this.selectedEdgeId.split('___')[1];
+    const fromNode = this.curModelGraph[toNodeId];
+    return this.nodeToNodeInfo(fromNode, this.curDiffs);
+  }
+
+  handleClickFitEdgeToView() {
+    this.graphService.fitEdge();
+  }
+
+  private handleGetRunResult(diffs: Diffs|undefined, modelGraph: ModelGraph) {
     this.curModelGraph = modelGraph;
     this.curDiffs = diffs;
 
@@ -146,10 +195,16 @@ export class InfoPanel implements OnInit {
     const numTotalNodes = Object.keys(modelGraph)
                               .filter(id => modelGraph[id].op !== 'Const')
                               .length;
-    const badNodeIds = Object.keys(diffs).filter(
-        key => diffs[key] >= DEFAULT_BAD_NODE_THRESHOLD);
-    const badNodes = badNodeIds.map(id => modelGraph[id]);
-    const numBadNodes = badNodes.length;
+    let numBadNodes = 0;
+    let badNodes: ModelGraphNode[] = [];
+    if (diffs && Object.keys(diffs).length > 0) {
+      const badNodeIds = Object.keys(diffs).filter(
+          key => diffs[key] >= DEFAULT_BAD_NODE_THRESHOLD);
+      badNodes = badNodeIds.map(id => modelGraph[id]);
+      numBadNodes = badNodes.length;
+    } else {
+      numBadNodes = -1;
+    }
 
     const inputNodes =
         Object.values(modelGraph)
@@ -175,6 +230,11 @@ export class InfoPanel implements OnInit {
     this.changeDetectionRef.markForCheck();
   }
 
+  private handleEdgeSelected(edgeId?: string) {
+    this.selectedEdgeId = edgeId;
+    this.changeDetectionRef.markForCheck();
+  }
+
   private nodeToNodeInfo(
       node: ModelGraphNode, diffs?: Diffs, includeValues = false): NodeInfo {
     let shape = node.shape;
@@ -196,10 +256,7 @@ export class InfoPanel implements OnInit {
       const diffValue = diffs[node.id];
       if (diffValue != null) {
         nodeInfo.diffValue = diffValue;
-        nodeInfo.diff = `${(diffValue * 100).toFixed(2)}%`;
-        if (nodeInfo.diff === '0.00%' || nodeInfo.diff === '-0.00%') {
-          nodeInfo.diff = '0%';
-        }
+        nodeInfo.diff = getPctDiffString(diffValue);
       }
     }
     if (includeValues && this.runResultService.result1 &&

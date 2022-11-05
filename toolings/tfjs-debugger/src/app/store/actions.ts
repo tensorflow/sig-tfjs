@@ -30,6 +30,7 @@ export enum DebuggerAction {
   SET_TFSJS_MODEL_URL = '[Conf] Set TFJS Model Url',
   SET_TFJS_BACKEND_ID = '[Conf] Set TFJS Backend Id',
   SET_TFJS_BACKEND_VERSION = '[Conf] Set TFJS Backend Version',
+  SET_CONFIG_ENABLED = '[Conf] Set Config Enabled',
   SET_INPUTS = '[Input] Set Inputs',
   SET_DIFFS = '[Run] Set Diffs',
   FETCH_TFJS_RELEASES = '[Conf] Fetch TFJS Releases',
@@ -44,6 +45,7 @@ export enum DebuggerAction {
   UPDATE_RUN_TASK_STATUS = '[App] Update Run Task Status',
   RESET_RUN_STATUS = '[App] Reset Run Status',
   SET_SELECTED_NODE_ID = '[App] Set Selected Node Id',
+  SET_SELECTED_EDGE_ID = '[App] Set Selected Edge Id',
   SET_NODE_ID_TO_LOCATE = '[App] Set Node Id To Locate',
 }
 
@@ -69,6 +71,12 @@ export const setTfjsBackendId = createAction(
 export const setTfjsBackendVersion = createAction(
     DebuggerAction.SET_TFJS_BACKEND_VERSION,
     props<{configIndex: number, version: string}>(),
+);
+
+/** Sets tfjs backend version for the given config. */
+export const setConfigEnabled = createAction(
+    DebuggerAction.SET_CONFIG_ENABLED,
+    props<{configIndex: number, enabled: boolean}>(),
 );
 
 /** Sets diffs. */
@@ -141,6 +149,12 @@ export const updateRunTaskStatus = createAction(
 export const setSelectedNodeId = createAction(
     DebuggerAction.SET_SELECTED_NODE_ID,
     props<{nodeId: string}>(),
+);
+
+/** Sets the selected edge id. */
+export const setSelectedEdgeId = createAction(
+    DebuggerAction.SET_SELECTED_EDGE_ID,
+    props<{edgeId: string}>(),
 );
 
 /** Sets the node id to locate. */

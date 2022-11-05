@@ -43,21 +43,25 @@ export class RunResultService {
     };
   }
 
-  setResultsAndCalculateDiffs(result1: TensorMap, result2: TensorMap) {
+  setResultsAndCalculateDiffs(result1: TensorMap, result2?: TensorMap) {
     // Store results.
     this.curResult1 = result1;
     this.curResult2 = result2;
 
-    // Create worker to calculate diffs.
-    const req: CalculateDiffsRequest = {
-      cmd: WorkerCommand.CALCULATE_DIFFS,
-      result1,
-      result2,
-    };
-    this.diffCalculatorWorker.postMessage(req, [
-      ...Object.values(result1).map(v => v.values.buffer),
-      ...Object.values(result2).map(v => v.values.buffer),
-    ]);
+    if (result2) {
+      // Create worker to calculate diffs.
+      const req: CalculateDiffsRequest = {
+        cmd: WorkerCommand.CALCULATE_DIFFS,
+        result1,
+        result2,
+      };
+      this.diffCalculatorWorker.postMessage(req, [
+        ...Object.values(result1).map(v => v.values.buffer),
+        ...Object.values(result2).map(v => v.values.buffer),
+      ]);
+    } else {
+      this.store.dispatch(setDiffs({diffs: {}}));
+    }
   }
 
   get result1() {

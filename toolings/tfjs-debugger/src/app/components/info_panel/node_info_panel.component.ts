@@ -18,6 +18,7 @@
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit} from '@angular/core';
 import {Store} from '@ngrx/store';
 import {DEFAULT_BAD_NODE_THRESHOLD} from 'src/app/common/consts';
+import {calculateRelativeDiff, getPctDiffString} from 'src/app/common/utils';
 import {setNodeIdToLocate} from 'src/app/store/actions';
 import {AppState} from 'src/app/store/state';
 
@@ -64,14 +65,8 @@ export class NodeInfoPanel implements OnInit {
   }
 
   getDiff(v: Value): string {
-    if (v.v2 === 0) {
-      return v.v1 === 0 ? '0%' : 'Inf';
-    }
-    let ret = `${((v.v1 - v.v2) / v.v2 * 100).toFixed(2)}%`;
-    if (ret === '0.00%' || ret === '-0.00%') {
-      ret = '0%';
-    }
-    return ret;
+    const diff = calculateRelativeDiff(v.v1 - v.v2, v.v2);
+    return getPctDiffString(diff);
   }
 
   isDiffBad(v: Value): boolean {

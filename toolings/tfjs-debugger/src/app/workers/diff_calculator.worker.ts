@@ -18,6 +18,7 @@
 /// <reference lib="webworker" />
 
 import {CalculateDiffsRequest, CalculateDiffsResponse, WorkerCommand, WorkerMessage} from '../common/types';
+import {calculateRelativeDiff} from '../common/utils';
 import {Diffs} from '../data_model/run_results';
 
 addEventListener('message', ({data}) => {
@@ -54,12 +55,7 @@ function calculateDiffs(req: CalculateDiffsRequest) {
     }
     sum /= len;
     sumDiff /= len;
-    let diff = sumDiff / sum;
-    if (sum === 0) {
-      diff = (sumDiff < 1e-7) ? 0 : Infinity;
-    }
-
-    diffs[id] = diff;
+    diffs[id] = calculateRelativeDiff(sumDiff, sum);
   }
   const resp: CalculateDiffsResponse = {
     cmd: WorkerCommand.CALCULATE_DIFFS_RESULT,

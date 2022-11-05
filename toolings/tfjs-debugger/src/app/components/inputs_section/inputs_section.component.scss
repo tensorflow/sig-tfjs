@@ -1,13 +1,27 @@
 @use '../../../variables' as var;
 
 .container {
-  padding: 12px;
+  .config-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    height: var.$config-header-height;
+    padding: 0 var.$spacing-3x;
+    color: var.$grey-800;
+    font-weight: 500;
+    font-size: var.$font-size-normal;
+    background-color: #e7edf7;
+  }
 
   .info-msg {
+    padding: 12px;
     color: var.$grey-500;
   }
 
   .inputs-container {
+    padding: 12px;
     font-size: 13px;
 
     .input-container {
