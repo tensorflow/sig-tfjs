@@ -84,12 +84,16 @@ limitations under the License.
       <node-info-panel [nodeInfo]="getSelectedNodeInfo()"></node-info-panel>
     </div>
 
-    <div class="header">{{getNodeSectionTitle('Input', getSelectedNodeInputs())}}</div>
+    <div class="header" *ngIf="getSelectedNodeInputs().length > 0">
+      {{getNodeSectionTitle('Input', getSelectedNodeInputs())}}
+    </div>
     <div class="node-container" *ngFor="let node of getSelectedNodeInputs()">
       <node-info-panel [nodeInfo]="node"></node-info-panel>
     </div>
 
-    <div class="header">{{getNodeSectionTitle('Output', getSelectedNodeOutputs())}}</div>
+    <div class="header" *ngIf="getSelectedNodeOutputs().length > 0">
+      {{getNodeSectionTitle('Output', getSelectedNodeOutputs())}}
+    </div>
     <div class="node-container" *ngFor="let node of getSelectedNodeOutputs()">
       <node-info-panel [nodeInfo]="node"></node-info-panel>
     </div>

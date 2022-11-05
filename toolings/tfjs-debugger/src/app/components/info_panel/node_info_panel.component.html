@@ -18,6 +18,13 @@ limitations under the License.
   <div class="node-item">
     <div class="item-name">op</div>
     <div class="item-value main">{{nodeInfo!.op}}</div>
+    <div class="navigate">
+      <button mat-icon-button class="navigate-icon-button"
+              disableRipple="true"
+              (click)="handleClickLocateNode()">
+        <mat-icon>my_location</mat-icon>
+      </button>
+    </div>
   </div>
   <div class="node-item">
     <div class="item-name">id</div>
@@ -42,7 +49,7 @@ limitations under the License.
       <div class="values-row" *ngFor="let v of nodeInfo.values">
         <div class="value">{{v.v1}}</div>
         <div class="value">{{v.v2}}</div>
-        <div class="diff-value">{{getDiff(v)}}</div>
+        <div class="diff-value" [class.bad]="isDiffBad(v)">{{getDiff(v)}}</div>
       </div>
     </div>
   </div>

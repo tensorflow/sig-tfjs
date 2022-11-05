@@ -88,12 +88,12 @@
 
         .config-header {
           width: 100px;
+          margin-right: 8px;
         }
 
         .diff-header {
           flex-grow: 1;
           padding-right: 10px;
-          text-align: right;
         }
       }
 
@@ -105,12 +105,19 @@
         .value {
           flex-shrink: 0;
           width: 100px;
+          margin-right: 8px;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .diff-value {
           width: 40px;
           padding-right: 6px;
-          text-align: right;
+          color: #0a0;
+
+          &.bad {
+            color: var.$red;
+          }
         }
       }
 
@@ -131,6 +138,24 @@
 
       &::-webkit-scrollbar-thumb:hover {
         background-color: rgb(0 0 0 / 22%);
+      }
+    }
+
+    .navigate {
+      position: absolute;
+      top: -3px;
+      right: 0;
+
+      .navigate-icon-button {
+        color: var.$grey-400;
+
+        &:hover {
+          color: var.$grey-500;
+        }
+
+        ::ng-deep mat-icon {
+          font-size: 18px;
+        }
       }
     }
   }

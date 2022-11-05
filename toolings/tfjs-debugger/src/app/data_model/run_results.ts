@@ -146,6 +146,9 @@ export function modelJsonToModelGraph(json: ModelJson): ModelGraph {
   // Output node ids indexed by source node ids.
   const outputNodeIds: {[nodeId: string]: string[]} = {};
   for (const node of json.modelTopology.node) {
+    if (!node.name || node.name.includes('/cond/')) {
+      continue;
+    }
     if (node.input) {
       for (const inputNodeId of node.input) {
         if (!outputNodeIds[inputNodeId]) {

@@ -103,3 +103,8 @@ export const selectDiffs = createSelector(selectMainState, (state) => {
 export const selectSelectedNodeId = createSelector(selectMainState, (state) => {
   return state.selectedNodeId;
 });
+
+/** Selector to select the node id to locate. */
+export const selectNodeIdToLocate = createSelector(selectMainState, (state) => {
+  return state.nodeIdToLocate;
+});

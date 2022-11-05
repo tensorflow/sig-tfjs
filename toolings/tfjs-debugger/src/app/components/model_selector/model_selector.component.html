@@ -40,14 +40,17 @@ limitations under the License.
     <div *ngSwitchCase="ModelTypeId.TFJS">
       <div class="title">Model url</div>
       <mat-form-field floatLabel="never">
-        <input #tfjsModelUrlInput
+        <textarea #tfjsModelUrlInput
                matInput
+               cdkTextareaAutosize
+               cdkAutosizeMinRows="1"
+               cdkAutosizeMaxRows="5"
                required
                placeholder="URL for model.json"
                class="tfjs-model-url-input"
                [(ngModel)]="tfjsModelUrl"
                (focus)="tfjsModelUrlInput.select()"
-               (change)="handleTfjsModelUrlChanged()">
+               (change)="handleTfjsModelUrlChanged()"></textarea>
       </mat-form-field>
 
       <div class="title model-selector-label"

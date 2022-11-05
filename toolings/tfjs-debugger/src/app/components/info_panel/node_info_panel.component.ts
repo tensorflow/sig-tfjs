@@ -16,7 +16,10 @@
  */
 
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit} from '@angular/core';
+import {Store} from '@ngrx/store';
 import {DEFAULT_BAD_NODE_THRESHOLD} from 'src/app/common/consts';
+import {setNodeIdToLocate} from 'src/app/store/actions';
+import {AppState} from 'src/app/store/state';
 
 import {NodeInfo, Value} from './types';
 
@@ -31,15 +34,25 @@ export class NodeInfoPanel implements OnInit {
 
   constructor(
       private readonly changeDetectionRef: ChangeDetectorRef,
+      private readonly store: Store<AppState>,
   ) {}
 
   ngOnInit() {}
+
+  handleClickLocateNode() {
+    if (!this.nodeInfo) {
+      return;
+    }
+
+    this.store.dispatch(setNodeIdToLocate({nodeId: this.nodeInfo.id}));
+  }
 
   isNodeBad() {
     if (!this.nodeInfo) {
       return false;
     }
-    return (this.nodeInfo.diffValue || 0) > DEFAULT_BAD_NODE_THRESHOLD;
+    return Math.abs((this.nodeInfo.diffValue || 0)) >
+        DEFAULT_BAD_NODE_THRESHOLD;
   }
 
   showValues() {
@@ -52,8 +65,20 @@ export class NodeInfoPanel implements OnInit {
 
   getDiff(v: Value): string {
     if (v.v2 === 0) {
-      return v.v1 === 0 ? '0.00%' : 'Inf';
+      return v.v1 === 0 ? '0%' : 'Inf';
     }
-    return `${((v.v1 - v.v2) / v.v2 * 100).toFixed(2)}%`;
+    let ret = `${((v.v1 - v.v2) / v.v2 * 100).toFixed(2)}%`;
+    if (ret === '0.00%' || ret === '-0.00%') {
+      ret = '0%';
+    }
+    return ret;
+  }
+
+  isDiffBad(v: Value): boolean {
+    let diff = (v.v1 - v.v2) / v.v2;
+    if (v.v2 === 0) {
+      diff = v.v1 === 0 ? 0 : Infinity;
+    }
+    return Math.abs(diff) >= DEFAULT_BAD_NODE_THRESHOLD;
   }
 }

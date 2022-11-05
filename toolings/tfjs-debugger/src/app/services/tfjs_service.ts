@@ -33,19 +33,17 @@ export class TfjsService {
       private readonly runResultService: RunResultService,
       private readonly store: Store<AppState>,
   ) {
-    combineLatest([
-      this.store.select(selectRunCurrentConfigsTrigger),
-      this.store.select(selectModelGraph(0)),
-    ])
+    // this.store.select(selectRunCurrentConfigsTrigger)
+    this.store.select(selectModelGraph(0))
         .pipe(
-            filter(([trigger,
-                     modelGraph]) => trigger != null && modelGraph != null),
+            filter((trigger) => trigger != null),
             withLatestFrom(
                 this.store.select(selectCurrentConfigs),
                 this.store.select(selectCurrentInputs),
-                this.store.select(selectCurrentConfigs)))
+                this.store.select(selectCurrentConfigs),
+                ))
         .subscribe(([
-                     [unusedTrigger, modelGraph],
+                     modelGraph,
                      curConfigs,
                      curInputs,
                      {config1, config2},
@@ -54,8 +52,10 @@ export class TfjsService {
           if (!modelGraph || !config1.tfjsModelUrl) {
             return;
           }
-          // this.runConfigs(
-          //     curConfigs, curInputs, modelGraph, config1.tfjsModelUrl);
+
+          console.log(modelGraph);
+          this.runConfigs(
+              curConfigs, curInputs, modelGraph, config1.tfjsModelUrl);
         });
   }
 

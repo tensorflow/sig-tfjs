@@ -21,18 +21,18 @@ import * as d3 from 'd3';
 import {filter} from 'rxjs/operators';
 import {CONST_NODE_WIDTH, DEFAULT_BAD_NODE_THRESHOLD, NODE_HEIGHT, NON_CONST_NODE_WIDTH} from 'src/app/common/consts';
 import {Diffs, ModelGraphLayout, ModelGraphNode} from 'src/app/data_model/run_results';
-import {setSeelctedNodeId as setSelectedNodeId} from 'src/app/store/actions';
-import {selectDiffs} from 'src/app/store/selectors';
+import {setSelectedNodeId as setSelectedNodeId} from 'src/app/store/actions';
+import {selectDiffs, selectNodeIdToLocate, selectSelectedNodeId} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 import * as THREE from 'three';
 import {preloadFont, Text as ThreeText} from 'troika-three-text';
 
 const DEFAULT_FRUSTUM_SIZE = 500;
-const DEFAULT_CAMERA_Y = 50;
+const DEFAULT_CAMERA_Y = 100;
 const NODE_RECT_CORNER_RADIUS = 6;
 const EDGE_TUBE_RADIUS = 0.5;
 const EDGE_NUM_SEGMENTATIONS = 64;
-const BORDER_WIDTH = 3;
+const BORDER_WIDTH = 5;
 const NODE_Y = 11;
 const EDGE_Y = 8;
 const NODE_HIGHLIGHTER_Y = 9;
@@ -163,6 +163,24 @@ export class GraphService {
         .subscribe(diffs => {
           this.handleDiffs(diffs!);
         });
+
+    // Update UI for selected node.
+    this.store.select(selectSelectedNodeId).subscribe(nodeId => {
+      if (nodeId == null) {
+        return;
+      }
+
+      this.handleSelectedNodeIdUpdated(nodeId);
+    });
+
+    // Zoom and translate graph to locate the given node.
+    this.store.select(selectNodeIdToLocate).subscribe(nodeId => {
+      if (!nodeId || !nodeId.id) {
+        return;
+      }
+
+      this.handleLocateNodeId(nodeId.id);
+    })
   }
 
   init(container: HTMLElement, canvas: HTMLElement) {
@@ -322,6 +340,10 @@ export class GraphService {
           });
         });
 
+    // Use the regular interpolation instead of the default d3.zoomInterpolate
+    // which has some unexpected behavior.
+    this.zoom.interpolate(d3.interpolate);
+
     // Attach `d3.zoom` to the container.
     //
     // tslint:disable-next-line:no-any
@@ -444,23 +466,7 @@ export class GraphService {
       return;
     }
 
-    // Unselect the previous node if existed.
-    if (this.curSelectedNodeId) {
-      this.curSelectedNodeId = '';
-      this.removeNodeSelection();
-    }
-
-    // Set current selection.
-    if (this.curHoveredNodeId) {
-      this.curSelectedNodeId = this.curHoveredNodeId;
-      this.showNodeSelection(this.curHoveredNodeId);
-    } else {
-      this.curSelectedNodeId = '';
-      this.removeNodeSelection();
-    }
-
-    this.store.dispatch(setSelectedNodeId({nodeId: this.curSelectedNodeId}));
-    this.render();
+    this.store.dispatch(setSelectedNodeId({nodeId: this.curHoveredNodeId}));
   }
 
   renderGraph(modelGraphLayout: ModelGraphLayout, doneCallbackFn: () => void) {
@@ -758,7 +764,7 @@ export class GraphService {
       return;
     }
     this.renderer.render(this.scene, this.camera);
-    console.log('call count', this.renderer.info.render.calls);
+    // console.log('call count', this.renderer.info.render.calls);
   }
 
   private centerModelGraph(transitionDuration = 0) {
@@ -830,6 +836,57 @@ export class GraphService {
     this.render();
   }
 
+  handleSelectedNodeIdUpdated(nodeId: string) {
+    // Unselect the previous node if existed.
+    if (this.curSelectedNodeId) {
+      this.curSelectedNodeId = '';
+      this.removeNodeSelection();
+    }
+
+    this.curSelectedNodeId = nodeId;
+    if (this.curSelectedNodeId) {
+      this.showNodeSelection(this.curSelectedNodeId);
+    } else {
+      this.removeNodeSelection();
+    }
+    this.render();
+  }
+
+  handleLocateNodeId(nodeId: string) {
+    const zoomLevel = this.currentZoom;
+    this.currentTranslatX = 0;
+    this.currentTranslatY = 0;
+    this.currentZoom = 1;
+    this.locateNode(nodeId, zoomLevel, 300);
+  }
+
+  private locateNode(
+      nodeId: string, zoomLevel: number, transitionDuration = 0) {
+    if (!this.container) {
+      return;
+    }
+
+    const containerWidth = this.container.clientWidth;
+    const containerHeight = this.container.clientHeight;
+    const scale = zoomLevel;
+    const node = this.curNodesMap[nodeId];
+    const x = node.x!;
+    const y = node.y!;
+    // Apply transform (translation + scale) through d3.zoom.
+    const aspect = containerWidth / containerHeight;
+    const targetCameraLeft =
+        (-2 * DEFAULT_FRUSTUM_SIZE * aspect / 2 / scale + x);
+    const targetCameraTop = -y + DEFAULT_FRUSTUM_SIZE / scale;
+    const transform = d3.zoomIdentity.scale(scale).translate(
+        this.cameraLeftToD3Translate(targetCameraLeft),
+        this.cameraTopToD3Translate(targetCameraTop));
+    const view = d3.select(this.container as Element);
+    view.transition()
+        .duration(transitionDuration)
+        .ease(d3.easeCubicInOut)
+        .call(this.zoom.transform, transform);
+  }
+
   private cameraLeftToD3Translate(targetCameraLeft: number): number {
     if (!this.container) {
       return 0;
@@ -843,6 +900,24 @@ export class GraphService {
     return targetCameraLeft /
         (DEFAULT_FRUSTUM_SIZE / this.currentZoom * aspect) / -2 *
         containerWidth;
+  }
+
+  private cameraTopToD3Translate(targetCameraTop: number): number {
+    if (!this.container) {
+      return 0;
+    }
+
+    const containerHeight = this.container.clientHeight;
+    return targetCameraTop * this.currentZoom * containerHeight /
+        DEFAULT_FRUSTUM_SIZE / 2;
+    // const x = this.currentTranslatX - width / 2;
+    // const y = this.currentTranslatY - height / 2;
+    // this.camera.left = -DEFAULT_FRUSTUM_SIZE / this.currentZoom * aspect -
+    //     x / width * 2 * DEFAULT_FRUSTUM_SIZE / this.currentZoom * aspect;
+    // this.camera.right = DEFAULT_FRUSTUM_SIZE / this.currentZoom * aspect -
+    //     x / width * 2 * DEFAULT_FRUSTUM_SIZE / this.currentZoom * aspect;
+    // this.camera.top = DEFAULT_FRUSTUM_SIZE / this.currentZoom +
+    //     y * DEFAULT_FRUSTUM_SIZE / this.currentZoom / height * 2;
   }
 
   private setInstancedMeshPosition(

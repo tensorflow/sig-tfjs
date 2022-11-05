@@ -19,7 +19,7 @@ import {createReducer, on} from '@ngrx/store';
 
 import {RunStatus, RunTask, TaskStatus} from '../data_model/misc';
 
-import {clearErrorMessage, fetchTfjsModelJsonFail, fetchTfjsModelJsonSuccess, fetchTfjsReleasesFail, fetchTfjsReleasesSuccess, resetRunStatus, setDiffs, setErrorMessage, setInputs, setModelType, setSeelctedNodeId, setTfjsBackendId, setTfjsBackendVersion, setTfjsModelUrl, triggerRunCurrentConfigs, updateRunTaskStatus} from './actions';
+import {clearErrorMessage, fetchTfjsModelJsonFail, fetchTfjsModelJsonSuccess, fetchTfjsReleasesFail, fetchTfjsReleasesSuccess, resetRunStatus, setDiffs, setErrorMessage, setInputs, setModelType, setNodeIdToLocate, setSelectedNodeId, setTfjsBackendId, setTfjsBackendVersion, setTfjsModelUrl, triggerRunCurrentConfigs, updateRunTaskStatus} from './actions';
 import {Configs, initialState} from './state';
 import {getRunTasksFromConfigs} from './utils';
 
@@ -184,6 +184,7 @@ export const mainReducer = createReducer(
                ...state.runStatus,
                [RunTask.LOAD_TFJS_MODEL1]: TaskStatus.SUCCESS,
              },
+             errorMessage: undefined,
            };
          } else if (configIndex === 1) {
            return {
@@ -196,6 +197,7 @@ export const mainReducer = createReducer(
                ...state.runStatus,
                [RunTask.LOAD_TFJS_MODEL2]: TaskStatus.SUCCESS,
              },
+             errorMessage: undefined,
            };
          }
          return state;
@@ -250,6 +252,9 @@ export const mainReducer = createReducer(
            runResults: {},
            runCurrentConfigsTrigger: {},
            runStatus,
+           // Reset.
+           selectedNodeId: '',
+           nodeIdToLocate: {id: ''},
          };
        }),
 
@@ -272,10 +277,19 @@ export const mainReducer = createReducer(
          };
        }),
 
-    on(setSeelctedNodeId,
+    on(setSelectedNodeId,
        (state, {nodeId}) => {
          return {
            ...state,
+           selectedNodeId: nodeId,
+         };
+       }),
+
+    on(setNodeIdToLocate,
+       (state, {nodeId}) => {
+         return {
+           ...state,
+           nodeIdToLocate: {id: nodeId},
            selectedNodeId: nodeId,
          };
        }),

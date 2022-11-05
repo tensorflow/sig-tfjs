@@ -54,6 +54,9 @@ export interface AppState {
   /** Stores the currently selected node id. */
   selectedNodeId?: string;
 
+  /** Stores the id of the node to locate. */
+  nodeIdToLocate?: {id: string};
+
   /**
    * The current error message occurred in the app.
    *

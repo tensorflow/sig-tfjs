@@ -18,6 +18,8 @@
 import {CommonModule} from '@angular/common';
 import {NgModule} from '@angular/core';
 import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 
 import {InfoPanel} from './info_panel.component';
@@ -31,6 +33,8 @@ import {NodeInfoPanel} from './node_info_panel.component';
   imports: [
     CommonModule,
     FormsModule,
+    MatButtonModule,
+    MatIconModule,
     MatInputModule,
   ],
   exports: [

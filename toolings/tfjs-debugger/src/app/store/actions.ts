@@ -44,6 +44,7 @@ export enum DebuggerAction {
   UPDATE_RUN_TASK_STATUS = '[App] Update Run Task Status',
   RESET_RUN_STATUS = '[App] Reset Run Status',
   SET_SELECTED_NODE_ID = '[App] Set Selected Node Id',
+  SET_NODE_ID_TO_LOCATE = '[App] Set Node Id To Locate',
 }
 
 /** Sets model type for the given config. */
@@ -137,8 +138,14 @@ export const updateRunTaskStatus = createAction(
 );
 
 /** Sets the selected node id. */
-export const setSeelctedNodeId = createAction(
+export const setSelectedNodeId = createAction(
     DebuggerAction.SET_SELECTED_NODE_ID,
+    props<{nodeId: string}>(),
+);
+
+/** Sets the node id to locate. */
+export const setNodeIdToLocate = createAction(
+    DebuggerAction.SET_NODE_ID_TO_LOCATE,
     props<{nodeId: string}>(),
 );
 

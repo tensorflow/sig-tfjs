@@ -119,8 +119,12 @@ export class InfoPanel implements OnInit {
       return [];
     }
 
+    // TODO: handle "show const node" checkbox.
     const node = this.curModelGraph[this.selectedNodeId];
-    return node.inputNodeIds.filter(id => this.curModelGraph![id])
+    return node.inputNodeIds
+        .filter(
+            id => this.curModelGraph![id] &&
+                this.curModelGraph![id].op !== 'Const')
         .map(id => this.nodeToNodeInfo(this.curModelGraph![id], this.curDiffs));
   }
 
@@ -138,7 +142,10 @@ export class InfoPanel implements OnInit {
     this.curModelGraph = modelGraph;
     this.curDiffs = diffs;
 
-    const numTotalNodes = Object.keys(modelGraph).length;
+    // TODO: handle "show const node" checkbox.
+    const numTotalNodes = Object.keys(modelGraph)
+                              .filter(id => modelGraph[id].op !== 'Const')
+                              .length;
     const badNodeIds = Object.keys(diffs).filter(
         key => diffs[key] >= DEFAULT_BAD_NODE_THRESHOLD);
     const badNodes = badNodeIds.map(id => modelGraph[id]);
@@ -190,6 +197,9 @@ export class InfoPanel implements OnInit {
       if (diffValue != null) {
         nodeInfo.diffValue = diffValue;
         nodeInfo.diff = `${(diffValue * 100).toFixed(2)}%`;
+        if (nodeInfo.diff === '0.00%' || nodeInfo.diff === '-0.00%') {
+          nodeInfo.diff = '0%';
+        }
       }
     }
     if (includeValues && this.runResultService.result1 &&
@@ -201,7 +211,10 @@ export class InfoPanel implements OnInit {
         const len = Math.min(100, values1.length);
         const values: Value[] = [];
         for (let i = 0; i < len; i++) {
-          values.push({v1: values1[i], v2: values2[i]});
+          values.push({
+            v1: Math.abs(values1[i]) < 1e-7 ? 0 : values1[i],
+            v2: Math.abs(values2[i]) < 1e-7 ? 0 : values2[i],
+          });
         }
         nodeInfo.values = values;
       }

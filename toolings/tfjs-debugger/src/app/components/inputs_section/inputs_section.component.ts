@@ -8,7 +8,7 @@ import {Input, InputValuesType} from 'src/app/data_model/input';
 import {ModelGraph, modelJsonToModelGraph} from 'src/app/data_model/run_results';
 import {TfjsService} from 'src/app/services/tfjs_service';
 import {UrlService} from 'src/app/services/url_service';
-import {setErrorMessage, setInputs} from 'src/app/store/actions';
+import {clearErrorMessage, setErrorMessage, setInputs} from 'src/app/store/actions';
 import {selectConfigValueFromUrl, selectValueFromUrl} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 
@@ -99,13 +99,16 @@ export class InputsSection implements OnInit, OnDestroy {
             catchError((e: HttpErrorResponse) => {
               this.store.dispatch(setErrorMessage({
                 title: 'Network error',
-                content:
-                    `Failed to load TFJS model '${this.tfjsModelUrl}': ${e}`
+                content: `Failed to load TFJS model '${this.tfjsModelUrl}': ${
+                    e.message}`
               }));
               return of({} as ModelGraph);
             }),
             )
         .subscribe(modelGraph => {
+          if (Object.keys(modelGraph).length > 0) {
+            this.store.dispatch(clearErrorMessage());
+          }
           this.updateInfoMsg('');
           this.updateInputs(modelGraph);
         });
