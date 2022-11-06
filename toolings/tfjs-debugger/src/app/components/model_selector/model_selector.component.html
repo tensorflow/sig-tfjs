@@ -39,7 +39,7 @@ limitations under the License.
     <!-- TFJS -->
     <div *ngSwitchCase="ModelTypeId.TFJS">
       <div class="title">Model url</div>
-      <mat-form-field floatLabel="never">
+      <mat-form-field floatLabel="never" color="accent">
         <textarea #tfjsModelUrlInput
                matInput
                cdkTextareaAutosize
@@ -64,10 +64,10 @@ limitations under the License.
         </button>
       </mat-menu>
 
-      <mat-checkbox disabled color="primary" disableRipple="true"
+      <mat-checkbox color="accent" disableRipple="true"
                     class="show-const-checkbox"
-                    matTooltip="WIP"
-                    matTooltipPosition="right">
+                    [(ngModel)]="showConstNodes"
+                    (change)="handleShowConstNodesUpdated()">
         Show Const nodes
       </mat-checkbox>
     </div>

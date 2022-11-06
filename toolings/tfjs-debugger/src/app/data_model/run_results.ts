@@ -17,7 +17,7 @@
 
 // TODO: update when the types are exported in the new converter release.
 // tslint:disable-next-line:no-imports-from-dist
-import {INodeDef} from '@tensorflow/tfjs-converter/dist/data/compiled_api';
+import {IAttrValue, INodeDef} from '@tensorflow/tfjs-converter/dist/data/compiled_api';
 
 import {CONST_NODE_WIDTH, NODE_HEIGHT, NON_CONST_NODE_WIDTH} from '../common/consts';
 
@@ -79,6 +79,9 @@ export interface ModelGraphNode {
   /** Shape */
   shape: number[];
 
+  /** Attributes */
+  attrs: NodeAttr[];
+
   /**
    * The width of the node.
    *
@@ -98,6 +101,11 @@ export interface ModelGraphNode {
 
   /** The y coordinate after layout is done. */
   y?: number;
+}
+
+export interface NodeAttr {
+  key: string;
+  value: string;
 }
 
 /** Stores data for an edge in the layout results. */
@@ -175,11 +183,41 @@ export function modelJsonToModelGraph(json: ModelJson): ModelGraph {
                  []).map(entry => Number(entry.size!));
       }
     }
+    const attrs: NodeAttr[] = [];
+    if (node.op !== 'Const') {
+      Object.keys(node.attr || {}).forEach(key => {
+        const attrValue = node.attr![key];
+        let value = '';
+        if (attrValue.list != null) {
+          if (attrValue.list.s != null) {
+            value =
+                attrValue.list.s.map(v => decodeAttrValue({s: v})).join(', ');
+          } else if (attrValue.list.b != null) {
+            value =
+                attrValue.list.b.map(v => decodeAttrValue({b: v})).join(', ');
+          } else if (attrValue.list.f != null) {
+            value =
+                attrValue.list.f.map(v => decodeAttrValue({f: v})).join(', ');
+          } else if (attrValue.list.i != null) {
+            value =
+                attrValue.list.i.map(v => decodeAttrValue({i: v})).join(', ');
+          } else {
+            value = '[]';
+          }
+        } else {
+          value = decodeAttrValue(attrValue);
+        }
+        if (key !== 'T' && key !== 'dtype' && key !== 'shape') {
+          attrs.push({key, value});
+        }
+      });
+    }
     modelGraph[node.name] = {
       // Use node name as id since it is unique.
       id: node.name,
       op,
       dtype,
+      attrs,
       shape,
       width: op.toLowerCase() === 'const' ? CONST_NODE_WIDTH :
                                             NON_CONST_NODE_WIDTH,
@@ -189,6 +227,19 @@ export function modelJsonToModelGraph(json: ModelJson): ModelGraph {
     };
   }
   return modelGraph;
+}
+
+function decodeAttrValue(attrValue: IAttrValue): string {
+  if (attrValue.s != null) {
+    return atob(attrValue.s);
+  } else if (attrValue.i != null) {
+    return String(attrValue.i);
+  } else if (attrValue.f != null) {
+    return String(attrValue.f);
+  } else if (attrValue.b != null) {
+    return String(attrValue.b);
+  }
+  return '';
 }
 
 function getStrTypeFromDType(dataType: string|undefined|null): string {

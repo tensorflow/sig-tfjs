@@ -8,8 +8,9 @@ import {getTypedArrayFromInput} from '../common/utils';
 import {Configuration} from '../data_model/configuration';
 import {Input, InputValuesType} from '../data_model/input';
 import {RunTask, TaskStatus} from '../data_model/misc';
+import {ModelTypeId} from '../data_model/model_type';
 import {ModelGraph, ModelJson, TensorMap} from '../data_model/run_results';
-import {updateRunTaskStatus} from '../store/actions';
+import {setErrorMessage, updateRunTaskStatus} from '../store/actions';
 import {selectCurrentConfigs, selectCurrentInputs, selectModelGraph, selectRunCurrentConfigsTrigger} from '../store/selectors';
 import {AppState, Configs} from '../store/state';
 
@@ -54,7 +55,6 @@ export class TfjsService {
             return;
           }
 
-          console.log(modelGraph);
           this.runConfigs(
               curConfigs, curInputs, modelGraph, config1.tfjsModelUrl);
         });
@@ -104,15 +104,20 @@ export class TfjsService {
     this.targetRunCount = configs.config2.enabled ? 2 : 1;
     this.result1 = undefined;
     this.result2 = undefined;
-    this.runModel(0, configs.config1, inputTensorMap1, modelGraph, modelUrl);
+    const showConstNodes = configs.config1.showConstNodes || false;
+    this.runModel(
+        0, configs.config1, inputTensorMap1, modelGraph, modelUrl,
+        showConstNodes);
     if (this.targetRunCount === 2) {
-      this.runModel(1, configs.config2, inputTensorMap2, modelGraph, modelUrl);
+      this.runModel(
+          1, configs.config2, inputTensorMap2, modelGraph, modelUrl,
+          showConstNodes);
     }
   }
 
   private runModel(
       index: number, config: Configuration, inputTensorMap: TensorMap,
-      modelGraph: ModelGraph, modelUrl: string) {
+      modelGraph: ModelGraph, modelUrl: string, showConstNodes: boolean) {
     // Create a runner and send necessary data to run the corresponding model,
     // and wait for the result.
     const tfjsModelRunner = new Worker(
@@ -122,32 +127,39 @@ export class TfjsService {
       modelGraph,
       modelUrl,
       config,
+      showConstNodes,
       inputs: inputTensorMap,
     };
 
     tfjsModelRunner.onmessage = ({data}) => {
       const msg = data as WorkerMessage;
       if (msg.cmd === WorkerCommand.RUN_TFJS_MODEL_RESULT) {
-        // Save results.
-        const outputs = (msg as RunTfjsModelResponse).outputs;
-        this.finishedRunCount++;
-        if (index === 0) {
-          this.result1 = outputs;
-        } else if (index === 1) {
-          this.result2 = outputs;
-        }
+        const resp = (msg as RunTfjsModelResponse);
+        if (resp.errorMsg) {
+          this.store.dispatch(setErrorMessage(
+              {title: 'Failed to run model', content: resp.errorMsg}));
+        } else {
+          // Save results.
+          const outputs = (msg as RunTfjsModelResponse).outputs;
+          this.finishedRunCount++;
+          if (index === 0) {
+            this.result1 = outputs;
+          } else if (index === 1) {
+            this.result2 = outputs;
+          }
 
-        // Update store when all results are sent back from runners.
-        if (this.finishedRunCount === this.targetRunCount) {
-          this.runResultService.setResultsAndCalculateDiffs(
-              this.result1!, this.result2!);
-        }
+          // Update store when all results are sent back from runners.
+          if (this.finishedRunCount === this.targetRunCount) {
+            this.runResultService.setResultsAndCalculateDiffs(
+                this.result1!, this.result2!);
+          }
 
-        // Update task status.
-        this.store.dispatch(updateRunTaskStatus({
-          task: index === 0 ? RunTask.RUN_CONFIG1 : RunTask.RUN_CONFIG2,
-          status: TaskStatus.SUCCESS
-        }));
+          // Update task status.
+          this.store.dispatch(updateRunTaskStatus({
+            task: index === 0 ? RunTask.RUN_CONFIG1 : RunTask.RUN_CONFIG2,
+            status: TaskStatus.SUCCESS
+          }));
+        }
       }
     };
 

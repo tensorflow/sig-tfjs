@@ -89,6 +89,39 @@ export const selectModelGraph = (configIndex: ConfigIndex) =>
       return undefined;
     });
 
+/** Selector to select selected release. */
+export const selectSelectedTfjsRelease = (configIndex: ConfigIndex) =>
+    createSelector(selectMainState, (state) => {
+      if (configIndex === 0) {
+        return state.configs.config1.backendVersion;
+      } else if (configIndex === 1) {
+        return state.configs.config2.backendVersion;
+      }
+      return undefined;
+    });
+
+/** Selector to select local build settings for the given config index. */
+export const selectLocalBuildSettings = (configIndex: ConfigIndex) =>
+    createSelector(selectMainState, (state) => {
+      if (configIndex === 0) {
+        return state.configs.config1.localBuildSetting;
+      } else if (configIndex === 1) {
+        return state.configs.config2.localBuildSetting;
+      }
+      return undefined;
+    });
+
+/** Selector to select show const nodes for given config index. */
+export const selectShowConstNodes = (configIndex: ConfigIndex) =>
+    createSelector(selectMainState, (state) => {
+      if (configIndex === 0) {
+        return state.configs.config1.showConstNodes;
+      } else if (configIndex === 1) {
+        return state.configs.config2.showConstNodes;
+      }
+      return undefined;
+    });
+
 /** Selector to select whether config2 is enabled or not. */
 export const selectConfig2Enabled = createSelector(selectMainState, (state) => {
   return state.configs.config2.enabled;

@@ -19,20 +19,29 @@ import {CommonModule} from '@angular/common';
 import {NgModule} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatRadioModule} from '@angular/material/radio';
 import {MatSelectModule} from '@angular/material/select';
+
+import {BubbleModule} from '../bubble/bubble.module';
 
 import {BackendSelector} from './backend_selector.component';
 import {BackendVersionSelector} from './backend_version_selector.component';
+import {LocalBuildConfig} from './local_build_config.component';
 
 @NgModule({
   declarations: [
     BackendSelector,
     BackendVersionSelector,
+    LocalBuildConfig,
   ],
   imports: [
+    BubbleModule,
     CommonModule,
     FormsModule,
     MatFormFieldModule,
+    MatInputModule,
+    MatRadioModule,
     MatSelectModule,
   ],
   exports: [

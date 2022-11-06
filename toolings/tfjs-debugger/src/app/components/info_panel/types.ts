@@ -15,11 +15,14 @@
  * =============================================================================
  */
 
+import {NodeAttr} from 'src/app/data_model/run_results';
+
 export interface NodeInfo {
   id: string;
   y: number;
   op: string;
   dtypeAndShape: string;
+  attrs: NodeAttr[];
   diff?: string;
   diffValue?: number;
   values?: Value[];

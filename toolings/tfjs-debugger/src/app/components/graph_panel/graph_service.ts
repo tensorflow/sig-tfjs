@@ -123,6 +123,7 @@ interface TextProperties {
 interface InstancedMeshInfo {
   instanceId: number;
   instancedMesh: THREE.InstancedMesh;
+  color: THREE.Color;
 }
 
 /** Handles tasks related to graph rendering. */
@@ -670,12 +671,14 @@ export class GraphService {
         this.nodeIdToInstancedMeshInfo[node.id] = {
           instanceId: constNodeIndex,
           instancedMesh: this.constNodesInstancedMesh,
+          color: COLOR_CONST_NODE,
         };
         this.constInstanceIdToNodeId[constNodeIndex] = node.id;
       } else {
         this.nodeIdToInstancedMeshInfo[node.id] = {
           instanceId: nonConstNodeIndex,
           instancedMesh: this.nonConstNodesInstancedMesh,
+          color: COLOR_LN_BLUE,
         };
         this.nonConstInstanceIdToNodeId[nonConstNodeIndex] = node.id;
       }
@@ -694,12 +697,14 @@ export class GraphService {
         this.inputNodes.push(node);
         this.nonConstNodesInstancedMesh.setColorAt(
             nonConstNodeIndex, COLOR_LN_GREEN);
+        this.nodeIdToInstancedMeshInfo[node.id].color = COLOR_LN_GREEN;
       }
       // Output nodes.
       if (node.outputNodeIds.length === 0) {
         this.outputNodes.push(node);
         this.nonConstNodesInstancedMesh.setColorAt(
             nonConstNodeIndex, COLOR_LN_BROWN);
+        this.nodeIdToInstancedMeshInfo[node.id].color = COLOR_LN_BROWN;
       }
       // TODO: add a plane to make it easy to find input/output nodes.
 
@@ -985,11 +990,7 @@ export class GraphService {
     // Reset.
     this.removeDiffTexts();
     Object.values(this.nodeIdToInstancedMeshInfo).forEach(info => {
-      info.instancedMesh.setColorAt(
-          info.instanceId,
-          info.instancedMesh === this.constNodesInstancedMesh ?
-              COLOR_CONST_NODE :
-              COLOR_LN_BLUE);
+      info.instancedMesh.setColorAt(info.instanceId, info.color);
       info.instancedMesh.instanceColor!.needsUpdate = true;
     });
 
@@ -1111,7 +1112,7 @@ export class GraphService {
     let scale = areaAspect > containerAspect ?
         (this.container.clientWidth / w) :
         (this.container.clientHeight / h);
-    scale = Math.max(0.4, Math.min(scale, 1.5));
+    scale = Math.max(0.02, Math.min(scale, 1.5));
 
     this.centerViewAt(x, y, scale);
   }

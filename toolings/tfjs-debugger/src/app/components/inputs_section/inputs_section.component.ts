@@ -134,10 +134,10 @@ export class InputsSection implements OnInit, OnDestroy {
                 shape: input.shape,
                 dtype: input.dtype,
                 op: input.op,
-                strShape: `${input.dtype}[${input.shape.join(', ')}]`,
+                strShape: `${input.dtype} [${input.shape.join(', ')}]`,
                 inputValuesType: InputValuesType.RANDOM,
                 randomMin: 0,
-                randomMax: 1,
+                randomMax: input.dtype === 'int32' ? 255 : 1,
                 sameValue: 0,
               };
             });

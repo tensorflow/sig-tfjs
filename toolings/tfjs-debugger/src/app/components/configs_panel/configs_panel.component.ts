@@ -52,7 +52,11 @@ export class ConfigsPanel implements OnInit {
     // Update config2's enabled/disabled status.
     this.store.select(selectConfigValueFromUrl(1, UrlParamKey.CONFIG_ENABLED))
         .subscribe((strEnabled) => {
-          this.config2Enabled = strEnabled === 'true';
+          if (strEnabled == null) {
+            this.config2Enabled = true;
+          } else {
+            this.config2Enabled = strEnabled === 'true';
+          }
           this.changeDetectorRef.markForCheck();
 
           // Update store.

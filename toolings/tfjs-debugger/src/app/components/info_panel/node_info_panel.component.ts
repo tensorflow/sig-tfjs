@@ -90,4 +90,11 @@ export class NodeInfoPanel implements OnInit, OnDestroy {
     }
     return Math.abs(diff) >= this.threshold;
   }
+
+  attrsCount(): number {
+    if (!this.nodeInfo) {
+      return 0;
+    }
+    return this.nodeInfo.attrs.length;
+  }
 }

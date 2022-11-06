@@ -4,6 +4,7 @@ import {Actions, createEffect, ofType} from '@ngrx/effects';
 import {of} from 'rxjs';
 import {catchError, map, switchMap} from 'rxjs/operators';
 
+import {LOCAL_BUILD_LAEL} from '../common/consts';
 import {modelJsonToModelGraph} from '../data_model/run_results';
 import {releaseJsonToTfjsRelease, TfjsRelease} from '../data_model/tfjs_release';
 import {GithubService} from '../services/github_service';

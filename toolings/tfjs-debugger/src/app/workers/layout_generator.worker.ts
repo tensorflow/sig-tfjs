@@ -18,6 +18,7 @@
 /// <reference lib="webworker" />
 
 import {LayoutBatchRequest, LayoutBatchResponse, LayoutRequest, LayoutResponse, WorkerCommand, WorkerMessage} from '../common/types';
+import {Configuration} from '../data_model/configuration';
 import {ModelGraph, ModelGraphLayout, ModelGraphLayoutEdge, ModelGraphNode} from '../data_model/run_results';
 
 const BATCH_SIZE = 800;
@@ -48,7 +49,7 @@ addEventListener('message', ({data}) => {
   switch (msg.cmd) {
     case WorkerCommand.LAYOUT:
       const req = msg as LayoutRequest;
-      layoutModelGraph(req.modelGraph, req.configIndex);
+      layoutModelGraph(req.modelGraph, req.configIndex, req.config);
       break;
     default:
       break;
@@ -60,7 +61,8 @@ addEventListener('message', ({data}) => {
  * coordinates) will be stored directly inside each ModelGraphNode in
  * ModelGraph.
  */
-function layoutModelGraph(modelGraph: ModelGraph, configIndex: number) {
+function layoutModelGraph(
+    modelGraph: ModelGraph, configIndex: number, config: Configuration) {
   curTasks = [];
   curResults = [];
   curConfigIndex = configIndex;
@@ -73,8 +75,7 @@ function layoutModelGraph(modelGraph: ModelGraph, configIndex: number) {
   let c = 0;
   for (let i = 0; i < allNodes.length; i++) {
     const node = allNodes[i];
-    // TODO: support setting this as an option.
-    if (node.op === 'Const') {
+    if (!config.showConstNodes && node.op === 'Const') {
       continue;
     }
     if (c % BATCH_SIZE === 0) {
@@ -126,8 +127,6 @@ function processResults() {
   postMessage(resp);
 }
 
-// TODO(do not submit): add comments
-// TODO(do not submit): add missing edges.
 function processResultForOneAlign(results: LayoutBatchResponse[]):
     ModelGraphLayout {
   // Process batches so that the batch n is placed right below the batch n-1,

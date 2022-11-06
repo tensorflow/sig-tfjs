@@ -20,6 +20,7 @@ import {createAction, props} from '@ngrx/store';
 
 import {BackendId} from '../data_model/backend_type';
 import {Input} from '../data_model/input';
+import {LocalBuildSetting} from '../data_model/local_build_setting';
 import {RunTask, TaskStatus} from '../data_model/misc';
 import {ModelTypeId} from '../data_model/model_type';
 import {Diffs, ModelGraph} from '../data_model/run_results';
@@ -30,6 +31,8 @@ export enum DebuggerAction {
   SET_TFSJS_MODEL_URL = '[Conf] Set TFJS Model Url',
   SET_TFJS_BACKEND_ID = '[Conf] Set TFJS Backend Id',
   SET_TFJS_BACKEND_VERSION = '[Conf] Set TFJS Backend Version',
+  SET_TFJS_LOCAL_BUILD_SETTING = '[Conf] Set TFJS Local Build Setting',
+  SET_SHOW_CONST_NODES = '[Conf] Show Const Nodes',
   SET_CONFIG_ENABLED = '[Conf] Set Config Enabled',
   SET_BAD_NODES_THRESHOLD = '[Conf] Set Bad Nodes Threshold',
   SET_INPUTS = '[Input] Set Inputs',
@@ -72,6 +75,18 @@ export const setTfjsBackendId = createAction(
 export const setTfjsBackendVersion = createAction(
     DebuggerAction.SET_TFJS_BACKEND_VERSION,
     props<{configIndex: number, version: string}>(),
+);
+
+/** Sets tfjs backend version for the given config. */
+export const setTfjsLocalBuildSetting = createAction(
+    DebuggerAction.SET_TFJS_LOCAL_BUILD_SETTING,
+    props<{configIndex: number, setting: LocalBuildSetting}>(),
+);
+
+/** Sets show const nodes. */
+export const setShowConstNodes = createAction(
+    DebuggerAction.SET_SHOW_CONST_NODES,
+    props<{configIndex: number, showConstNodes: boolean}>(),
 );
 
 /** Sets tfjs backend version for the given config. */

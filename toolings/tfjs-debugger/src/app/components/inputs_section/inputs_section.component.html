@@ -45,18 +45,16 @@ limitations under the License.
 
           <!-- Random -->
           <ng-container *ngSwitchCase="InputValuesType.RANDOM">
-            <div class="min-max-label">Min</div>
+            <div class="min-max-label">Min:</div>
             <mat-form-field class="min-max-input"
-                            appearance="outline"
                             floatLabel="never">
               <input #minInput matInput
                      [(ngModel)]="input.randomMin"
                      (focus)="minInput.select()"
                      (change)="handleInputChanged()">
             </mat-form-field>
-            <div class="min-max-label">Max</div>
+            <div class="min-max-label">Max:</div>
             <mat-form-field class="min-max-input"
-                            appearance="outline"
                             floatLabel="never">
               <input #maxInput matInput
                      [(ngModel)]="input.randomMax"
@@ -67,9 +65,8 @@ limitations under the License.
 
           <!-- Same value -->
           <ng-container *ngSwitchCase="InputValuesType.SAME_VALUE">
-            <div class="same-value-label">Value</div>
+            <div class="same-value-label">Value:</div>
             <mat-form-field class="same-value-input"
-                            appearance="outline"
                             floatLabel="never">
               <input #sameValueInput matInput
                      [(ngModel)]="input.sameValue"

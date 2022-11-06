@@ -31,5 +31,9 @@ limitations under the License.
   <div class="extra-components-container">
     <div class="title">Version</div>
     <backend-version-selector [configIndex]="configIndex"></backend-version-selector>
+
+    <ng-container *ngIf="isLocalBuild()">
+      <local-build-config [configIndex]="configIndex"></local-build-config>
+    </ng-container>
   </div>
 </div>

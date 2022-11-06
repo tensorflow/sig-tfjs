@@ -25,6 +25,8 @@ export enum UrlParamKey {
   SELECTED_INPUT_TYPE_ID = 'iid',
   SELECTED_BACKEND_ID = 'bi',
   SELECTED_BACKEND_VERSION = 'bv',
+  LOCAL_BUILD_SETTING = 'lbs',
+  SHOW_CONST_NODES = 'scn',
   CONFIG_ENABLED = 'ce',
   INPUTS = 'inputs',
   BAD_NODES_THRESHOLD = 'bnt',
@@ -40,6 +42,7 @@ export interface WorkerMessage {
 
 export interface LayoutRequest extends WorkerMessage {
   configIndex: number;
+  config: Configuration;
   /** The model graph to calculate layout for. */
   modelGraph: ModelGraph;
 }
@@ -79,11 +82,13 @@ export interface RunTfjsModelRequest extends WorkerMessage {
   modelGraph: ModelGraph;
   modelUrl: string;
   config: Configuration;
+  showConstNodes: boolean;
   inputs: TensorMap;
 }
 
 export interface RunTfjsModelResponse extends WorkerMessage {
   outputs: TensorMap;
+  errorMsg?: string;
 }
 
 export interface CalculateDiffsRequest extends WorkerMessage {

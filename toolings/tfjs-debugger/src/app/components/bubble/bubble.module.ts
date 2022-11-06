@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2021 Google LLC. All Rights Reserved.
+ * Copyright 2022 Google LLC. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,34 +15,27 @@
  * =============================================================================
  */
 
+import {OverlayModule} from '@angular/cdk/overlay';
 import {CommonModule} from '@angular/common';
 import {NgModule} from '@angular/core';
 import {FormsModule} from '@angular/forms';
-import {MatButtonModule} from '@angular/material/button';
-import {MatIconModule} from '@angular/material/icon';
-import {MatInputModule} from '@angular/material/input';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 
-import {BubbleModule} from '../bubble/bubble.module';
-
-import {InfoPanel} from './info_panel.component';
-import {NodeInfoPanel} from './node_info_panel.component';
+import {Bubble} from './bubble.component';
 
 @NgModule({
   declarations: [
-    InfoPanel,
-    NodeInfoPanel,
+    Bubble,
   ],
   imports: [
-    BubbleModule,
     CommonModule,
     FormsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatInputModule,
+    MatSlideToggleModule,
+    OverlayModule,
   ],
   exports: [
-    InfoPanel,
+    Bubble,
   ]
 })
-export class InfoPanelModule {
+export class BubbleModule {
 }

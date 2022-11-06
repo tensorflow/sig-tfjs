@@ -93,14 +93,8 @@ export class GraphPanel implements OnInit, AfterViewInit {
         //
         // See:
         // https://github.com/dagrejs/dagre/wiki#configuring-the-layout.
-        console.log('!!!!!!!!!!!', Object.keys(modelGraph1).length);
         this.layoutGraph(0, modelGraph1);
       }
-    });
-
-    // Update the graph to visualize diffs.
-    this.store.select(selectDiffs).subscribe(diffs => {
-      console.log(diffs);
     });
   }
 
@@ -151,6 +145,8 @@ export class GraphPanel implements OnInit, AfterViewInit {
   private layoutGraph(configIndex: number, modelGraph: ModelGraph) {
     const msg: LayoutRequest = {
       cmd: WorkerCommand.LAYOUT,
+      config: configIndex === 0 ? this.curConfigs!.config1 :
+                                  this.curConfigs!.config2,
       configIndex,
       modelGraph,
     };

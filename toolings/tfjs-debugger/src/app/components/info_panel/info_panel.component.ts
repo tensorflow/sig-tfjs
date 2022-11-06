@@ -25,7 +25,7 @@ import {Diffs, ModelGraph, ModelGraphNode} from 'src/app/data_model/run_results'
 import {RunResultService} from 'src/app/services/run_result_service';
 import {UrlService} from 'src/app/services/url_service';
 import {setBadNodesThreshold} from 'src/app/store/actions';
-import {selectBadNodesThreshold, selectDiffs, selecteSelectedEdgeId, selectModelGraph, selectSelectedNodeId, selectValueFromUrl} from 'src/app/store/selectors';
+import {selectBadNodesThreshold, selectDiffs, selecteSelectedEdgeId, selectModelGraph, selectSelectedNodeId, selectShowConstNodes, selectValueFromUrl} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 
 import {GraphService} from '../graph_panel/graph_service';
@@ -53,6 +53,7 @@ interface Overview {
 export class InfoPanel implements OnInit {
   private curModelGraph?: ModelGraph;
   private curDiffs?: Diffs;
+  private showConstNodes = false;
 
   selectedNodeId?: string;
   selectedEdgeId?: string;
@@ -109,6 +110,13 @@ export class InfoPanel implements OnInit {
                 this.curDiffs, this.curModelGraph, threshold);
           }
         });
+
+    this.store.select(selectShowConstNodes(0)).subscribe(show => {
+      if (show == null) {
+        return;
+      }
+      this.showConstNodes = show;
+    });
   }
 
   noBadNodes(): boolean {
@@ -164,12 +172,13 @@ export class InfoPanel implements OnInit {
       return [];
     }
 
-    // TODO: handle "show const node" checkbox.
     const node = this.curModelGraph[this.selectedNodeId];
     return node.inputNodeIds
         .filter(
             id => this.curModelGraph![id] &&
-                this.curModelGraph![id].op !== 'Const')
+                (this.showConstNodes ||
+                 (!this.showConstNodes &&
+                  this.curModelGraph![id].op !== 'Const')))
         .map(id => this.nodeToNodeInfo(this.curModelGraph![id], this.curDiffs));
   }
 
@@ -218,15 +227,21 @@ export class InfoPanel implements OnInit {
     this.graphService.fitEdge();
   }
 
+  trackByNodeId(index: number, node: NodeInfo) {
+    return node.id;
+  }
+
   private handleGetRunResult(
       diffs: Diffs|undefined, modelGraph: ModelGraph, threshold: number) {
     this.curModelGraph = modelGraph;
     this.curDiffs = diffs;
 
-    // TODO: handle "show const node" checkbox.
-    const numTotalNodes = Object.keys(modelGraph)
-                              .filter(id => modelGraph[id].op !== 'Const')
-                              .length;
+    const numTotalNodes =
+        Object.keys(modelGraph)
+            .filter(
+                id => this.showConstNodes ||
+                    (!this.showConstNodes && modelGraph[id].op !== 'Const'))
+            .length;
     let numBadNodes = 0;
     let badNodes: ModelGraphNode[] = [];
     if (diffs && Object.keys(diffs).length > 0) {
@@ -282,6 +297,7 @@ export class InfoPanel implements OnInit {
       id: node.id,
       y: node.y!,
       op: node.op,
+      attrs: node.attrs,
       dtypeAndShape: `${dtype} [${shape.join(', ')}]`,
     };
     if (diffs) {

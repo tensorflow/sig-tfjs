@@ -19,3 +19,4 @@ export const CONST_NODE_WIDTH = 56;
 export const NON_CONST_NODE_WIDTH = 90;
 export const NODE_HEIGHT = 28;
 export const DEFAULT_BAD_NODE_THRESHOLD = 0.1;
+export const LOCAL_BUILD_LAEL = 'Local build';

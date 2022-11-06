@@ -19,12 +19,14 @@ import {ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy,
 import {MatSelectChange} from '@angular/material/select';
 import {Store} from '@ngrx/store';
 import {takeWhile} from 'rxjs';
+import {LOCAL_BUILD_LAEL} from 'src/app/common/consts';
 import {ConfigIndex, UrlParamKey} from 'src/app/common/types';
 import {appendConfigIndexToKey} from 'src/app/common/utils';
 import {BackendId} from 'src/app/data_model/backend_type';
+import {TfjsRelease} from 'src/app/data_model/tfjs_release';
 import {UrlService} from 'src/app/services/url_service';
 import {setTfjsBackendId} from 'src/app/store/actions';
-import {selectConfigValueFromUrl} from 'src/app/store/selectors';
+import {selectConfigValueFromUrl, selectSelectedTfjsRelease, selectTfjsReleases} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 
 import {BackendOption} from './types';
@@ -60,6 +62,10 @@ export class BackendSelector implements OnInit, OnDestroy {
   /** Stores the currently selected backend. */
   selectedBackendId!: BackendId;
 
+  selectedRelease = '';
+
+  localServerAddress = 'localhost:9876';
+
   private active = true;
 
   constructor(
@@ -89,6 +95,17 @@ export class BackendSelector implements OnInit, OnDestroy {
             backendId,
           }));
         });
+
+    this.store.select(selectSelectedTfjsRelease(this.configIndex))
+        .pipe(takeWhile(() => this.active))
+        .subscribe((release) => {
+          if (!release) {
+            return;
+          }
+
+          this.selectedRelease = release;
+          this.changeDetectorRef.markForCheck();
+        });
   }
 
   ngOnDestroy() {
@@ -103,5 +120,9 @@ export class BackendSelector implements OnInit, OnDestroy {
       [appendConfigIndexToKey(
           UrlParamKey.SELECTED_BACKEND_ID, this.configIndex)]: `${backendId}`
     });
+  }
+
+  isLocalBuild(): boolean {
+    return this.selectedRelease === LOCAL_BUILD_LAEL;
   }
 }

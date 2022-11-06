@@ -19,7 +19,7 @@ import {createReducer, on} from '@ngrx/store';
 
 import {RunStatus, RunTask, TaskStatus} from '../data_model/misc';
 
-import {clearErrorMessage, fetchTfjsModelJsonFail, fetchTfjsModelJsonSuccess, fetchTfjsReleasesFail, fetchTfjsReleasesSuccess, resetRunStatus, setBadNodesThreshold, setConfigEnabled, setDiffs, setErrorMessage, setInputs, setModelType, setNodeIdToLocate, setSelectedEdgeId, setSelectedNodeId, setTfjsBackendId, setTfjsBackendVersion, setTfjsModelUrl, triggerRunCurrentConfigs, updateRunTaskStatus} from './actions';
+import {clearErrorMessage, fetchTfjsModelJsonFail, fetchTfjsModelJsonSuccess, fetchTfjsReleasesFail, fetchTfjsReleasesSuccess, resetRunStatus, setBadNodesThreshold, setConfigEnabled, setDiffs, setErrorMessage, setInputs, setModelType, setNodeIdToLocate, setSelectedEdgeId, setSelectedNodeId, setShowConstNodes, setTfjsBackendId, setTfjsBackendVersion, setTfjsLocalBuildSetting, setTfjsModelUrl, triggerRunCurrentConfigs, updateRunTaskStatus} from './actions';
 import {Configs, initialState} from './state';
 import {getRunTasksFromConfigs} from './utils';
 
@@ -125,6 +125,60 @@ export const mainReducer = createReducer(
              config2: {
                ...state.configs.config2,
                backendVersion: version,
+             }
+           };
+         }
+         if (!configs) {
+           return state;
+         } else {
+           return {...state, configs};
+         }
+       }),
+
+    on(setTfjsLocalBuildSetting,
+       (state, {configIndex, setting}) => {
+         let configs: Configs|undefined;
+         if (configIndex === 0) {
+           configs = {
+             ...state.configs,
+             config1: {
+               ...state.configs.config1,
+               localBuildSetting: {...setting},
+             }
+           };
+         } else if (configIndex === 1) {
+           configs = {
+             ...state.configs,
+             config2: {
+               ...state.configs.config2,
+               localBuildSetting: {...setting},
+             }
+           };
+         }
+         if (!configs) {
+           return state;
+         } else {
+           return {...state, configs};
+         }
+       }),
+
+    on(setShowConstNodes,
+       (state, {configIndex, showConstNodes}) => {
+         let configs: Configs|undefined;
+         if (configIndex === 0) {
+           configs = {
+             ...state.configs,
+             config1: {
+               ...state.configs.config1,
+               showConstNodes,
+             }
+           };
+         } else if (configIndex === 1) {
+           configs = {
+             ...state.configs,
+             config2: {
+               ...state.configs.config2,
+               showConstNodes,
              }
            };
          }

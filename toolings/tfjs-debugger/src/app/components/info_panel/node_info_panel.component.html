@@ -34,6 +34,20 @@ limitations under the License.
     <div class="item-name">shape</div>
     <div class="item-value">{{nodeInfo!.dtypeAndShape}}</div>
   </div>
+  <div class="node-item" *ngIf="attrsCount() > 0">
+    <div class="item-name">attrs</div>
+    <bubble [panelTemplate]="attrsPanel" #bubble>
+      <div class="item-value attrs">Hover for details ({{attrsCount()}})</div>
+      <ng-template #attrsPanel>
+        <table class="attrs-table">
+          <tr class="attr-row" *ngFor="let attr of nodeInfo!.attrs">
+            <td class="key">{{attr.key}}</td>
+            <td class="value">{{attr.value}}</td>
+          </tr>
+        </table>
+      </ng-template>
+    </bubble>
+  </div>
   <div class="node-item" *ngIf="nodeInfo!.diff">
     <div class="item-name">diff</div>
     <div class="item-value diff" [class.bad]="isNodeBad()">{{nodeInfo!.diff}}</div>

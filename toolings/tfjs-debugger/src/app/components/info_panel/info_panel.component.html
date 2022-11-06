@@ -53,7 +53,8 @@ limitations under the License.
     <div class="header">
       {{getNodeSectionTitle('Input', overview!.inputNodes)}}
     </div>
-    <div class="node-container" *ngFor="let node of overview!.inputNodes; let i = index">
+    <div class="node-container"
+         *ngFor="let node of overview!.inputNodes; let i = index; trackBy: trackByNodeId">
       <div class="index-container input">{{i + 1}}</div>
       <node-info-panel [nodeInfo]="node"></node-info-panel>
     </div>
@@ -61,7 +62,8 @@ limitations under the License.
     <div class="header">
       {{getNodeSectionTitle('Output', overview!.outputNodes)}}
     </div>
-    <div class="node-container" *ngFor="let node of overview!.outputNodes; let i = index">
+    <div class="node-container"
+         *ngFor="let node of overview!.outputNodes; let i = index; trackBy: trackByNodeId">
       <div class="index-container output">{{i + 1}}</div>
       <node-info-panel [nodeInfo]="node"></node-info-panel>
     </div>
@@ -70,7 +72,8 @@ limitations under the License.
       <div class="header">
         {{getNodeSectionTitle('Bad', overview!.badNodes)}}
       </div>
-      <div class="node-container" *ngFor="let node of overview!.badNodes; let i = index">
+      <div class="node-container"
+           *ngFor="let node of overview!.badNodes; let i = index; trackBy: trackByNodeId">
         <div class="index-container bad">{{i + 1}}</div>
         <node-info-panel [nodeInfo]="node"></node-info-panel>
       </div>
@@ -87,14 +90,16 @@ limitations under the License.
     <div class="header" *ngIf="getSelectedNodeInputs().length > 0">
       {{getNodeSectionTitle('Input', getSelectedNodeInputs())}}
     </div>
-    <div class="node-container" *ngFor="let node of getSelectedNodeInputs()">
+    <div class="node-container"
+         *ngFor="let node of getSelectedNodeInputs(); trackBy: trackByNodeId">
       <node-info-panel [nodeInfo]="node"></node-info-panel>
     </div>
 
     <div class="header" *ngIf="getSelectedNodeOutputs().length > 0">
       {{getNodeSectionTitle('Output', getSelectedNodeOutputs())}}
     </div>
-    <div class="node-container" *ngFor="let node of getSelectedNodeOutputs()">
+    <div class="node-container"
+         *ngFor="let node of getSelectedNodeOutputs(); trackBy: trackByNodeId">
       <node-info-panel [nodeInfo]="node"></node-info-panel>
     </div>
   </div>

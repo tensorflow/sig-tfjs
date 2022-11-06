@@ -19,6 +19,7 @@ import {ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy,
 import {MatSelectChange} from '@angular/material/select';
 import {Store} from '@ngrx/store';
 import {distinctUntilChanged, takeWhile} from 'rxjs';
+import {LOCAL_BUILD_LAEL} from 'src/app/common/consts';
 import {ConfigIndex, UrlParamKey} from 'src/app/common/types';
 import {appendConfigIndexToKey} from 'src/app/common/utils';
 import {TfjsRelease} from 'src/app/data_model/tfjs_release';
@@ -64,7 +65,8 @@ export class BackendVersionSelector implements OnInit, OnDestroy {
           }
 
           // Store locally.
-          this.releases.push(...releases);
+          this.releases.push(
+              {version: LOCAL_BUILD_LAEL, date: ''}, ...releases);
           for (const release of releases) {
             this.releasesMap.set(release.version, release);
           }
@@ -72,7 +74,8 @@ export class BackendVersionSelector implements OnInit, OnDestroy {
           // Only set default value if selectedVersion has not been set from
           // url.
           if (!this.selectedVersion) {
-            this.selectedVersion = this.releases[0].version;
+            // [0] is local build. [1] is the latest release.
+            this.selectedVersion = this.releases[1].version;
 
             // Update url with the default version.
             //

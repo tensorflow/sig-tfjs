@@ -23,8 +23,8 @@ import {ConfigIndex, UrlParamKey} from 'src/app/common/types';
 import {appendConfigIndexToKey} from 'src/app/common/utils';
 import {ModelTypeId} from 'src/app/data_model/model_type';
 import {UrlService} from 'src/app/services/url_service';
-import {setModelType, setTfjsModelUrl} from 'src/app/store/actions';
-import {selectConfigValueFromUrl} from 'src/app/store/selectors';
+import {setModelType, setShowConstNodes, setTfjsModelUrl} from 'src/app/store/actions';
+import {selectConfigValueFromUrl, selectShowConstNodes} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 
 import {ModelTypeOption} from './types';
@@ -109,7 +109,7 @@ export class ModelSelector implements OnInit, OnDestroy {
   tfjsModelUrl = '';
 
   /** Stores whether to show the const nodes in graph. */
-  showConstNodes = true;
+  showConstNodes = false;
 
   private active = true;
 
@@ -167,6 +167,21 @@ export class ModelSelector implements OnInit, OnDestroy {
             }));
           }
         });
+
+    // Update show const nodes from URL.
+    this.store
+        .select(selectConfigValueFromUrl(
+            this.configIndex, UrlParamKey.SHOW_CONST_NODES))
+        .pipe(takeWhile(() => this.active))
+        .subscribe((strShow) => {
+          this.showConstNodes = strShow === 'true';
+
+          // Update store.
+          this.store.dispatch(setShowConstNodes({
+            configIndex: this.configIndex,
+            showConstNodes: this.showConstNodes,
+          }));
+        });
   }
 
   ngOnDestroy() {
@@ -213,6 +228,13 @@ export class ModelSelector implements OnInit, OnDestroy {
   handleClickPublishedModel(url: string) {
     this.tfjsModelUrl = url;
     this.handleTfjsModelUrlChanged();
+  }
+
+  handleShowConstNodesUpdated() {
+    this.urlService.updateUrlParameters({
+      [appendConfigIndexToKey(UrlParamKey.SHOW_CONST_NODES, this.configIndex)]:
+          `${this.showConstNodes}`,
+    });
   }
 
   get isSameAsConfig1Selected(): boolean {

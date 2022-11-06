@@ -54,6 +54,10 @@
       &.bad {
         color: var.$red;
       }
+
+      &.attrs {
+        cursor: pointer;
+      }
     }
 
     &.column {
@@ -158,5 +162,21 @@
         }
       }
     }
+  }
+}
+
+::ng-deep .attr-row {
+  font-size: 12px;
+
+  .key {
+    max-width: 200px;
+    margin-right: 4px;
+    color: var.$grey-500;
+    line-break: anywhere;
+  }
+
+  /* stylelint-disable-next-line no-descending-specificity */
+  .value {
+    color: var.$grey-800;
   }
 }
