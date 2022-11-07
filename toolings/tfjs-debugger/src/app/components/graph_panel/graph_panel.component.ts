@@ -27,6 +27,9 @@ import {selectCurrentConfigs, selectDiffs, selectModelGraph, selectRunCurrentCon
 import {AppState, Configs} from 'src/app/store/state';
 
 import {GraphService} from './graph_service';
+import {GraphService3d} from './graph_service_3d';
+
+// Left-click: rotate, Mouse-wheel/middle-click: zoom, Right-click: pan
 
 @Component({
   selector: 'graph-panel',
@@ -37,14 +40,18 @@ import {GraphService} from './graph_service';
 export class GraphPanel implements OnInit, AfterViewInit {
   @ViewChild('canvas', {static: false}) canvas!: ElementRef;
   @ViewChild('container', {static: false}) container!: ElementRef;
+  @ViewChild('container3d', {static: false}) container3d!: ElementRef;
 
   /** The processed model graph with the layout data. */
   modelGraphLayout?: ModelGraphLayout;
+  modelGraph1?: ModelGraph;
 
   /** Track whether mouse cursor is in or out of the help icon. */
   mouseEnteredHelpIcon = false;
+  graphType = '2d';
 
   private curConfigs?: Configs;
+  private reRenderGraph3d = false;
 
   private layoutWorker = new Worker(
       new URL('../../workers/layout_generator.worker', import.meta.url));
@@ -53,6 +60,7 @@ export class GraphPanel implements OnInit, AfterViewInit {
       private readonly changeDetectionRef: ChangeDetectorRef,
       private readonly store: Store<AppState>,
       private readonly graphService: GraphService,
+      private readonly graphService3d: GraphService3d,
   ) {
     this.setupWorkers();
   }
@@ -65,6 +73,12 @@ export class GraphPanel implements OnInit, AfterViewInit {
             filter(trigger => trigger != null),
             withLatestFrom(this.store.select(selectCurrentConfigs)))
         .subscribe(([unusedTrigger, curConfigs]) => {
+          // Switch to 2d.
+          this.graphType = '2d';
+          this.reRenderGraph3d = true;
+          this.handleGraphTypeChanged();
+          this.changeDetectionRef.markForCheck();
+
           const prevConfigs: Configs|undefined =
               !this.curConfigs ? undefined : {...this.curConfigs};
           this.curConfigs = curConfigs;
@@ -101,6 +115,52 @@ export class GraphPanel implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     this.graphService.init(
         this.container.nativeElement, this.canvas.nativeElement);
+    this.graphService3d.init(this.container3d.nativeElement);
+  }
+
+  handleGraphTypeChanged() {
+    if (!this.modelGraphLayout) {
+      return;
+    }
+
+    if (this.graphType === '3d') {
+      if (this.reRenderGraph3d) {
+        // Duplicate modelGraphLayout and send it to GraphService3d to render.
+        const modelGraphLayout: ModelGraphLayout =
+            JSON.parse(JSON.stringify(this.modelGraphLayout)) as
+            ModelGraphLayout;
+        this.graphService3d.renderGraph(modelGraphLayout);
+        this.reRenderGraph3d = false;
+      }
+      this.graphService3d.resume();
+      this.graphService.pause();
+    } else if (this.graphType === '2d') {
+      this.graphService3d.pause();
+      this.graphService.resume();
+    }
+  }
+
+  getZoomHelp(): string {
+    if (this.graphType === '2d') {
+      return 'Ctrl+ScrollWheel, or pinch on trackpad';
+    } else {
+      return 'ScrollWheel, or pinch on trackpad';
+    }
+  }
+
+  getPanHelp(): string {
+    if (this.graphType === '2d') {
+      return 'Drag the graph, two-finger move on trackpad, or use scroll wheel to pan vertically';
+    } else {
+      return 'Drag with right mouse button';
+    }
+  }
+
+  getRotateHelp(): string {
+    if (this.graphType === '3d') {
+      return 'Drag with left mouse button';
+    }
+    return '';
   }
 
   private fetchModelJsonFilesIfChanged(

@@ -17,6 +17,8 @@
 
 import {CommonModule} from '@angular/common';
 import {NgModule} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
 import {MatIconModule} from '@angular/material/icon';
 
 import {GraphPanel} from './graph_panel.component';
@@ -27,7 +29,9 @@ import {GraphPanel} from './graph_panel.component';
   ],
   imports: [
     CommonModule,
+    FormsModule,
     MatIconModule,
+    MatButtonToggleModule,
   ],
   exports: [
     GraphPanel,

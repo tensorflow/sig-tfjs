@@ -137,7 +137,7 @@ export class InputsSection implements OnInit, OnDestroy {
                 strShape: `${input.dtype} [${input.shape.join(', ')}]`,
                 inputValuesType: InputValuesType.RANDOM,
                 randomMin: 0,
-                randomMax: input.dtype === 'int32' ? 255 : 1,
+                randomMax: 1,
                 sameValue: 0,
               };
             });

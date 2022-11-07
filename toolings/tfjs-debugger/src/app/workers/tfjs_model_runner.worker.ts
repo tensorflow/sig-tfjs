@@ -29,12 +29,13 @@ addEventListener('message', ({data}) => {
 async function runTfjsModel(req: RunTfjsModelRequest) {
   // Node ids for getting results for.
   const showConstNodes = req.showConstNodes;
-  const nodeIds = Object.values(req.modelGraph)
-                      .filter(
-                          node => (showConstNodes ||
-                                   (!showConstNodes && node.op !== 'Const')) &&
-                              !node.id.includes('/cond'))
-                      .map(node => node.id);
+  const nodeIds =
+      Object.values(req.modelGraph)
+          .filter(
+              node => (showConstNodes ||
+                       (!showConstNodes && node.op !== 'Const')) &&
+                  !node.id.includes('/cond') && node.dtype !== 'resource')
+          .map(node => node.id);
 
   // Load packages.
   const {tf, errorMsg} = await loadTfjsPackegesAndSetBackend(req.config);
@@ -62,7 +63,13 @@ async function runTfjsModel(req: RunTfjsModelRequest) {
   }
 
   // Run model and gather outputs.
-  const outs = await model.executeAsync(namedTensorMap, nodeIds);
+  let outs: any = [];
+  try {
+    outs = await model.executeAsync(namedTensorMap, nodeIds);
+  } catch (e: any) {
+    sendRespWithError(e.message);
+    return;
+  }
   const outputTensorMap: TensorMap = {};
   for (let i = 0; i < nodeIds.length; i++) {
     const nodeId = nodeIds[i];

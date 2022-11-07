@@ -15,7 +15,6 @@
  * =============================================================================
  */
 
-import ForceGraph3D from '3d-force-graph';
 import {Injectable} from '@angular/core';
 import {Store} from '@ngrx/store';
 import * as d3 from 'd3';
@@ -23,13 +22,12 @@ import {filter, skip, withLatestFrom} from 'rxjs/operators';
 import {CONST_NODE_WIDTH, NODE_HEIGHT, NON_CONST_NODE_WIDTH} from 'src/app/common/consts';
 import {getPctDiffString} from 'src/app/common/utils';
 import {Diffs, ModelGraphLayout, ModelGraphLayoutEdge, ModelGraphNode} from 'src/app/data_model/run_results';
-import {setSelectedEdgeId, setSelectedNodeId as setSelectedNodeId} from 'src/app/store/actions';
+import {setSelectedEdgeId, setSelectedNodeId} from 'src/app/store/actions';
 import {selectBadNodesThreshold, selectDiffs, selecteSelectedEdgeId, selectNodeIdToLocate, selectSelectedNodeId} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 import * as THREE from 'three';
-import {preloadFont, Text as ThreeText} from 'troika-three-text';
 
-import {ForceGraph3DGenericInstance} from './3d-force-graph';
+import {createText, Font, preloadTroikaThreeTextFont} from './utils';
 
 const DEFAULT_FRUSTUM_SIZE = 500;
 const DEFAULT_CAMERA_Y = 100;
@@ -88,11 +86,6 @@ const BAD_NODE_TEXT_MATERIAL = new THREE.MeshBasicMaterial({color: 0xf02311});
 // Edges and labels will be hidden when zoom level is below this threshold.
 const ZOOM_LEVEL_THRESHOLD_FOR_SHOWING_DETAILS = 0.3;
 
-// Fonts that will be used in the scene.
-enum Font {
-  GoogleSansMedium = 'assets/GoogleSans-Medium.ttf',
-}
-
 enum ObjectType {
   CONST_NODES = 'constNodes',
   NON_CONST_NODES = 'nonConstNodes',
@@ -100,24 +93,6 @@ enum ObjectType {
   EDGE_BG = 'edgeBg',
   EDGE_HIGHLIGHTER = 'edgeHighlighter',
   EDGE_SELECTION = 'edgeSelection',
-}
-
-// See
-// https://protectwise.github.io/troika/troika-three-text/#supported-properties
-interface TextProperties {
-  // Font and font size are required.
-  font: Font;
-  fontSize: number;
-
-  // Optional.
-  color?: number;              // Default to black
-  maxWidth?: number;           // Default to unset
-  anchorX?: string;            // Default to 'center'
-  anchorY?: string;            // Default to 'middle'
-  textAlign?: string;          // Default to 'center'
-  whiteSpace?: string;         // Default to 'normal'
-  overflowWrap?: string;       // Default to 'break-word'
-  lineHeight?: number|string;  // Default to 'normal'
 }
 
 interface InstancedMeshInfo {
@@ -173,27 +148,19 @@ export class GraphService {
   private prevHoveredEdgeId = '';
 
   private container?: HTMLElement;
+  private canvas?: HTMLElement;
 
   private curDiffs?: Diffs;
   private curModelGraphLayout?: ModelGraphLayout;
   private curNodesMap: {[id: string]: ModelGraphNode} = {};
   private curEdgesMap: {[id: string]: ModelGraphLayoutEdge} = {};
 
+  private paused = false;
+
   constructor(
       private readonly store: Store<AppState>,
   ) {
-    // Preload fonts for text rendering in the THREE.js scene.
-    //
-    // This will be done in webworkers without blocking the main UI.
-    for (const font of Object.values(Font)) {
-      preloadFont(
-          {
-            font,
-            characters: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ' +
-                '0123456789'
-          },
-          () => {});
-    }
+    preloadTroikaThreeTextFont();
 
     // Update graph to show nodes with large diffs.
     this.store.select(selectDiffs)
@@ -245,17 +212,28 @@ export class GraphService {
 
   init(container: HTMLElement, canvas: HTMLElement) {
     this.container = container;
+    this.canvas = canvas;
 
     this.setupThreeJs(canvas);
     this.setupPanAndZoom();
 
-    container.addEventListener('mousemove', (e) => {
+    canvas.addEventListener('mousemove', (e) => {
       this.hanldeMouseMove(e);
     });
 
-    container.addEventListener('click', (e) => {
+    canvas.addEventListener('click', (e) => {
       this.handleClick(e);
     });
+  }
+
+  pause() {
+    this.paused = true;
+  }
+
+  resume() {
+    this.paused = false;
+    this.resizeRendererToDisplaySize();
+    this.render();
   }
 
   /** Sets up THREE.js scene with camera, renderer, resize observer, etc. */
@@ -347,6 +325,9 @@ export class GraphService {
     // Setup drag and zoom
     this.zoom.scaleExtent([0.02, 10])
         .filter((event) => {
+          if (this.paused) {
+            return false;
+          }
           // Don't process zoom related events when the model graph layout has
           // not been loaded.
           if (!this.curModelGraphLayout) {
@@ -417,6 +398,10 @@ export class GraphService {
 
     // Press space to reset zoom and pan.
     document.addEventListener('keydown', (event) => {
+      if (this.paused) {
+        return;
+      }
+
       if (event.key === ' ') {
         // Don't handle it when the model graph layout has not been loaded.
         if (!this.curModelGraphLayout) {
@@ -607,25 +592,6 @@ export class GraphService {
     this.store.dispatch(setSelectedEdgeId({edgeId: this.curHoveredEdgeId}));
   }
 
-  renderGraph2(modelGraphLayout: ModelGraphLayout, doneCallbackFn: () => void) {
-    // Random tree
-    const N = 300;
-    const gData = {
-      nodes: [...Array(N).keys()].map(i => ({id: i})),
-      links: [...Array(N).keys()].filter(id => id).map(
-          id => ({source: id, target: Math.round(Math.random() * (id - 1))}))
-    };
-
-    const gData2 = {
-      nodes: modelGraphLayout.nodes,
-      links: modelGraphLayout.edges.map(
-          edge => ({source: edge.fromNodeId, target: edge.toNodeId})),
-    };
-
-    const graph = ForceGraph3D()(this.container!).graphData(gData2);
-    doneCallbackFn();
-  }
-
   renderGraph(modelGraphLayout: ModelGraphLayout, doneCallbackFn: () => void) {
     this.curModelGraphLayout = modelGraphLayout;
 
@@ -723,7 +689,7 @@ export class GraphService {
       }
 
       // Add text for op name.
-      const opNameText = this.createText(
+      const opNameText = createText(
           node.op, {
             font: Font.GoogleSansMedium,
             fontSize: node.op.length > 15 ? 8 : 11,
@@ -829,6 +795,9 @@ export class GraphService {
     const canvas = this.renderer.domElement;
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
+    if (width === 0 || height === 0) {
+      return;
+    }
     const needResize = canvas.width !== width || canvas.height !== height;
     if (needResize) {
       this.renderer.setSize(width, height, false);
@@ -869,32 +838,6 @@ export class GraphService {
     roundedRectShape.lineTo(x + radius, y);
     roundedRectShape.quadraticCurveTo(x, y, x, y + radius);
     return roundedRectShape;
-  }
-
-  // tslint:disable-next-line:no-any
-  private createText(
-      content: string, properties: TextProperties,
-      material: THREE.Material): any {
-    const text = new ThreeText();
-    text.text = content;
-    text.font = properties.font;
-    text.fontSize = properties.fontSize;
-    text.material = material;
-    // text.color = properties.color || 0x000000;
-    text.anchorX = properties.anchorX || 'center';
-    text.anchorY = properties.anchorY || 'middle';
-    text.textAlign = properties.textAlign || 'center';
-    if (properties.maxWidth != null) {
-      text.maxWidth = properties.maxWidth;
-    }
-    text.whiteSpace = properties.whiteSpace || 'normal';
-    text.overflowWrap = properties.overflowWrap || 'break-word';
-    text.lineHeight = properties.lineHeight || 'normal';
-
-    // Rotate the text to make it facing the camera.
-    text.rotateX(-Math.PI / 2);
-
-    return text;
   }
 
   private clearScene() {
@@ -1005,7 +948,7 @@ export class GraphService {
         }
 
         const node = this.curNodesMap[id];
-        const diffText = this.createText(
+        const diffText = createText(
             getPctDiffString(diff), {
               font: Font.GoogleSansMedium,
               fontSize: 8,

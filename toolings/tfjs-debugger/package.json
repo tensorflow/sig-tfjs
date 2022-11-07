@@ -24,9 +24,10 @@
     "dagre": "^0.8.5",
     "dateformat": "~5.0.2",
     "rxjs": "~7.4.0",
-    "three": "^0.137.5",
     "troika-three-text": "^0.45.0",
     "tslib": "^2.3.0",
+    "three-spritetext": "1.6.5",
+    "@tweenjs/tween.js": "18.6.4",
     "zone.js": "~0.11.4"
   },
   "peerDependencies": {},
