@@ -17,6 +17,7 @@
 
 /// <reference lib="webworker" />
 
+import {NODE_NAME_PARTS_TO_SKIP} from '../common/consts';
 import {LayoutBatchRequest, LayoutBatchResponse, LayoutRequest, LayoutResponse, WorkerCommand, WorkerMessage} from '../common/types';
 import {Configuration} from '../data_model/configuration';
 import {ModelGraph, ModelGraphLayout, ModelGraphLayoutEdge, ModelGraphNode} from '../data_model/run_results';
@@ -76,6 +77,9 @@ function layoutModelGraph(
   for (let i = 0; i < allNodes.length; i++) {
     const node = allNodes[i];
     if (!config.showConstNodes && node.op === 'Const') {
+      continue;
+    }
+    if (NODE_NAME_PARTS_TO_SKIP.some(p => node.id.includes(p))) {
       continue;
     }
     if (c % BATCH_SIZE === 0) {

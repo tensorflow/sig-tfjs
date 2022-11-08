@@ -1,12 +1,10 @@
 /// <reference lib="webworker" />
 
-import {LOCAL_BUILD_LAEL} from '../common/consts';
+import {LOCAL_BUILD_LAEL, NODE_NAME_PARTS_TO_SKIP} from '../common/consts';
 import {RunTfjsModelRequest, RunTfjsModelResponse, WorkerCommand, WorkerMessage} from '../common/types';
 import {Configuration} from '../data_model/configuration';
 import {PackageSource} from '../data_model/local_build_setting';
 import {TensorMap} from '../data_model/run_results';
-
-// npx local-web-server -p 9876 --https
 
 const LOCAL_CORE_PATH = 'dist/bin/tfjs-core/tfjs-core_pkg/dist/tf-core.js';
 const LOCAL_CONVERTER_PATH =
@@ -34,13 +32,14 @@ async function runTfjsModel(req: RunTfjsModelRequest) {
           .filter(
               node => (showConstNodes ||
                        (!showConstNodes && node.op !== 'Const')) &&
-                  !node.id.includes('/cond') && node.dtype !== 'resource')
+                  !NODE_NAME_PARTS_TO_SKIP.some(p => node.id.includes(p)) &&
+                  node.dtype !== 'resource')
           .map(node => node.id);
 
   // Load packages.
   const {tf, errorMsg} = await loadTfjsPackegesAndSetBackend(req.config);
   if (errorMsg) {
-    sendRespWithError(errorMsg);
+    sendRespWithError(`Failed to load TFJS packages: ${errorMsg}`);
     return;
   }
 
@@ -49,17 +48,20 @@ async function runTfjsModel(req: RunTfjsModelRequest) {
     model = await tf.loadGraphModel(
         req.modelUrl, {fromTFHub: req.modelUrl.includes('tfhub.dev')});
   } catch (e: any) {
-    sendRespWithError(e.message);
+    sendRespWithError(`Failed to load model graph: ${e.message}`);
     return;
   }
 
   // Set inputs.
   const namedTensorMap: {[name: string]: {}} = {};
-  for (const name of Object.keys(req.inputs)) {
-    const input = req.inputs[name];
-    // Convert -1 in shape to 1.
-    const shape = input.shape.map(v => v === -1 ? 1 : v);
-    namedTensorMap[name] = tf.tensor(input.values, shape, input.dtype);
+  try {
+    for (const name of Object.keys(req.inputs)) {
+      const input = req.inputs[name];
+      namedTensorMap[name] = tf.tensor(input.values, input.shape, input.dtype);
+    }
+  } catch (e: any) {
+    sendRespWithError(`Failed to create input tensor: ${e.message}`);
+    return;
   }
 
   // Run model and gather outputs.
@@ -67,18 +69,22 @@ async function runTfjsModel(req: RunTfjsModelRequest) {
   try {
     outs = await model.executeAsync(namedTensorMap, nodeIds);
   } catch (e: any) {
-    sendRespWithError(e.message);
+    sendRespWithError(`Failed to run model: ${e.message}`);
     return;
   }
   const outputTensorMap: TensorMap = {};
   for (let i = 0; i < nodeIds.length; i++) {
     const nodeId = nodeIds[i];
     const tensor = outs[i];
-    outputTensorMap[nodeId] = {
-      values: tensor.dataSync().slice(),
-      shape: tensor.shape,
-      dtype: tensor.dtype,
-    };
+    try {
+      outputTensorMap[nodeId] = {
+        values: tensor.dataSync().slice(),
+        shape: tensor.shape,
+        dtype: tensor.dtype,
+      };
+    } catch (e: any) {
+      console.warn(e.message);
+    }
   }
 
   // Send the result back.
@@ -118,16 +124,12 @@ async function loadTfjsPackegesAndSetBackend(config: Configuration):
     // Local build.
     else {
       const localBuildSetting = config.localBuildSetting!;
-      let localServerAddress = localBuildSetting.localServerAddress;
-      if (!localServerAddress.startsWith('http://')) {
-        localServerAddress = `http://${localServerAddress}`;
-      }
       const coreConverterVersion =
           localBuildSetting.coreConverterReleaseVersion;
 
       // Load core.
       if (localBuildSetting.coreSource === PackageSource.LOCAL) {
-        importScripts(`${localServerAddress}/${LOCAL_CORE_PATH}`);
+        importScripts(LOCAL_CORE_PATH);
       } else {
         importScripts(`https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@${
             coreConverterVersion}/dist/tf-core.js`);
@@ -135,7 +137,7 @@ async function loadTfjsPackegesAndSetBackend(config: Configuration):
 
       // Load converter.
       if (localBuildSetting.converterSource === PackageSource.LOCAL) {
-        importScripts(`${localServerAddress}/${LOCAL_CONVERTER_PATH}`);
+        importScripts(LOCAL_CONVERTER_PATH);
       } else {
         importScripts(
             `https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter@${
@@ -149,12 +151,10 @@ async function loadTfjsPackegesAndSetBackend(config: Configuration):
 
       // Load backend.
       if (localBuildSetting.backendSource === PackageSource.LOCAL) {
-        importScripts(`${localServerAddress}/dist/bin/tfjs-backend-${
-            backend}/tfjs-backend-${backend}_pkg/dist/tf-backend-${
-            backend}.js`);
+        importScripts(`dist/bin/tfjs-backend-${backend}/tfjs-backend-${
+            backend}_pkg/dist/tf-backend-${backend}.js`);
         if (backend === 'wasm') {
-          tf.wasm.setWasmPaths(
-              `${localServerAddress}/${LOCAL_BACKEND_WASM_PATH}`);
+          tf.wasm.setWasmPaths(LOCAL_BACKEND_WASM_PATH);
         }
       } else {
         importScripts(`https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-${

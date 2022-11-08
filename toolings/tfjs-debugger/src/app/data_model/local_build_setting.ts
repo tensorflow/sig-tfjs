@@ -16,7 +16,6 @@
  */
 
 export interface LocalBuildSetting {
-  localServerAddress: string;
   backendSource: PackageSource;
   coreSource: PackageSource;
   converterSource: PackageSource;

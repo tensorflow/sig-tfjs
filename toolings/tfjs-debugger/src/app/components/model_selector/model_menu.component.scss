@@ -1,0 +1,60 @@
+/**
+ * @license
+ * Copyright 2021 Google LLC. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =============================================================================
+ */
+
+@use '../../../variables' as var;
+
+.title {
+  margin-top: var.$spacing-1x;
+  color: var.$grey-600;
+  font-size: var.$font-size-smaller;
+  line-height: 11px;
+}
+
+.model-selector-label {
+  width: fit-content;
+  margin-top: 8px;
+  border-bottom: 1px dotted #555;
+  cursor: pointer;
+  opacity: 80%;
+
+  &:hover {
+    opacity: 100%;
+  }
+}
+
+::ng-deep .mat-menu-item {
+  height: 28px !important;
+  font-size: 13px;
+  line-height: 28px !important;
+}
+
+::ng-deep .menu-container {
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+}
+
+::ng-deep .mat-menu-item:hover:not([disabled]) {
+  background: var.$grey-200 !important;
+}
+
+::ng-deep .mat-menu-item:hover:not([disabled]) {
+  background: var.$grey-200 !important;
+}
+
+::ng-deep .menu-item-highlighted:not([disabled]) {
+  background: var.$grey-200 !important;
+}

@@ -27,8 +27,6 @@ import {setTfjsLocalBuildSetting} from 'src/app/store/actions';
 import {selectConfigValueFromUrl, selectTfjsReleases} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 
-const PORT_REGEX = /:(\d+)/;
-
 /**
  * A selector for users to select backend.
  */
@@ -48,7 +46,6 @@ export class LocalBuildConfig implements OnInit, OnDestroy {
 
   readonly releases: TfjsRelease[] = [];
   PackageSource = PackageSource;
-  localServerAddress = 'localhost:9876';
   backendSource: PackageSource = PackageSource.LOCAL;
   coreSource: PackageSource = PackageSource.RELEASE;
   converterSource: PackageSource = PackageSource.RELEASE;
@@ -98,7 +95,6 @@ export class LocalBuildConfig implements OnInit, OnDestroy {
           }
 
           const setting = this.decodeLocalBuildSetting(str);
-          this.localServerAddress = setting.localServerAddress;
           this.backendSource = setting.backendSource;
           this.coreSource = setting.coreSource;
           this.converterSource = setting.converterSource;
@@ -129,22 +125,8 @@ export class LocalBuildConfig implements OnInit, OnDestroy {
     });
   }
 
-  genLocalServerCommand(): string {
-    let port = 9876;
-    const match = this.localServerAddress.match(PORT_REGEX);
-    if (match && match.length > 1) {
-      port = Number(match[1]);
-    }
-    return `npx local-web-server -p ${port} --https`;
-  }
-
-  handleCopyLocalServerCommand() {
-    navigator.clipboard.writeText(this.genLocalServerCommand());
-  }
-
   private createLocalBuildSetting() {
     const setting: LocalBuildSetting = {
-      localServerAddress: this.localServerAddress,
       backendSource: this.backendSource,
       coreSource: this.coreSource,
       converterSource: this.converterSource,
@@ -162,7 +144,6 @@ export class LocalBuildConfig implements OnInit, OnDestroy {
 
   private encodeLocalBuildSetting(): string {
     return [
-      this.localServerAddress,
       this.backendSource,
       this.coreSource,
       this.converterSource,
@@ -172,13 +153,11 @@ export class LocalBuildConfig implements OnInit, OnDestroy {
 
   private decodeLocalBuildSetting(str: string): LocalBuildSetting {
     const parts = str.split(',');
-    const localServerAddress = parts[0];
-    const backendSource = parts[1] as PackageSource;
-    const coreSource = parts[2] as PackageSource;
-    const converterSource = parts[3] as PackageSource;
-    const coreConverterReleaseVersion = parts[4];
+    const backendSource = parts[0] as PackageSource;
+    const coreSource = parts[1] as PackageSource;
+    const converterSource = parts[2] as PackageSource;
+    const coreConverterReleaseVersion = parts[3];
     return {
-      localServerAddress,
       backendSource,
       coreSource,
       converterSource,

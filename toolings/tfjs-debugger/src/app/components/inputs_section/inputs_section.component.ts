@@ -4,6 +4,7 @@ import {Store} from '@ngrx/store';
 import {of} from 'rxjs';
 import {catchError, map, take, takeWhile} from 'rxjs/operators';
 import {UrlParamKey} from 'src/app/common/types';
+import {sanitizeShape} from 'src/app/common/utils';
 import {Input, InputValuesType} from 'src/app/data_model/input';
 import {ModelGraph, modelJsonToModelGraph} from 'src/app/data_model/run_results';
 import {TfjsService} from 'src/app/services/tfjs_service';
@@ -131,7 +132,7 @@ export class InputsSection implements OnInit, OnDestroy {
               return {
                 index,
                 id: input.id,
-                shape: input.shape,
+                shape: sanitizeShape(input.shape),
                 dtype: input.dtype,
                 op: input.op,
                 strShape: `${input.dtype} [${input.shape.join(', ')}]`,

@@ -25,11 +25,13 @@ import {MatMenuModule} from '@angular/material/menu';
 import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 
+import {ModelMenu} from './model_menu.component';
 import {ModelSelector} from './model_selector.component';
 
 @NgModule({
   declarations: [
     ModelSelector,
+    ModelMenu,
   ],
   imports: [
     CommonModule,

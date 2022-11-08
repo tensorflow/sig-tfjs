@@ -53,16 +53,10 @@ limitations under the License.
                (change)="handleTfjsModelUrlChanged()"></textarea>
       </mat-form-field>
 
-      <div class="title model-selector-label"
-           [matMenuTriggerFor]="menu">
-        Or select a published model
-      </div>
-      <mat-menu #menu="matMenu">
-        <button mat-menu-item *ngFor="let item of publishedModels"
-                (click)="handleClickPublishedModel(item.url)">
-          {{item.label}}
-        </button>
-      </mat-menu>
+      <model-menu [isRootNode]="true"
+                  [data]="publishedModels"
+                  [urlSubject]="modelUrlSubject">
+      </model-menu>
 
       <mat-checkbox color="accent" disableRipple="true"
                     class="show-const-checkbox"

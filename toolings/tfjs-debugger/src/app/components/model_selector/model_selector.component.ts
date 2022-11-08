@@ -18,7 +18,7 @@
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
 import {Store} from '@ngrx/store';
-import {takeWhile} from 'rxjs';
+import {Subject, takeWhile} from 'rxjs';
 import {ConfigIndex, UrlParamKey} from 'src/app/common/types';
 import {appendConfigIndexToKey} from 'src/app/common/utils';
 import {ModelTypeId} from 'src/app/data_model/model_type';
@@ -27,6 +27,7 @@ import {setModelType, setShowConstNodes, setTfjsModelUrl} from 'src/app/store/ac
 import {selectConfigValueFromUrl, selectShowConstNodes} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 
+import {ModelItem} from './model_menu.component';
 import {ModelTypeOption} from './types';
 
 /**
@@ -52,7 +53,7 @@ export class ModelSelector implements OnInit, OnDestroy {
   // Used by template.
   ModelTypeId = ModelTypeId;
 
-  publishedModels = [
+  publishedModels: ModelItem[] = [
     {
       label: 'Mobilenet V2',
       url:
@@ -63,47 +64,115 @@ export class ModelSelector implements OnInit, OnDestroy {
       url:
           'https://tfhub.dev/google/tfjs-model/imagenet/mobilenet_v3_large_100_224/classification/5/default/1',
     },
-    ...['lite', 'full'].map(
-        architecture => ({
-          label: `Hand pose detector (${architecture})`,
-          url: `https://tfhub.dev/mediapipe/tfjs-model/handpose_3d/detector/${
-              architecture}/1`
-        })),
-    ...['lite', 'full'].map(
-        architecture => ({
-          label: `Hand pose landmark (${architecture})`,
-          url: `https://tfhub.dev/mediapipe/tfjs-model/handpose_3d/landmark/${
-              architecture}/1`,
-        })),
+    {
+      label: 'Hand pose detector',
+      url: 'https://tfhub.dev/mediapipe/tfjs-model/handpose_3d/detector/{}/1',
+      children: ['lite', 'full']
+    },
+    {
+
+      label: 'Hand pose landmark',
+      url: `https://tfhub.dev/mediapipe/tfjs-model/handpose_3d/landmark/{}/1`,
+      children: ['lite', 'full']
+    },
     {
       label: 'BlazePose detector',
       url:
           'https://tfhub.dev/mediapipe/tfjs-model/blazeposedetector/1/default/1',
     },
-    ...['lite', 'full', 'heavy'].map(
-        architecture => ({
-          label: `BlazePose landmark (${architecture})`,
-          url: `https://tfhub.dev/mediapipe/tfjs-model/blazeposelandmark_${
-              architecture}/2/default/2`
-        })),
+    {
+
+      label: 'BlazePose landmark',
+      url:
+          'https://tfhub.dev/mediapipe/tfjs-model/blazeposelandmark_{}/2/default/2',
+    },
+    {
+      label: 'Movenet single pose',
+      url: 'https://tfhub.dev/google/tfjs-model/movenet/singlepose/{}/4',
+      children: ['lightning', 'thunder']
+    },
+    {
+      label: 'Movenet multipose lightning',
+      url: 'https://tfhub.dev/google/tfjs-model/movenet/multipose/lightning/1',
+    },
     {
       label: 'Posenet',
       url:
           'https://storage.googleapis.com/tfjs-models/savedmodel/posenet/mobilenet/float/075/model-stride16.json',
     },
     {
-      label: 'Movenet single pose lightning',
-      url: 'https://tfhub.dev/google/tfjs-model/movenet/singlepose/lightning/4',
+      label: 'Coco SSD',
+      url: '',
+      children:
+          [
+            {
+              label: 'Mobilenet V1',
+              url:
+                  'https://storage.googleapis.com/tfjs-models/savedmodel/ssd_mobilenet_v1/model.json',
+            },
+            {
+              label: 'Mobilenet V2',
+              url:
+                  'https://storage.googleapis.com/tfjs-models/savedmodel/ssd_mobilenet_v2/model.json',
+            },
+            {
+              label: 'Lite mobilenet v2',
+              url:
+                  'https://storage.googleapis.com/tfjs-models/savedmodel/ssdlite_mobilenet_v2/model.json'
+            }
+          ]
     },
     {
-      label: 'Movenet single pose thunder',
-      url: 'https://tfhub.dev/google/tfjs-model/movenet/singlepose/thunder/4',
+      label: 'DeeplabV3',
+      url:
+          'https://storage.googleapis.com/tfhub-tfjs-modules/tensorflow/tfjs-model/deeplab/{}/1/quantized/2/1/model.json',
+      children: ['pascal', 'ade20k']
     },
     {
-      label: 'Movenet multipose lightning',
-      url: 'https://tfhub.dev/google/tfjs-model/movenet/multipose/lightning/1',
+      label: 'Face detection',
+      url: 'https://tfhub.dev/mediapipe/tfjs-model/face_detection/{}/1',
+      children: ['short', 'full']
     },
+    {
+      label: 'Face landmark detection',
+      url:
+          'https://tfhub.dev/mediapipe/tfjs-model/face_landmarks_detection/{}/1',
+      children: ['attention_mesh', 'face_mesh'],
+    },
+    {
+      label: 'AR portrait depth',
+      url: 'https://tfhub.dev/tensorflow/tfjs-model/ar_portrait_depth/1',
+    },
+    {
+      label: 'Selfie segmentation',
+      url: 'https://tfhub.dev/mediapipe/tfjs-model/selfie_segmentation/{}/1',
+      children: ['general', 'landscape']
+    },
+    {
+      label: 'AutoML image',
+      url:
+          'https://storage.googleapis.com/tfjs-testing/tfjs-automl/img_classification/model.json',
+    },
+    {
+      label: 'TextToxicity',
+      url:
+          'https://storage.googleapis.com/tfhub-tfjs-modules/tensorflow/tfjs-model/toxicity/1/default/1/model.json',
+    },
+    {
+      label: 'Mobile bert',
+      url: 'https://tfhub.dev/tensorflow/tfjs-model/mobilebert/1',
+    },
+    // TODO(jingjin): this model needs hashtable input that is not supported for
+    // now.
+    //
+    // {
+    //   label: 'AutoML object',
+    //   url:
+    //       'https://storage.googleapis.com/tfjs-testing/tfjs-automl/object_detection/model.json',
+    // },
   ].sort((a, b) => a.label.localeCompare(b.label));
+
+  modelUrlSubject = new Subject<string>();
 
   /** All supported model types.  */
   readonly modelTypes: ModelTypeOption[] = [
@@ -111,8 +180,8 @@ export class ModelSelector implements OnInit, OnDestroy {
       id: ModelTypeId.TFJS,
       label: 'TFJS model',
     },
-    // TODO: the following types are disabled for now. Will enable them as they
-    // are implemented.
+    // TODO: the following types are disabled for now. Will enable them as
+    // they are implemented.
     {
       id: ModelTypeId.TF,
       label: 'TF model',
@@ -148,8 +217,8 @@ export class ModelSelector implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    // Add "Same as configuration 1" option when the model selector is used in
-    // the configuration 2.
+    // Add "Same as configuration 1" option when the model selector is used
+    // in the configuration 2.
     if (this.configIndex === 1) {
       this.modelTypes.unshift({
         id: ModelTypeId.SAME_AS_CONFIG1,
@@ -210,6 +279,10 @@ export class ModelSelector implements OnInit, OnDestroy {
             showConstNodes: this.showConstNodes,
           }));
         });
+
+    this.modelUrlSubject.subscribe(url => {
+      this.handleSelectedPublishedModelUrlChanged(url);
+    });
   }
 
   ngOnDestroy() {
@@ -221,10 +294,10 @@ export class ModelSelector implements OnInit, OnDestroy {
 
     // Do things after a new model type is selected.
     //
-    // Note that this method will only be triggered through user actions (e.g.
-    // click the drop down and select an item), not other non-user actions such
-    // as restoring states from URL or going forward/backward in browser
-    // history.
+    // Note that this method will only be triggered through user actions
+    // (e.g. click the drop down and select an item), not other non-user
+    // actions such as restoring states from URL or going forward/backward
+    // in browser history.
     switch (modelTypeId) {
       // Immediately focus on the the model url input whenn "TFJS model" is
       // selected.
@@ -253,7 +326,7 @@ export class ModelSelector implements OnInit, OnDestroy {
     });
   }
 
-  handleClickPublishedModel(url: string) {
+  handleSelectedPublishedModelUrlChanged(url: string) {
     this.tfjsModelUrl = url;
     this.handleTfjsModelUrlChanged();
   }

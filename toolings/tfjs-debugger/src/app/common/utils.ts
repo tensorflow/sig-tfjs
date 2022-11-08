@@ -74,3 +74,14 @@ export function getPctDiffString(diff: number): string {
   }
   return str;
 }
+
+export function sanitizeShape(shape: number[]): number[] {
+  // Convert -1 in shape.
+  return shape.map((v, index) => {
+    if (index === 0) {
+      return v === -1 ? 1 : v;
+    } else {
+      return v === -1 ? 128 : v;
+    }
+  });
+}

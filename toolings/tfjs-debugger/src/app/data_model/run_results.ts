@@ -17,7 +17,7 @@
 
 // TODO: update when the types are exported in the new converter release.
 // tslint:disable-next-line:no-imports-from-dist
-import {IAttrValue, INodeDef} from '@tensorflow/tfjs-converter/dist/data/compiled_api';
+import {DataType, IAttrValue, INodeDef} from '@tensorflow/tfjs-converter/dist/data/compiled_api';
 
 import {CONST_NODE_WIDTH, NODE_HEIGHT, NON_CONST_NODE_WIDTH} from '../common/consts';
 
@@ -154,10 +154,22 @@ export function modelJsonToModelGraph(json: ModelJson): ModelGraph {
   // Output node ids indexed by source node ids.
   const outputNodeIds: {[nodeId: string]: string[]} = {};
   for (const node of json.modelTopology.node) {
-    if (!node.name || node.name.includes('/cond/')) {
+    // if (!node.name ||
+    //     NODE_NAME_PARTS_TO_SKIP.some(p => node.name!.includes(p))) {
+    //   continue;
+    // }
+    if (!node.name) {
       continue;
     }
     if (node.input) {
+      // Remove ':x' in input.
+      node.input = node.input.map(input => {
+        const colonIndex = input.indexOf(':');
+        if (colonIndex >= 0) {
+          return input.substring(0, colonIndex);
+        }
+        return input;
+      });
       for (const inputNodeId of node.input) {
         if (!outputNodeIds[inputNodeId]) {
           outputNodeIds[inputNodeId] = [];
@@ -176,7 +188,7 @@ export function modelJsonToModelGraph(json: ModelJson): ModelGraph {
     let shape: number[] = [];
     if (node.attr) {
       if (node.attr['dtype']) {
-        dtype = getStrTypeFromDType(node.attr['dtype'].type as {} as string);
+        dtype = getStrTypeFromDType(String(node.attr['dtype'].type));
       }
       if (node.attr['shape']) {
         shape = (node.attr['shape'].shape?.dim ||
@@ -207,7 +219,7 @@ export function modelJsonToModelGraph(json: ModelJson): ModelGraph {
         } else {
           value = decodeAttrValue(attrValue);
         }
-        if (key !== 'T' && key !== 'dtype' && key !== 'shape') {
+        if (value !== '' && key !== 'T' && key !== 'dtype' && key !== 'shape') {
           attrs.push({key, value});
         }
       });
@@ -231,6 +243,9 @@ export function modelJsonToModelGraph(json: ModelJson): ModelGraph {
 
 function decodeAttrValue(attrValue: IAttrValue): string {
   if (attrValue.s != null) {
+    if (Array.isArray(attrValue.s)) {
+      return attrValue.s.join(', ');
+    }
     return atob(attrValue.s);
   } else if (attrValue.i != null) {
     return String(attrValue.i);
@@ -245,13 +260,26 @@ function decodeAttrValue(attrValue: IAttrValue): string {
 function getStrTypeFromDType(dataType: string|undefined|null): string {
   switch (dataType) {
     case 'DT_FLOAT':
+    case String(DataType.DT_FLOAT):
+    case 'DT_HALF':
+    case String(DataType.DT_HALF):
+    case 'DT_DOUBLE':
+    case String(DataType.DT_DOUBLE):
       return 'float32';
     case 'DT_INT32':
-      return 'int32';
+    case String(DataType.DT_INT32):
+    case 'DT_INT64':
+    case String(DataType.DT_INT64):
     case 'DT_INT8':
+    case String(DataType.DT_INT8):
+    case 'DT_UINT8':
+    case String(DataType.DT_UINT8):
+      return 'int32';
     case 'DT_BOOL':
-      return 'int8';
+    case String(DataType.DT_BOOL):
+      return 'bool';
     case 'DT_RESOURCE':
+    case String(DataType.DT_RESOURCE):
       return 'resource';
     default:
       return '';

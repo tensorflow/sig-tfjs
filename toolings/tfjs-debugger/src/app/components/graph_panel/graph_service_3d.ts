@@ -21,7 +21,7 @@ import {Store} from '@ngrx/store';
 import * as TWEEN from '@tweenjs/tween.js';
 import {filter, withLatestFrom} from 'rxjs';
 import {Diffs, ModelGraphLayout, ModelGraphLayoutEdge, ModelGraphNode} from 'src/app/data_model/run_results';
-import {setSelectedEdgeId, setSelectedNodeId} from 'src/app/store/actions';
+import {setNodeIdToLocate, setSelectedEdgeId, setSelectedNodeId} from 'src/app/store/actions';
 import {selectBadNodesThreshold, selectDiffs, selecteSelectedEdgeId, selectNodeIdToLocate, selectSelectedNodeId} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 import * as THREE from 'three';
@@ -30,6 +30,7 @@ import {genEdgeId} from './utils';
 
 const LOCALTE_NODE_DISTANCE = 500;
 const LINK_COLOR = '#ddd';
+const ARROW_COLOR = '#777';
 
 /** Handles tasks related to 3d graph rendering. */
 @Injectable({
@@ -249,7 +250,11 @@ export class GraphService3d {
               })
               .onNodeClick((node: any) => {
                 const nodeId = node.id;
-                this.store.dispatch(setSelectedNodeId({nodeId}));
+                if (this.curSelectedNodeId !== nodeId) {
+                  this.store.dispatch(setSelectedNodeId({nodeId}));
+                } else {
+                  this.store.dispatch(setNodeIdToLocate({nodeId}));
+                }
               })
               .onNodeDragEnd((node: any) => {
                 node.fx = node.x;
@@ -259,9 +264,9 @@ export class GraphService3d {
               .onBackgroundClick(() => {
                 this.store.dispatch(setSelectedNodeId({nodeId: ''}));
               })
-              .linkDirectionalArrowColor(LINK_COLOR)
-              .linkDirectionalArrowLength(5)
+              .linkDirectionalArrowLength(7)
               .linkDirectionalArrowRelPos(1)
+              .linkDirectionalArrowColor(ARROW_COLOR)
               .linkHoverPrecision(10)
               .linkColor((link: any) => {
                 const edgeId = genEdgeId(link as ModelGraphLayoutEdge);

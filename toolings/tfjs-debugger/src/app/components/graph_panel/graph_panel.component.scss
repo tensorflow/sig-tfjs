@@ -167,6 +167,7 @@
   background-color: white;
   border: 1px solid var.$grey-400;
   border-radius: 4px;
+  user-select: none;
 
   &:empty {
     display: none;

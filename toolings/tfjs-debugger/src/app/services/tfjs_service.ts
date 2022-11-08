@@ -4,7 +4,7 @@ import {Store} from '@ngrx/store';
 import {combineLatest, filter, Observable, shareReplay, withLatestFrom} from 'rxjs';
 
 import {RunTfjsModelRequest, RunTfjsModelResponse, WorkerCommand, WorkerMessage} from '../common/types';
-import {getTypedArrayFromInput} from '../common/utils';
+import {getTypedArrayFromInput, sanitizeShape} from '../common/utils';
 import {Configuration} from '../data_model/configuration';
 import {Input, InputValuesType} from '../data_model/input';
 import {RunTask, TaskStatus} from '../data_model/misc';
@@ -63,7 +63,6 @@ export class TfjsService {
   fetchModelJson(url: string): Observable<ModelJson> {
     if (url.startsWith('https://tfhub.dev')) {
       url = this.getTFHubUrl(url);
-      console.log(url);
     }
     if (!this.modelJsonCache[url]) {
       // ShareReplay will return the last emitted value, i.e. the response from
@@ -169,7 +168,7 @@ export class TfjsService {
   }
 
   private genInputValues(input: Input): number[] {
-    const size = Math.abs(input.shape.reduce((a, b) => a * b, 1));
+    const size = input.shape.reduce((a, b) => a * b, 1);
     const values: number[] = [];
     switch (input.inputValuesType) {
       case InputValuesType.RANDOM: {
