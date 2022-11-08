@@ -69,7 +69,8 @@
     "test-headless": "ng test --browsers=ChromeHeadless",
     "test-ci": "ng test --karma-config karma-ci.conf.js",
     "deploy-firebase": "./scripts/deploy-to-firebase.sh",
-    "deploy-firebase-dev": "./scripts/deploy-to-firebase.sh --dev"
+    "deploy-firebase-dev": "./scripts/deploy-to-firebase.sh --dev",
+    "upload-to-gcp": "./scripts/upload-to-gcp.sh"
   },
   "resolutions": {
     "set-value": "^4.0.1",

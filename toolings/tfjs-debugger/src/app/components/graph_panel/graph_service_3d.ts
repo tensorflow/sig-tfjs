@@ -20,13 +20,16 @@ import {Injectable} from '@angular/core';
 import {Store} from '@ngrx/store';
 import * as TWEEN from '@tweenjs/tween.js';
 import {filter, withLatestFrom} from 'rxjs';
-import {Diffs, ModelGraphLayout, ModelGraphNode} from 'src/app/data_model/run_results';
-import {setSelectedNodeId} from 'src/app/store/actions';
-import {selectBadNodesThreshold, selectDiffs, selectNodeIdToLocate, selectSelectedNodeId} from 'src/app/store/selectors';
+import {Diffs, ModelGraphLayout, ModelGraphLayoutEdge, ModelGraphNode} from 'src/app/data_model/run_results';
+import {setSelectedEdgeId, setSelectedNodeId} from 'src/app/store/actions';
+import {selectBadNodesThreshold, selectDiffs, selecteSelectedEdgeId, selectNodeIdToLocate, selectSelectedNodeId} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 import * as THREE from 'three';
 
+import {genEdgeId} from './utils';
+
 const LOCALTE_NODE_DISTANCE = 500;
+const LINK_COLOR = '#ddd';
 
 /** Handles tasks related to 3d graph rendering. */
 @Injectable({
@@ -40,6 +43,8 @@ export class GraphService3d {
   private curThreshold = 0;
   private curSelectedNodeId = '';
   private curHoveredNodeId = '';
+  private curHoveredEdgeId = '';
+  private curSelectedEdgeId = '';
   private curBadNodeMeshes: {[id: string]: THREE.Object3D} = {};
   private paused = false;
 
@@ -52,6 +57,15 @@ export class GraphService3d {
       }
 
       this.curSelectedNodeId = nodeId || '';
+      this.refreshGraph();
+    });
+
+    this.store.select(selecteSelectedEdgeId).subscribe(edgeId => {
+      if (edgeId == null) {
+        return;
+      }
+
+      this.curSelectedEdgeId = edgeId || '';
       this.refreshGraph();
     });
 
@@ -134,8 +148,7 @@ export class GraphService3d {
 
     const graphData = {
       nodes: modelGraphLayout.nodes,
-      links: modelGraphLayout.edges.map(
-          edge => ({source: edge.fromNodeId, target: edge.toNodeId})),
+      links: modelGraphLayout.edges,
     };
 
     // Wait for the size to be ready.
@@ -146,6 +159,7 @@ export class GraphService3d {
           ForceGraph3D({controlType: 'trackball'})(this.container)
               .width(width)
               .height(height)
+              .showNavInfo(false)
               .backgroundColor('white')
               .nodeColor(node => {
                 const id = node.id!;
@@ -223,36 +237,6 @@ export class GraphService3d {
                 // This asks the system to use the default object.
                 return undefined as any;
               })
-              // .nodeThreeObject((node: any) => {
-              //   const nodeData = node as ModelGraphNode;
-              //   let size = 10;
-              //   if (nodeData.inputNodeIds.length === 0 &&
-              //       nodeData.op !== 'Const') {
-              //     size = 15;
-              //   }
-              //   if (nodeData.outputNodeIds.length === 0) {
-              //     size = 15;
-              //   }
-              //   if (nodeData.op === 'Const') {
-              //     size = 6;
-              //   }
-              //   const geometry = new THREE.SphereGeometry(size, 16, 16);
-              //   const sphere =
-              //       new THREE.Mesh(geometry, NON_CONST_NODE_MATERIAL);
-              //   this.curNodeMeshes[nodeData.id] = sphere;
-              //   return sphere;
-              // })
-              // .nodeThreeObject(node => {
-              //   const op = (node as any).op;
-              //   const sprite = new SpriteText(op);
-              //   sprite.material.depthWrite = false;
-              //   sprite.material.depthTest = false;
-              //   sprite.color = 'black';
-              //   sprite.textHeight = 8;
-              //   sprite.position.setY(20);
-              //   return sprite;
-              // })
-              // .nodeThreeObjectExtend(true)
               .onNodeHover((node) => {
                 if (node == null) {
                   this.container.style.cursor = 'default';
@@ -275,62 +259,52 @@ export class GraphService3d {
               .onBackgroundClick(() => {
                 this.store.dispatch(setSelectedNodeId({nodeId: ''}));
               })
-              .linkDirectionalArrowColor('black')
+              .linkDirectionalArrowColor(LINK_COLOR)
               .linkDirectionalArrowLength(5)
               .linkDirectionalArrowRelPos(1)
-              .linkColor(link => {
-                return 'black';
+              .linkHoverPrecision(10)
+              .linkColor((link: any) => {
+                const edgeId = genEdgeId(link as ModelGraphLayoutEdge);
+                if (edgeId === this.curSelectedEdgeId) {
+                  return '#fbb829';
+                }
+                if (edgeId === this.curHoveredEdgeId) {
+                  return '#fdda91';
+                }
+                return LINK_COLOR;
+              })
+              .linkWidth((link: any) => {
+                const edgeId = genEdgeId(link as ModelGraphLayoutEdge);
+                if (edgeId === this.curSelectedEdgeId) {
+                  return 5;
+                }
+                if (edgeId === this.curHoveredEdgeId) {
+                  return 3;
+                }
+                return 1;
+              })
+              .linkOpacity(0.9)
+              .onLinkHover((link: any) => {
+                if (link == null) {
+                  this.container.style.cursor = 'default';
+                  this.curHoveredEdgeId = '';
+                } else {
+                  this.container.style.cursor = 'pointer';
+                  this.curHoveredEdgeId =
+                      genEdgeId(link as ModelGraphLayoutEdge);
+                }
+                this.refreshGraph();
+              })
+              .onLinkClick((link: any) => {
+                const edgeId = genEdgeId(link as ModelGraphLayoutEdge);
+                this.store.dispatch(setSelectedEdgeId({edgeId}));
               })
               .d3AlphaDecay(0.005)    // default to 0.0228
               .d3VelocityDecay(0.15)  // default to 0.4
-              // .linkWidth(link => 10)
-              // .forceEngine('ngraph')
-              // .ngraphPhysics({
-              //   springLength: 30,
-              //   springCoefficient: 0.0008,
-              //   gravity: -12,
-              //   theta: 0.8,
-              //   dragCoefficient: 0.02,
-              //   timeStep: 10
-              //   // timeStep: 0.5,
-              //   // dimensions: 2,
-              //   // gravity: -12,
-              //   // theta: 0.8,
-              //   // springLength: 10,
-              //   // springCoefficient: 0.8,
-              //   // dragCoefficient: 0.9,
-              // })
-              // .cooldownTime(200000)
-              // .dagMode('td')
               .nodeRelSize(10)
-              .graphData(graphData);
-
-      // // Outline.
-      // const composer = this.curGraph.postProcessingComposer();
-      // this.curOutlinePass = new OutlinePass(
-      //     new THREE.Vector2(width, height), this.curGraph.scene(),
-      //     this.curGraph.camera());
-      // this.curOutlinePass.visibleEdgeColor.set('red');
-      // this.curOutlinePass.hiddenEdgeColor.set('blue');
-      // this.curOutlinePass.edgeThickness = 10;
-      // this.curOutlinePass.edgeStrength = 100;
-      // this.curOutlinePass.edgeGlow = 10;
-      // const material = this.curOutlinePass.getOverlayMaterial();
-      // material.blending = THREE.NormalBlending;
-      // material.blendEquation = THREE.AddEquation;
-      // material.blendSrc = THREE.SrcAlphaFactor;
-      // material.blendDst = THREE.OneMinusSrcColorFactor;
-      // composer.addPass(this.curOutlinePass);
-
-      // const bloomPass = new UnrealBloomPass(
-      //     new THREE.Vector2(
-      //         this.container.offsetWidth, this.container.offsetHeight),
-      //     3, 1, 0.1);
-      // bloomPass.strength = 0.2;
-      // bloomPass.radius = 1;
-      // bloomPass.threshold = 0.1;
-      // // bloomPass.bloomTintColors = new THREE.Color('red');
-      // composer.addPass(bloomPass);
+              .graphData(graphData)
+              .linkSource('fromNodeId')
+              .linkTarget('toNodeId');
     });
   }
 

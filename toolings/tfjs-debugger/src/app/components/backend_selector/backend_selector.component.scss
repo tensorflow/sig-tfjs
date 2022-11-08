@@ -16,6 +16,7 @@
  */
 
 @use '../../../variables' as var;
+@use '../../../theme' as theme;
 
 .container {
   mat-form-field {
@@ -27,5 +28,53 @@
     color: var.$grey-600;
     font-size: var.$font-size-smaller;
     line-height: 11px;
+  }
+
+  .local-build-instructions-container {
+    margin-top: 8px;
+
+    .msg {
+      color: #d9ab21;
+    }
+
+    .instructions {
+      width: fit-content;
+      color: var.$grey-500;
+      border-bottom: 1px dotted var.$grey-800;
+      cursor: pointer;
+      opacity: 80%;
+
+      &:hover {
+        opacity: 100%;
+      }
+    }
+  }
+}
+
+::ng-deep .instruction-panel-container {
+  font-size: 13px;
+
+  .code {
+    font-family: 'Roboto Mono', Roboto, monospace;
+  }
+
+  .code-block {
+    padding: 12px;
+    color: white;
+    font-family: 'Roboto Mono', Roboto, monospace;
+    background-color: #232323;
+    border-radius: 4px;
+  }
+
+  .copy {
+    float: right;
+    color: var.$grey-800;
+    border-bottom: 1px dotted var.$grey-800;
+    cursor: pointer;
+    opacity: 80%;
+
+    &:hover {
+      opacity: 100%;
+    }
   }
 }

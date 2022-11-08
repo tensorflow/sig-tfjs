@@ -15,6 +15,7 @@
  * =============================================================================
  */
 
+import {ModelGraphLayoutEdge} from 'src/app/data_model/run_results';
 import {preloadFont, Text as ThreeText} from 'troika-three-text';
 
 // Fonts that will be used in the scene.
@@ -80,4 +81,8 @@ export function createText(
   text.rotateX(-Math.PI / 2);
 
   return text;
+}
+
+export function genEdgeId(edge: ModelGraphLayoutEdge): string {
+  return `${edge.fromNodeId}___${edge.toNodeId}`;
 }

@@ -63,6 +63,7 @@ export class TfjsService {
   fetchModelJson(url: string): Observable<ModelJson> {
     if (url.startsWith('https://tfhub.dev')) {
       url = this.getTFHubUrl(url);
+      console.log(url);
     }
     if (!this.modelJsonCache[url]) {
       // ShareReplay will return the last emitted value, i.e. the response from

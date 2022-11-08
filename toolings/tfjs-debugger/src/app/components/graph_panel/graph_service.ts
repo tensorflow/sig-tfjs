@@ -27,7 +27,7 @@ import {selectBadNodesThreshold, selectDiffs, selecteSelectedEdgeId, selectNodeI
 import {AppState} from 'src/app/store/state';
 import * as THREE from 'three';
 
-import {createText, Font, preloadTroikaThreeTextFont} from './utils';
+import {createText, Font, genEdgeId, preloadTroikaThreeTextFont} from './utils';
 
 const DEFAULT_FRUSTUM_SIZE = 500;
 const DEFAULT_CAMERA_Y = 100;
@@ -475,7 +475,7 @@ export class GraphService {
     if (edgeIntersections.length > 0) {
       const edge =
           edgeIntersections[0].object.userData['edge'] as ModelGraphLayoutEdge;
-      const edgeId = this.edgeId(edge);
+      const edgeId = genEdgeId(edge);
       if (edgeId !== this.prevHoveredEdgeId) {
         this.prevHoveredEdgeId = edgeId;
         this.curHoveredEdgeId = edgeId;
@@ -588,8 +588,13 @@ export class GraphService {
       return;
     }
 
-    this.store.dispatch(setSelectedNodeId({nodeId: this.curHoveredNodeId}));
-    this.store.dispatch(setSelectedEdgeId({edgeId: this.curHoveredEdgeId}));
+    if (this.curHoveredNodeId) {
+      this.store.dispatch(setSelectedNodeId({nodeId: this.curHoveredNodeId}));
+    } else if (this.curHoveredEdgeId) {
+      this.store.dispatch(setSelectedEdgeId({edgeId: this.curHoveredEdgeId}));
+    } else {
+      this.store.dispatch(setSelectedNodeId({nodeId: ''}));
+    }
   }
 
   renderGraph(modelGraphLayout: ModelGraphLayout, doneCallbackFn: () => void) {
@@ -726,7 +731,7 @@ export class GraphService {
     // TODO: render arrows at the end of the edges.
     this.curEdgesMap = {};
     for (const edge of modelGraphLayout.edges) {
-      this.curEdgesMap[this.edgeId(edge)] = edge;
+      this.curEdgesMap[genEdgeId(edge)] = edge;
       this.scene.add(this.createEdge(
           edge, EDGE_BG_MATERIAL, EDGE_TUBE_RADIUS * 10, 1,
           ObjectType.EDGE_BG));
@@ -1042,19 +1047,19 @@ export class GraphService {
     const [fromNodeId, toNodeId] = this.curSelectedEdgeId.split('___');
     const fromNode = this.curNodesMap[fromNodeId];
     const toNode = this.curNodesMap[toNodeId];
-    const x = (fromNode.x! + toNode.x!) / 2;
-    const y = (fromNode.y! + toNode.y!) / 2;
+    const x = (fromNode.x! + toNode.x! + toNode.width) / 2;
+    const y = (fromNode.y! + toNode.y! + toNode.height) / 2;
     const w = Math.max(fromNode.x! + fromNode.width, toNode.x! + toNode.width) -
         Math.min(fromNode.x!, toNode.x!);
     const h =
         Math.max(fromNode.y! + fromNode.height, toNode.y! + toNode.height) -
         Math.min(fromNode.y!, toNode.y!);
     const areaAspect = w / h;
-    const containerAspect =
-        this.container.clientWidth / this.container.clientHeight;
-    let scale = areaAspect > containerAspect ?
-        (this.container.clientWidth / w) :
-        (this.container.clientHeight / h);
+    const containerWidth = this.container.clientWidth;
+    const containerHeight = this.container.clientHeight - 100;
+    const containerAspect = containerWidth / containerHeight;
+    let scale = areaAspect > containerAspect ? (containerWidth / w) :
+                                               (containerHeight / h);
     scale = Math.max(0.02, Math.min(scale, 1.5));
 
     this.centerViewAt(x, y, scale);
@@ -1130,19 +1135,5 @@ export class GraphService {
     this.dummy.updateMatrix();
     instancedMesh.setMatrixAt(index, this.dummy.matrix);
     instancedMesh.instanceMatrix.needsUpdate = true;
-  }
-
-  private setInstancedMeshPositionY(
-      instancedMesh: THREE.InstancedMesh, index: number, y: number) {
-    const curMatrix = new THREE.Matrix4();
-    instancedMesh.getMatrixAt(index, curMatrix);
-    const elements = curMatrix.toArray();
-    curMatrix.setPosition(elements[12], y, elements[14]);
-    instancedMesh.setMatrixAt(index, curMatrix);
-    instancedMesh.instanceMatrix.needsUpdate = true;
-  }
-
-  private edgeId(edge: ModelGraphLayoutEdge): string {
-    return `${edge.fromNodeId}___${edge.toNodeId}`;
   }
 }

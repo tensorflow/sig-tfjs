@@ -64,7 +64,7 @@ export class BackendSelector implements OnInit, OnDestroy {
 
   selectedRelease = '';
 
-  localServerAddress = 'localhost:9876';
+  localServerCommand = `yarn\nyarn start-local-debugger-server`;
 
   private active = true;
 
@@ -122,7 +122,16 @@ export class BackendSelector implements OnInit, OnDestroy {
     });
   }
 
-  isLocalBuild(): boolean {
+  handleCopyLocalServerCommand() {
+    navigator.clipboard.writeText(this.localServerCommand);
+  }
+
+  isLocalBuildSelected(): boolean {
     return this.selectedRelease === LOCAL_BUILD_LAEL;
+  }
+
+  isLocalServer(): boolean {
+    const host = window.location.host;
+    return host.includes('localhost') || host.includes('127.0.0.1');
   }
 }

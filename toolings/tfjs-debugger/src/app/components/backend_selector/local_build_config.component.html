@@ -14,35 +14,6 @@ limitations under the License.
 ==============================================================================
 -->
 <div class="container">
-  <div class="local-server-row">
-    <div class="title">Local server</div>
-    <bubble [panelTemplate]="instructionPanel">
-      <div class="instructions">instructions</div>
-      <ng-template #instructionPanel>
-        <div class="instruction-panel-container">
-          <p>
-            First, run <span class="code">bazel build</span> in each of the
-            needed packges to build them locally.
-          </p>
-
-          <p>
-            Then, run the command below from the root of the local tfjs repo:
-          </p>
-          <div class="code-block">{{genLocalServerCommand()}}</div>
-          <div class="copy" (click)="handleCopyLocalServerCommand()">Copy</div>
-        </div>
-      </ng-template>
-    </bubble>
-  </div>
-  <mat-form-field color="accent" floatLabel="never" class="local-server-input">
-    <input #localServerInput
-            matInput
-            required
-            [(ngModel)]="localServerAddress"
-            (focus)="localServerInput.select()"
-            (change)="updateUrl()">
-  </mat-form-field>
-
   <div class="title">backend</div>
   <mat-radio-group color="accent" [(ngModel)]="backendSource"
                    (change)="updateUrl()">

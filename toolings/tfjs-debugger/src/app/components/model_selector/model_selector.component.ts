@@ -63,6 +63,34 @@ export class ModelSelector implements OnInit, OnDestroy {
       url:
           'https://tfhub.dev/google/tfjs-model/imagenet/mobilenet_v3_large_100_224/classification/5/default/1',
     },
+    ...['lite', 'full'].map(
+        architecture => ({
+          label: `Hand pose detector (${architecture})`,
+          url: `https://tfhub.dev/mediapipe/tfjs-model/handpose_3d/detector/${
+              architecture}/1`
+        })),
+    ...['lite', 'full'].map(
+        architecture => ({
+          label: `Hand pose landmark (${architecture})`,
+          url: `https://tfhub.dev/mediapipe/tfjs-model/handpose_3d/landmark/${
+              architecture}/1`,
+        })),
+    {
+      label: 'BlazePose detector',
+      url:
+          'https://tfhub.dev/mediapipe/tfjs-model/blazeposedetector/1/default/1',
+    },
+    ...['lite', 'full', 'heavy'].map(
+        architecture => ({
+          label: `BlazePose landmark (${architecture})`,
+          url: `https://tfhub.dev/mediapipe/tfjs-model/blazeposelandmark_${
+              architecture}/2/default/2`
+        })),
+    {
+      label: 'Posenet',
+      url:
+          'https://storage.googleapis.com/tfjs-models/savedmodel/posenet/mobilenet/float/075/model-stride16.json',
+    },
     {
       label: 'Movenet single pose lightning',
       url: 'https://tfhub.dev/google/tfjs-model/movenet/singlepose/lightning/4',
@@ -75,7 +103,7 @@ export class ModelSelector implements OnInit, OnDestroy {
       label: 'Movenet multipose lightning',
       url: 'https://tfhub.dev/google/tfjs-model/movenet/multipose/lightning/1',
     },
-  ];
+  ].sort((a, b) => a.label.localeCompare(b.label));
 
   /** All supported model types.  */
   readonly modelTypes: ModelTypeOption[] = [

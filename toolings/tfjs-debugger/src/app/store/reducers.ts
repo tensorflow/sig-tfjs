@@ -372,6 +372,7 @@ export const mainReducer = createReducer(
          return {
            ...state,
            selectedNodeId: nodeId,
+           selectedEdgeId: '',
          };
        }),
 
@@ -380,6 +381,7 @@ export const mainReducer = createReducer(
          return {
            ...state,
            selectedEdgeId: edgeId,
+           selectedNodeId: '',
          };
        }),
 

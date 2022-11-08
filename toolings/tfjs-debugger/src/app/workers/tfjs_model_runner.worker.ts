@@ -119,8 +119,8 @@ async function loadTfjsPackegesAndSetBackend(config: Configuration):
     else {
       const localBuildSetting = config.localBuildSetting!;
       let localServerAddress = localBuildSetting.localServerAddress;
-      if (!localServerAddress.startsWith('https://')) {
-        localServerAddress = `https://${localServerAddress}`;
+      if (!localServerAddress.startsWith('http://')) {
+        localServerAddress = `http://${localServerAddress}`;
       }
       const coreConverterVersion =
           localBuildSetting.coreConverterReleaseVersion;

@@ -32,7 +32,30 @@ limitations under the License.
     <div class="title">Version</div>
     <backend-version-selector [configIndex]="configIndex"></backend-version-selector>
 
-    <ng-container *ngIf="isLocalBuild()">
+    <div class="local-build-instructions-container"
+         *ngIf="isLocalBuildSelected() && !isLocalServer()">
+      <div class="msg">Local server is needed for local debugging</div>
+      <bubble [panelTemplate]="instructionPanel">
+        <div class="instructions">instructions</div>
+        <ng-template #instructionPanel>
+          <div class="instruction-panel-container">
+            <p>
+              From the root of the local TFJS repo, build local packages by
+              running <span class="code">bazel build</span> in each of the
+              package directories.
+            </p>
+
+            <p>
+              Then, run the commands below from the root of the repo:
+            </p>
+            <pre class="code-block">{{localServerCommand}}</pre>
+            <div class="copy" (click)="handleCopyLocalServerCommand()">Copy</div>
+          </div>
+        </ng-template>
+      </bubble>
+    </div>
+
+    <ng-container *ngIf="isLocalBuildSelected() && isLocalServer()">
       <local-build-config [configIndex]="configIndex"></local-build-config>
     </ng-container>
   </div>
