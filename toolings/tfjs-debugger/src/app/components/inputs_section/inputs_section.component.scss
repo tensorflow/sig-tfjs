@@ -44,6 +44,39 @@
         margin-right: 4px;
       }
 
+      .input-shape-container {
+        display: flex;
+        align-items: center;
+        color: var.$grey-500;
+        font-size: 12px;
+
+        .input-shape-number {
+          display: flex;
+          align-items: center;
+        }
+
+        .comma {
+          margin-right: 2px;
+        }
+
+        .dimension-input {
+          display: flex;
+          align-items: center;
+          width: 22px;
+          margin: 0 2px;
+          padding: 0 4px;
+          font-size: 12px;
+          background-color: white;
+          border: 1px solid var.$grey-400;
+          border-radius: 3px;
+
+          &:focus-visible {
+            border-color: var.$grey-600;
+            outline: none;
+          }
+        }
+      }
+
       .input-shape {
         color: var.$grey-500;
         font-size: 12px;

@@ -17,6 +17,7 @@
 
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {Store} from '@ngrx/store';
+import {LOCAL_BUILD_LAEL} from 'src/app/common/consts';
 import {ModelTypeId} from 'src/app/data_model/model_type';
 import {triggerRunCurrentConfigs} from 'src/app/store/actions';
 import {selectCurrentConfigs} from 'src/app/store/selectors';
@@ -71,9 +72,15 @@ export class AppBar implements OnInit {
 
     // TODO: add more check conditions.
     if (config1.modelType === ModelTypeId.TFJS) {
-      return (config1.tfjsModelUrl == null || config1.tfjsModelUrl === '') ?
-          'TFJS model url required in configuration 1' :
-          '';
+      if (config1.tfjsModelUrl == null || config1.tfjsModelUrl === '') {
+        return 'TFJS model url required in configuration 1';
+      }
+      if (config1.backendVersion === LOCAL_BUILD_LAEL &&
+          !this.isLocalServer()) {
+        return 'Local build can only be used on local server. ' +
+            'See instructions in configuration 1.';
+      }
+      return '';
     }
 
     if (config2.modelType === ModelTypeId.TFJS) {
@@ -83,5 +90,10 @@ export class AppBar implements OnInit {
     }
 
     return '';
+  }
+
+  private isLocalServer(): boolean {
+    const host = window.location.host;
+    return host.includes('localhost') || host.includes('127.0.0.1');
   }
 }

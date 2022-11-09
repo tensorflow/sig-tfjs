@@ -20,11 +20,25 @@ limitations under the License.
   </div>
   <div class="info-msg" *ngIf="infoMsg">{{infoMsg}}</div>
   <div class="inputs-container" *ngIf="!infoMsg">
-    <div class="input-container" *ngFor="let input of inputs">
+    <div class="input-container" *ngFor="let input of inputs; trackBy: trackByInputId">
       <div class="input-info-row">
         <div class="input-index">{{input.index + 1}}:</div>
         <div class="input-name">{{input.id}}</div>
-        <div class="input-shape">{{input.strShape}}</div>
+        <div class="input-shape-container">
+          <div>{{input.dtype}} [</div>
+          <div class="input-shape-number"
+               *ngFor="let d of input.originalShape; let i = index; trackBy: trackByIndex">
+            <input class="dimension-input" #numberInput
+                   *ngIf="d === -1"
+                   [value]="input.shape[i]"
+                   (focus)="numberInput.select()"
+                   (change)="handleDimensionNumberUpdated(input, i, numberInput.value)">
+            <div *ngIf="d !== -1">{{d}}</div>
+            <span class="comma" *ngIf="i !== input.shape.length - 1">,</span>
+          </div>
+          <div>]</div>
+        </div>
+        <!-- <div class="input-shape">{{input.strShape}}</div> -->
       </div>
       <div class="input-type-chooser">
         <mat-form-field class="input-type-select"

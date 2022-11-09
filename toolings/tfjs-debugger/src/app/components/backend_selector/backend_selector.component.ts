@@ -23,10 +23,9 @@ import {LOCAL_BUILD_LAEL} from 'src/app/common/consts';
 import {ConfigIndex, UrlParamKey} from 'src/app/common/types';
 import {appendConfigIndexToKey} from 'src/app/common/utils';
 import {BackendId} from 'src/app/data_model/backend_type';
-import {TfjsRelease} from 'src/app/data_model/tfjs_release';
 import {UrlService} from 'src/app/services/url_service';
 import {setTfjsBackendId} from 'src/app/store/actions';
-import {selectConfigValueFromUrl, selectSelectedTfjsRelease, selectTfjsReleases} from 'src/app/store/selectors';
+import {selectConfigValueFromUrl, selectSelectedTfjsRelease} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
 
 import {BackendOption} from './types';
@@ -61,10 +60,9 @@ export class BackendSelector implements OnInit, OnDestroy {
 
   /** Stores the currently selected backend. */
   selectedBackendId!: BackendId;
-
   selectedRelease = '';
-
   localServerCommand = `yarn\nyarn start-local-debugger-server`;
+
 
   private active = true;
 

@@ -17,6 +17,7 @@ interface InputItem extends Input {
   index: number;
   op: string;
   strShape: string;
+  originalShape: number[];
 }
 
 interface DecodedInputItem {
@@ -26,6 +27,8 @@ interface DecodedInputItem {
   randomMax?: number;
 
   sameValue?: number;
+
+  shape?: number[];
 }
 
 @Component({
@@ -71,8 +74,12 @@ export class InputsSection implements OnInit, OnDestroy {
           this.changeDetectorRef.markForCheck();
 
           // Update store.
-          this.store.dispatch(
-              setInputs({inputs: this.inputs.map(input => ({...input}))}));
+          this.store.dispatch(setInputs({
+            inputs: this.inputs.map(input => ({
+                                      ...input,
+                                      shape: sanitizeShape(input.shape),
+                                    }))
+          }));
         });
   }
 
@@ -84,11 +91,39 @@ export class InputsSection implements OnInit, OnDestroy {
     this.updateUrl();
   }
 
+  handleDimensionNumberUpdated(input: InputItem, i: number, newValue: string) {
+    this.inputs = this.inputs.map(curInput => {
+      const newInput = {
+        ...curInput,
+        shape: [...curInput.shape],
+      };
+      if (newInput.id === input.id) {
+        newInput.shape[i] = Number(newValue);
+      }
+      return newInput;
+    });
+    this.updateUrl();
+  }
+
+  trackByInputId(index: number, input: Input) {
+    return input.id;
+  }
+
+  trackByIndex(index: number, unused: unknown) {
+    return index;
+  }
+
   private handleTfjsUrlChanged(url: string) {
     if (!url) {
       this.inputs = [];
+      this.inputsFromUrl = [];
       this.changeDetectorRef.markForCheck();
       return;
+    }
+
+    if (this.tfjsModelUrl) {
+      this.inputs = [];
+      this.inputsFromUrl = [];
     }
 
     this.updateInfoMsg('Loading model...');
@@ -132,7 +167,8 @@ export class InputsSection implements OnInit, OnDestroy {
               return {
                 index,
                 id: input.id,
-                shape: sanitizeShape(input.shape),
+                shape: [...input.shape],
+                originalShape: input.shape,
                 dtype: input.dtype,
                 op: input.op,
                 strShape: `${input.dtype} [${input.shape.join(', ')}]`,
@@ -174,6 +210,7 @@ export class InputsSection implements OnInit, OnDestroy {
             default:
               break;
           }
+          parts.push(input.shape.join('_'));
           return parts.join(';');
         })
         .join(',');
@@ -189,17 +226,21 @@ export class InputsSection implements OnInit, OnDestroy {
           if (fields.length >= 3) {
             const randomMin = Number(fields[1]);
             const randomMax = Number(fields[2]);
+            const shape = fields[3].split('_').map(s => Number(s));
             item.inputValuesType = InputValuesType.RANDOM;
             item.randomMin = randomMin;
             item.randomMax = randomMax;
+            item.shape = shape;
           }
           break;
         }
         case InputValuesType.SAME_VALUE: {
           if (fields.length >= 2) {
             const sameValue = Number(fields[1]);
+            const shape = fields[2].split('_').map(s => Number(s));
             item.inputValuesType = InputValuesType.SAME_VALUE;
             item.sameValue = sameValue;
+            item.shape = shape;
           }
           break;
         }
@@ -227,6 +268,9 @@ export class InputsSection implements OnInit, OnDestroy {
         }
         if (decodedInput.sameValue != null) {
           modelInput.sameValue = decodedInput.sameValue;
+        }
+        if (decodedInput.shape != null) {
+          modelInput.shape = decodedInput.shape;
         }
       }
     }
