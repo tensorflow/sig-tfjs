@@ -74,12 +74,7 @@ export class InputsSection implements OnInit, OnDestroy {
           this.changeDetectorRef.markForCheck();
 
           // Update store.
-          this.store.dispatch(setInputs({
-            inputs: this.inputs.map(input => ({
-                                      ...input,
-                                      shape: sanitizeShape(input.shape),
-                                    }))
-          }));
+          this.updateStoreWithInputs();
         });
   }
 
@@ -124,6 +119,7 @@ export class InputsSection implements OnInit, OnDestroy {
     if (this.tfjsModelUrl) {
       this.inputs = [];
       this.inputsFromUrl = [];
+      this.updateUrl();
     }
 
     this.updateInfoMsg('Loading model...');
@@ -182,8 +178,7 @@ export class InputsSection implements OnInit, OnDestroy {
     this.changeDetectorRef.markForCheck();
 
     // Update store.
-    this.store.dispatch(
-        setInputs({inputs: this.inputs.map(input => ({...input}))}));
+    this.updateStoreWithInputs();
   }
 
   private updateUrl() {
@@ -279,5 +274,14 @@ export class InputsSection implements OnInit, OnDestroy {
   private updateInfoMsg(msg: string) {
     this.infoMsg = msg;
     this.changeDetectorRef.markForCheck();
+  }
+
+  private updateStoreWithInputs() {
+    this.store.dispatch(setInputs({
+      inputs: this.inputs.map(input => ({
+                                ...input,
+                                shape: sanitizeShape(input.shape),
+                              }))
+    }));
   }
 }
