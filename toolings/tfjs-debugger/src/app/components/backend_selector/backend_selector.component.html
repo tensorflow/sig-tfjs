@@ -41,12 +41,14 @@ limitations under the License.
           <div class="instruction-panel-container">
             <p>
               From the root of the local TFJS repo, build local packages by
-              running <span class="code">bazel build</span> in each of the
-              package directories.
+              running <span class="code">yarn && yarn build</span> in the
+              <span class="code">link-package</span> directory.
             </p>
 
             <p>
-              Then, run the commands below from the root of the repo:
+              Then, run the commands below from the root of the repo to start
+              a local server, and click on the printed-out local server address
+              to continue local debugging:
             </p>
             <pre class="code-block">{{localServerCommand}}</pre>
             <div class="copy" (click)="handleCopyLocalServerCommand()">Copy</div>

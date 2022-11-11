@@ -36,6 +36,7 @@ export enum DebuggerAction {
   SET_CONFIG_ENABLED = '[Conf] Set Config Enabled',
   SET_BAD_NODES_THRESHOLD = '[Conf] Set Bad Nodes Threshold',
   SET_INPUTS = '[Input] Set Inputs',
+  SET_INPUT_MODE = '[Input] Set Input Mode',
   SET_DIFFS = '[Run] Set Diffs',
   FETCH_TFJS_RELEASES = '[Conf] Fetch TFJS Releases',
   FETCH_TFJS_RELEASES_SUCCESS = '[Conf] Fetch TFJS Releases - Success',
@@ -111,6 +112,12 @@ export const setDiffs = createAction(
 export const setInputs = createAction(
     DebuggerAction.SET_INPUTS,
     props<{inputs: Input[]}>(),
+);
+
+/** Sets input mode. */
+export const setInputMode = createAction(
+    DebuggerAction.SET_INPUT_MODE,
+    props<{mode: string}>(),
 );
 
 /** Fetches available TFJS releases. */

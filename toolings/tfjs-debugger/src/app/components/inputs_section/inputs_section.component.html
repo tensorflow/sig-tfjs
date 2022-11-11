@@ -16,82 +16,100 @@ limitations under the License.
 
 <div class="container" *ngIf="inputs.length > 0">
   <div class="config-header">
-    Inputs
+    <div>Inputs</div>
+    <mat-button-toggle-group [(ngModel)]="inputMode"
+                             (change)="handleInputModeChanged()">
+      <mat-button-toggle value="simple">simple</mat-button-toggle>
+      <mat-button-toggle value="advanced">advanced</mat-button-toggle>
+    </mat-button-toggle-group>
   </div>
   <div class="info-msg" *ngIf="infoMsg">{{infoMsg}}</div>
   <div class="inputs-container" *ngIf="!infoMsg">
-    <div class="input-container" *ngFor="let input of inputs; trackBy: trackByInputId">
-      <div class="input-info-row">
-        <div class="input-index">{{input.index + 1}}:</div>
-        <div class="input-name">{{input.id}}</div>
-        <div class="input-shape-container">
-          <div>{{input.dtype}} [</div>
-          <div class="input-shape-number"
-               *ngFor="let d of input.originalShape; let i = index; trackBy: trackByIndex">
-            <input class="dimension-input" #numberInput
-                   *ngIf="d === -1"
-                   [value]="input.shape[i]"
-                   (focus)="numberInput.select()"
-                   (change)="handleDimensionNumberUpdated(input, i, numberInput.value)">
-            <div *ngIf="d !== -1">{{d}}</div>
-            <span class="comma" *ngIf="i !== input.shape.length - 1">,</span>
+    <ng-container *ngIf="inputMode === 'simple'">
+      <div class="input-container" *ngFor="let input of inputs; trackBy: trackByInputId">
+        <div class="input-info-row">
+          <div class="input-index">{{input.index + 1}}:</div>
+          <div class="input-name">{{input.id}}</div>
+          <div class="input-shape-container">
+            <div>{{input.dtype}} [</div>
+            <div class="input-shape-number"
+                *ngFor="let d of input.originalShape; let i = index; trackBy: trackByIndex">
+              <input class="dimension-input" #numberInput
+                    *ngIf="d === -1"
+                    [value]="input.shape[i]"
+                    (focus)="numberInput.select()"
+                    (change)="handleDimensionNumberUpdated(input, i, numberInput.value)">
+              <div *ngIf="d !== -1">{{d}}</div>
+              <span class="comma" *ngIf="i !== input.shape.length - 1">,</span>
+            </div>
+            <div>]</div>
           </div>
-          <div>]</div>
         </div>
-        <!-- <div class="input-shape">{{input.strShape}}</div> -->
-      </div>
-      <div class="input-type-chooser">
-        <mat-form-field class="input-type-select"
-                        appearance="outline"
-                        floatLabel="never">
-          <mat-select
-              [(value)]="input.inputValuesType"
-              (selectionChange)="handleInputChanged()">
-            <mat-option *ngFor="let type of inputTypes"
-                [value]="type">
-              {{type}}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+        <div class="input-type-chooser">
+          <mat-form-field class="input-type-select"
+                          appearance="outline"
+                          floatLabel="never">
+            <mat-select
+                [(value)]="input.inputValuesType"
+                (selectionChange)="handleInputChanged()">
+              <mat-option *ngFor="let type of inputTypes"
+                  [value]="type">
+                {{type}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
 
-        <div class="input-type-controls"
-              [ngSwitch]="input.inputValuesType">
+          <div class="input-type-controls"
+                [ngSwitch]="input.inputValuesType">
 
-          <!-- Random -->
-          <ng-container *ngSwitchCase="InputValuesType.RANDOM">
-            <div class="min-max-label">Min:</div>
-            <mat-form-field class="min-max-input"
-                            floatLabel="never">
-              <input #minInput matInput
-                     [(ngModel)]="input.randomMin"
-                     (focus)="minInput.select()"
-                     (change)="handleInputChanged()">
-            </mat-form-field>
-            <div class="min-max-label">Max:</div>
-            <mat-form-field class="min-max-input"
-                            floatLabel="never">
-              <input #maxInput matInput
-                     [(ngModel)]="input.randomMax"
-                     (focus)="maxInput.select()"
-                     (change)="handleInputChanged()">
-            </mat-form-field>
-          </ng-container>
+            <!-- Random -->
+            <ng-container *ngSwitchCase="InputValuesType.RANDOM">
+              <div class="min-max-label">Min:</div>
+              <mat-form-field class="min-max-input"
+                              color="accent"
+                              floatLabel="never">
+                <input #minInput matInput
+                      [(ngModel)]="input.randomMin"
+                      (focus)="minInput.select()"
+                      (change)="handleInputChanged()">
+              </mat-form-field>
+              <div class="min-max-label">Max:</div>
+              <mat-form-field class="min-max-input"
+                              color="accent"
+                              floatLabel="never">
+                <input #maxInput matInput
+                      [(ngModel)]="input.randomMax"
+                      (focus)="maxInput.select()"
+                      (change)="handleInputChanged()">
+              </mat-form-field>
+            </ng-container>
 
-          <!-- Same value -->
-          <ng-container *ngSwitchCase="InputValuesType.SAME_VALUE">
-            <div class="same-value-label">Value:</div>
-            <mat-form-field class="same-value-input"
-                            floatLabel="never">
-              <input #sameValueInput matInput
-                     [(ngModel)]="input.sameValue"
-                     (focus)="sameValueInput.select()"
-                     (change)="handleInputChanged()">
-            </mat-form-field>
-          </ng-container>
+            <!-- Same value -->
+            <ng-container *ngSwitchCase="InputValuesType.SAME_VALUE">
+              <div class="same-value-label">Value:</div>
+              <mat-form-field class="same-value-input"
+                              floatLabel="never">
+                <input #sameValueInput matInput
+                      [(ngModel)]="input.sameValue"
+                      (focus)="sameValueInput.select()"
+                      (change)="handleInputChanged()">
+              </mat-form-field>
+            </ng-container>
 
-          <div *ngSwitchDefault></div>
+            <div *ngSwitchDefault></div>
+          </div>
+
         </div>
-
       </div>
+    </ng-container>
+
+    <ng-container *ngIf="inputMode === 'advanced'">
+      <div class="results" [class.ready]="curCodeGeneratorResults">
+        {{curCodeGeneratorResults ? 'All inputs are genereated' : 'Inputs are not generated yet'}}
+      </div>
+      <div class="open-code-editor-label" (click)="handleOpenCodeEditor()">
+        Open code editor
+      </div>
+    </ng-container>
   </div>
 </div>

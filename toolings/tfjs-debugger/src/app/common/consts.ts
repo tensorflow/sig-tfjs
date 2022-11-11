@@ -18,6 +18,19 @@
 export const CONST_NODE_WIDTH = 56;
 export const NON_CONST_NODE_WIDTH = 90;
 export const NODE_HEIGHT = 28;
-export const DEFAULT_BAD_NODE_THRESHOLD = 0.1;
+export const DEFAULT_BAD_NODE_THRESHOLD_PCT = 10;
 export const LOCAL_BUILD_LAEL = 'Local build';
 export const NODE_NAME_PARTS_TO_SKIP = ['/cond/', '/while/'];
+export const codeMirrorOptions: any = {
+  mode: 'javascript',
+  indentWithTabs: true,
+  smartIndent: true,
+  lineNumbers: true,
+  lineWrapping: true,
+  extraKeys: {'Ctrl-Space': 'autocomplete'},
+  gutters: ['CodeMirror-linenumbers'],
+  autoCloseBrackets: true,
+  matchBrackets: true,
+  lint: true,
+  theme: 'vscode-dark',
+};

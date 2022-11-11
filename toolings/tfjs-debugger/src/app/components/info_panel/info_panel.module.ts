@@ -19,24 +19,30 @@ import {CommonModule} from '@angular/common';
 import {NgModule} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
+import {MatDialogModule} from '@angular/material/dialog';
 import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
+import {CodemirrorModule} from '@ctrl/ngx-codemirror';
 
 import {BubbleModule} from '../bubble/bubble.module';
 
 import {InfoPanel} from './info_panel.component';
 import {NodeInfoPanel} from './node_info_panel.component';
+import {PostProcessingCodeEditor} from './post_processing_code_editor.component';
 
 @NgModule({
   declarations: [
     InfoPanel,
     NodeInfoPanel,
+    PostProcessingCodeEditor,
   ],
   imports: [
     BubbleModule,
+    CodemirrorModule,
     CommonModule,
     FormsModule,
     MatButtonModule,
+    MatDialogModule,
     MatIconModule,
     MatInputModule,
   ],

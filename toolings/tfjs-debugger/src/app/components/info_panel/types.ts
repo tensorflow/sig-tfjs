@@ -15,17 +15,23 @@
  * =============================================================================
  */
 
-import {NodeAttr} from 'src/app/data_model/run_results';
+import {NodeAttr, TypedArray} from 'src/app/data_model/run_results';
 
 export interface NodeInfo {
   id: string;
   y: number;
   op: string;
+  dtype: string;
+  shape: number[];
   dtypeAndShape: string;
   attrs: NodeAttr[];
   diff?: string;
   diffValue?: number;
+  // Only store top 100.
   values?: Value[];
+
+  rawValues1?: TypedArray;
+  rawValues2?: TypedArray;
 }
 
 export interface Value {

@@ -67,4 +67,35 @@ limitations under the License.
       </div>
     </div>
   </div>
+
+  <div class="post-processing-container">
+    <ng-container *ngIf="output1">
+      <div class="label">Post-processing output (configuration 1)</div>
+      <div class="output-container" *ngIf="output1Type === 'executing'">
+        Executing...
+      </div>
+      <div class="output-container" *ngIf="output1Type === 'string'">
+        {{output1}}
+      </div>
+      <div class="canvas-container" *ngIf="output1Type === 'canvas'">
+        <canvas #canvas1></canvas>
+      </div>
+    </ng-container>
+    <ng-container *ngIf="output2">
+      <div class="label output2">Post-processing output (configuration 2)</div>
+      <div class="output-container" *ngIf="output2Type === 'executing'">
+        Executing...
+      </div>
+      <div class="output-container" *ngIf="output2Type === 'string'">
+        {{output2}}
+      </div>
+      <div class="canvas-container" *ngIf="output2Type === 'canvas'">
+        <canvas #canvas2></canvas>
+      </div>
+    </ng-container>
+    <div class="open-post-processing-code-editor-label"
+         (click)="handleClickOpenPostProcessingCodeEditor()">
+      {{curPostProcessingCode ? 'Edit' : 'Add'}} post-processing code
+    </div>
+  </div>
 </div>

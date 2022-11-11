@@ -15,9 +15,9 @@
  * =============================================================================
  */
 
-import {DEFAULT_BAD_NODE_THRESHOLD} from '../common/consts';
+import {DEFAULT_BAD_NODE_THRESHOLD_PCT} from '../common/consts';
 import {Configuration} from '../data_model/configuration';
-import {Input} from '../data_model/input';
+import {Input, InputMode} from '../data_model/input';
 import {ErrorMessage, RunStatus} from '../data_model/misc';
 import {ModelTypeId} from '../data_model/model_type';
 import {RunResults} from '../data_model/run_results';
@@ -32,6 +32,7 @@ export interface Configs {
 export interface AppState {
   configs: Configs;
   inputs: Input[];
+  inputMode: string;
   tfjsReleases: TfjsRelease[];
 
   /**
@@ -61,7 +62,7 @@ export interface AppState {
   /** Stores the id of the node to locate. */
   nodeIdToLocate?: {id: string};
 
-  /** Threshold for bad nodes. */
+  /** Threshold (percentage) for bad nodes. */
   badNodeThreshold: number;
 
   /**
@@ -86,7 +87,8 @@ export const initialState: AppState = {
     }
   },
   inputs: [],
+  inputMode: InputMode.SIMPLE,
   tfjsReleases: [],
   runResults: {},
-  badNodeThreshold: DEFAULT_BAD_NODE_THRESHOLD,
+  badNodeThreshold: DEFAULT_BAD_NODE_THRESHOLD_PCT,
 };

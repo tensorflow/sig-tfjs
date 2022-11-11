@@ -78,6 +78,12 @@ export const selectCurrentInputs = createSelector(selectMainState, (state) => {
   return state.inputs;
 });
 
+/** Selector to select current input mode. */
+export const selectCurrentInputMode =
+    createSelector(selectMainState, (state) => {
+      return state.inputMode;
+    });
+
 /** Selector to select model graph for the given config index. */
 export const selectModelGraph = (configIndex: ConfigIndex) =>
     createSelector(selectMainState, (state) => {

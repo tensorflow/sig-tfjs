@@ -41,7 +41,7 @@ export class GraphService3d {
   private curNodesMap: {[id: string]: ModelGraphNode} = {};
   private curGraph?: ForceGraph3DInstance;
   private curDiffs?: Diffs;
-  private curThreshold = 0;
+  private curThresholdPct = 0;
   private curSelectedNodeId = '';
   private curHoveredNodeId = '';
   private curHoveredEdgeId = '';
@@ -75,9 +75,9 @@ export class GraphService3d {
         .pipe(
             filter(diffs => diffs != null),
             withLatestFrom(this.store.select(selectBadNodesThreshold)))
-        .subscribe(([diffs, threshold]) => {
+        .subscribe(([diffs, thresholdPct]) => {
           this.curDiffs = diffs;
-          this.curThreshold = threshold;
+          this.curThresholdPct = thresholdPct;
           this.refreshGraph();
         });
 
@@ -92,7 +92,7 @@ export class GraphService3d {
 
     // Handle threhold update.
     this.store.select(selectBadNodesThreshold).subscribe(threshold => {
-      this.curThreshold = threshold;
+      this.curThresholdPct = threshold;
       this.curBadNodeMeshes = {};
       this.refreshGraph();
     });
@@ -166,7 +166,7 @@ export class GraphService3d {
                 const id = node.id!;
                 const nodeData = this.curNodesMap[id];
                 if (this.curDiffs &&
-                    Math.abs(this.curDiffs[id]) > this.curThreshold) {
+                    Math.abs(this.curDiffs[id]) > this.curThresholdPct / 100) {
                   return '#f02311';
                 }
 
@@ -213,7 +213,7 @@ export class GraphService3d {
               .nodeThreeObject((node: any) => {
                 const id = node.id;
                 if (this.curDiffs &&
-                    Math.abs(this.curDiffs[id]) > this.curThreshold) {
+                    Math.abs(this.curDiffs[id]) > this.curThresholdPct / 100) {
                   // TODO: Make these colors reusable.
                   let color = 0xf02311;
                   if (id === this.curHoveredNodeId) {

@@ -1,0 +1,71 @@
+<!-- Copyright 2022 Google LLC. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+==============================================================================
+-->
+
+<h1 mat-dialog-title>Write JS post-processing code</h1>
+
+<div mat-dialog-content class="container">
+  <ngx-codemirror #codemirror
+    class="post-processing-code-editor"
+    [options]="codeMirrorOptions"
+    [(ngModel)]="codeContent"
+    [autoFocus]="true">
+  </ngx-codemirror>
+  <div class="outputs-container">
+    <div class="output-wrapper">
+      <div class="label">
+        Output (configuration 1)
+      </div>
+      <div class="output-container" *ngIf="output1Type === ''">
+        Click "Execute" to see result
+      </div>
+      <div class="output-container" *ngIf="output1Type === 'string'">
+        {{output1}}
+      </div>
+      <div class="canvas-container" *ngIf="output1Type === 'canvas'">
+        <canvas #canvas1></canvas>
+      </div>
+    </div>
+    <ng-container *ngIf="tensor2">
+      <div class="spacer"></div>
+      <div class="output-wrapper">
+        <div class="label">
+          Output (configuration 2)
+        </div>
+        <div class="output-container" *ngIf="output1Type === ''">
+          Click "Execute" to see result
+        </div>
+        <div class="output-container" *ngIf="output2Type === 'string'">
+          {{output2}}
+        </div>
+        <div class="canvas-container" *ngIf="output2Type === 'canvas'">
+          <canvas #canvas2></canvas>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+  <div class="error-msg" [class.error]="errorMsg">
+    {{errorMsg || 'No error'}}
+  </div>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="handleDone()">Done</button>
+  <button color="primary" mat-flat-button
+          [disabled]="executing"
+          (click)="handleExecuteCode()">
+    {{executing ? 'Executing...' : 'Execute'}}
+  </button>
+</div>

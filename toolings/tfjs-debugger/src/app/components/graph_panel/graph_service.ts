@@ -167,19 +167,19 @@ export class GraphService {
         .pipe(
             filter(diffs => diffs != null),
             withLatestFrom(this.store.select(selectBadNodesThreshold)))
-        .subscribe(([diffs, threshold]) => {
+        .subscribe(([diffs, thresholdPct]) => {
           this.curDiffs = diffs;
-          this.handleDiffs(diffs!, threshold);
+          this.handleDiffs(diffs!, thresholdPct);
         });
 
     // Update graph for threhold changes.
     this.store.select(selectBadNodesThreshold)
         .pipe(skip(1))
-        .subscribe(threshold => {
+        .subscribe(thresholdPct => {
           if (!this.curDiffs) {
             return;
           }
-          this.handleDiffs(this.curDiffs, threshold);
+          this.handleDiffs(this.curDiffs, thresholdPct);
         });
 
     // Update UI for selected node.
@@ -934,7 +934,7 @@ export class GraphService {
     }
   }
 
-  private handleDiffs(diffs: Diffs, threshold: number) {
+  private handleDiffs(diffs: Diffs, thresholdPct: number) {
     // Reset.
     this.removeDiffTexts();
     Object.values(this.nodeIdToInstancedMeshInfo).forEach(info => {
@@ -944,7 +944,7 @@ export class GraphService {
 
     Object.keys(diffs).forEach(id => {
       const diff = diffs[id];
-      if (Math.abs(diff) > threshold) {
+      if (Math.abs(diff) > thresholdPct / 100) {
         const instancedMeshInfo = this.nodeIdToInstancedMeshInfo[id];
         if (instancedMeshInfo) {
           instancedMeshInfo.instancedMesh.setColorAt(

@@ -1,17 +1,38 @@
+/**
+ * @license
+ * Copyright 2022 Google LLC. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =============================================================================
+ */
+
 import {HttpErrorResponse} from '@angular/common/http';
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit} from '@angular/core';
+import {MatDialog} from '@angular/material/dialog';
 import {Store} from '@ngrx/store';
-import {of} from 'rxjs';
+import {of, Subject} from 'rxjs';
 import {catchError, map, take, takeWhile} from 'rxjs/operators';
-import {UrlParamKey} from 'src/app/common/types';
+import {TensorResults, UrlParamKey} from 'src/app/common/types';
 import {sanitizeShape} from 'src/app/common/utils';
-import {Input, InputValuesType} from 'src/app/data_model/input';
+import {Input, InputMode, InputValuesType} from 'src/app/data_model/input';
 import {ModelGraph, modelJsonToModelGraph} from 'src/app/data_model/run_results';
+import {CustomInputsService} from 'src/app/services/custom_inputs_service';
 import {TfjsService} from 'src/app/services/tfjs_service';
 import {UrlService} from 'src/app/services/url_service';
-import {clearErrorMessage, setErrorMessage, setInputs} from 'src/app/store/actions';
+import {clearErrorMessage, setErrorMessage, setInputMode, setInputs} from 'src/app/store/actions';
 import {selectConfigValueFromUrl, selectValueFromUrl} from 'src/app/store/selectors';
 import {AppState} from 'src/app/store/state';
+
+import {DialogData, DialogResult, InputsCodeEditor, UploadedImage} from './inputs_code_editor.component';
 
 interface InputItem extends Input {
   index: number;
@@ -41,17 +62,24 @@ export class InputsSection implements OnInit, OnDestroy {
   private tfjsModelUrl = '';
   private active = true;
   private inputsFromUrl: DecodedInputItem[] = [];
+  private curCode = '';
+  private curUploadedImages: UploadedImage[] = [];
+  private tensorResultsSubject = new Subject<TensorResults|undefined>();
 
   InputValuesType = InputValuesType;
   infoMsg = 'No model loaded';
   inputs: InputItem[] = [];
   inputTypes = [InputValuesType.RANDOM, InputValuesType.SAME_VALUE];
+  inputMode = InputMode.SIMPLE;
+  curCodeGeneratorResults?: TensorResults;
 
   constructor(
       private readonly changeDetectorRef: ChangeDetectorRef,
       private readonly store: Store<AppState>,
+      private readonly customInputsService: CustomInputsService,
       private readonly urlService: UrlService,
       private readonly tfjsService: TfjsService,
+      public dialog: MatDialog,
   ) {}
 
   ngOnInit() {
@@ -75,6 +103,12 @@ export class InputsSection implements OnInit, OnDestroy {
 
           // Update store.
           this.updateStoreWithInputs();
+        });
+
+    this.tensorResultsSubject.pipe(takeWhile(() => this.active))
+        .subscribe(results => {
+          this.curCodeGeneratorResults = results;
+          this.changeDetectorRef.markForCheck();
         });
   }
 
@@ -100,6 +134,43 @@ export class InputsSection implements OnInit, OnDestroy {
     this.updateUrl();
   }
 
+  handleInputModeChanged() {
+    this.store.dispatch(setInputMode({mode: this.inputMode}));
+  }
+
+  handleOpenCodeEditor() {
+    const data: DialogData = {
+      inputs: this.inputs.map(
+          input => ({...input, shape: sanitizeShape(input.shape)})),
+      code: this.curCode,
+      uploadedImages: this.curUploadedImages,
+      tensorResultsSubject: this.tensorResultsSubject,
+    };
+    const dialogRef = this.dialog.open(InputsCodeEditor, {
+      width: '1100px',
+      data,
+    });
+
+    dialogRef.afterClosed().subscribe((result: DialogResult) => {
+      this.curCode = result.code;
+      this.curUploadedImages = result.uploadedImages;
+
+      // Save the code into local storage, indexed by model url.
+      localStorage.setItem(this.genInputsCustomCodeKey(), this.curCode);
+
+      // Valid results.
+      if (Object.keys(result.tensorResults).length > 0) {
+        this.curCodeGeneratorResults = result.tensorResults;
+        this.customInputsService.setTensorResults(result.tensorResults);
+      }
+      // Invalid results.
+      else if (!this.curCodeGeneratorResults) {
+        this.curCodeGeneratorResults = undefined;
+      }
+      this.changeDetectorRef.markForCheck();
+    });
+  }
+
   trackByInputId(index: number, input: Input) {
     return input.id;
   }
@@ -110,15 +181,12 @@ export class InputsSection implements OnInit, OnDestroy {
 
   private handleTfjsUrlChanged(url: string) {
     if (!url) {
-      this.inputs = [];
-      this.inputsFromUrl = [];
-      this.changeDetectorRef.markForCheck();
+      this.reset();
       return;
     }
 
     if (this.tfjsModelUrl) {
-      this.inputs = [];
-      this.inputsFromUrl = [];
+      this.reset();
       this.updateUrl();
     }
 
@@ -126,6 +194,7 @@ export class InputsSection implements OnInit, OnDestroy {
 
     // Fetch and parse model.json, find inputs, and update UI.
     this.tfjsModelUrl = url;
+    this.curCode = localStorage.getItem(this.genInputsCustomCodeKey()) || '';
     this.tfjsService.fetchModelJson(url)
         .pipe(
             take(1),
@@ -146,6 +215,15 @@ export class InputsSection implements OnInit, OnDestroy {
           this.updateInfoMsg('');
           this.updateInputs(modelGraph);
         });
+  }
+
+  private reset() {
+    this.inputMode = InputMode.SIMPLE;
+    this.inputs = [];
+    this.inputsFromUrl = [];
+    this.curCodeGeneratorResults = undefined;
+    this.customInputsService.setTensorResults(undefined);
+    this.changeDetectorRef.markForCheck();
   }
 
   private updateInputs(modelGraph: ModelGraph) {
@@ -283,5 +361,9 @@ export class InputsSection implements OnInit, OnDestroy {
                                 shape: sanitizeShape(input.shape),
                               }))
     }));
+  }
+
+  private genInputsCustomCodeKey() {
+    return `${this.tfjsModelUrl}_inputs_code`;
   }
 }

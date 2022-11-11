@@ -6,11 +6,12 @@ import {Configuration} from '../data_model/configuration';
 import {PackageSource} from '../data_model/local_build_setting';
 import {TensorMap} from '../data_model/run_results';
 
-const LOCAL_CORE_PATH = 'dist/bin/tfjs-core/tfjs-core_pkg/dist/tf-core.js';
+const LOCAL_CORE_PATH =
+    'link-package/node_modules/@tensorflow/tfjs-core/dist/tf-core.js';
 const LOCAL_CONVERTER_PATH =
-    'dist/bin/tfjs-converter/tfjs-converter_pkg/dist/tf-converter.js';
+    'link-package/node_modules/@tensorflow/tfjs-converter/dist/tf-converter.js';
 const LOCAL_BACKEND_WASM_PATH =
-    'dist/bin/tfjs-backend-wasm/tfjs-backend-wasm_pkg/dist/';
+    'link-package/node_modules/@tensorflow/tfjs-backend-wasm/dist/';
 
 addEventListener('message', ({data}) => {
   const msg = data as WorkerMessage;
@@ -151,8 +152,8 @@ async function loadTfjsPackegesAndSetBackend(config: Configuration):
 
       // Load backend.
       if (localBuildSetting.backendSource === PackageSource.LOCAL) {
-        importScripts(`dist/bin/tfjs-backend-${backend}/tfjs-backend-${
-            backend}_pkg/dist/tf-backend-${backend}.js`);
+        importScripts(`link-package/node_modules/@tensorflow/tfjs-backend-${
+            backend}/dist/tf-backend-${backend}.js`);
         if (backend === 'wasm') {
           tf.wasm.setWasmPaths(LOCAL_BACKEND_WASM_PATH);
         }

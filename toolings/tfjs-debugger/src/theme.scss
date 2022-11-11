@@ -50,3 +50,7 @@ $tfjs-debugger-theme: mat.define-light-theme(
 // Export theme colors that can be used in components.
 $primary-color: mat-color($tfjs-debugger-primary);
 $accent-color: mat-color($tfjs-debugger-accent);
+
+@import '~codemirror/lib/codemirror';
+@import '~codemirror/theme/material';
+@import './vscode-dark.scss';

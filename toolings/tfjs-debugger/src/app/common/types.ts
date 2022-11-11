@@ -16,7 +16,7 @@
  */
 
 import {Configuration} from '../data_model/configuration';
-import {Diffs, ModelGraph, ModelGraphLayout, ModelGraphLayoutEdge, ModelGraphNode, TensorMap} from '../data_model/run_results';
+import {Diffs, ModelGraph, ModelGraphLayout, ModelGraphLayoutEdge, ModelGraphNode, TensorMap, TypedArray} from '../data_model/run_results';
 
 /** URL parameter keys. */
 export enum UrlParamKey {
@@ -66,6 +66,48 @@ export interface LayoutBatchResponse extends WorkerMessage {
   batchIndex: number;
 }
 
+export interface ExecuteInputsCodeRequest extends WorkerMessage {
+  latestTfjeRelease: string;
+  code: string;
+  tensors: ExecuteCodeTensor[];
+}
+
+export interface ExecuteCodeTensor {
+  varName: string;
+  values: TypedArray;
+  shape: number[];
+  dtype: string;
+}
+
+export interface ExecuteInputsCodeResponse extends WorkerMessage {
+  error: string;
+  tensorResults: TensorResults;
+}
+
+export type TensorResults = {
+  [id: string]: {values: TypedArray; dtype: string}
+};
+
+export interface ExecutePostProcessingCodeRequest extends WorkerMessage {
+  latestTfjeRelease: string;
+  code: string;
+  tensor: ExecuteCodeTensor;
+  index: number;
+}
+
+export interface ExecutePostProcessingCodeResponse extends WorkerMessage {
+  error: string;
+  index: number;
+  result?: PostProcessingResult;
+}
+
+export interface PostProcessingResult {
+  type: 'string'|'canvas';
+  strResult?: string;
+  imageData?: ImageData;
+}
+
+
 /** Possible commands for the msg. */
 export enum WorkerCommand {
   LAYOUT = 'layout',
@@ -76,6 +118,10 @@ export enum WorkerCommand {
   RUN_TFJS_MODEL_RESULT = 'run_tfjs_model_result',
   CALCULATE_DIFFS = 'calculate_diffs',
   CALCULATE_DIFFS_RESULT = 'calculate_diffs_result',
+  EXECUTE_INPUTS_CODE = 'execute_inputs_code',
+  EXECUTE_INPUTS_CODE_RESULT = 'execute_input_code_result',
+  EXECUTE_POST_PROCESSING_CODE = 'execute_post_processing_code',
+  EXECUTE_POST_PROCESSING_CODE_RESULT = 'execute_post_processing_code_result',
 }
 
 export interface RunTfjsModelRequest extends WorkerMessage {

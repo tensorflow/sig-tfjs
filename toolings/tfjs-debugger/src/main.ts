@@ -36,3 +36,5 @@ else {
       .bootstrapModule(DevAppModule)
       .catch(err => console.error(err));
 }
+
+import 'codemirror/mode/javascript/javascript';

@@ -52,9 +52,12 @@
 }
 
 ::ng-deep .instruction-panel-container {
+  color: var.$grey-700;
   font-size: 13px;
 
   .code {
+    color: var.$grey-900;
+    font-weight: bold;
     font-family: 'Roboto Mono', Roboto, monospace;
   }
 

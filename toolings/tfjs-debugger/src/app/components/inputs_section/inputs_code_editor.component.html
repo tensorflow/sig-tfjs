@@ -1,0 +1,95 @@
+<!-- Copyright 2022 Google LLC. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+==============================================================================
+-->
+
+<h1 mat-dialog-title>Write JS code to generate inputs</h1>
+
+<div mat-dialog-content class="container">
+  <div class="left-panel">
+    <div class="header">Instructions</div>
+    <div class="content">
+      Write a <span class="code">main</span> function (async) that returns a
+      tensor map object (from input name to tensor). Click the "Execute" button
+      to execute the code. The returned object will be checked against the
+      expected inputs and the check results will be shown in the table below.
+      The results will be accpeted when all checks are passed.
+    </div>
+
+    <div class="header">Expected tensor map</div>
+    <div class="content">
+      <table>
+        <thead><th>Key</th><th>Tensor</th><th>Check result</th></thead>
+        <tbody>
+          <tr *ngFor="let input of data.inputs">
+            <td>{{input.id}}</td>
+            <td class="shape">{{getInputDTypeAndShape(input)}}</td>
+            <td class="bad" [class.empty]="getInputCheckResult(input) === '' && !errorMsg"
+                            [class.passed]="isInputPassed(input)">
+              {{getInputCheckLabel(input)}}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="subtitle">
+      Check console log for the raw code being executed and the raw results.
+    </div>
+
+    <div class="header row">
+      <div>Image resources</div>
+      <label>
+        <div class="upload-label">Upload</div>
+        <input type="file" accept="image/*" multiple=true
+              (change)="handleUploadedFilesChanged($event)">
+      </label>
+    </div>
+    <div class="content">
+      <table *ngIf="curUploadedImages.length > 0">
+        <thead><th>Preview</th><th>Size</th><th>Tensor variable</th></thead>
+        <tbody>
+          <tr *ngFor="let image of curUploadedImages; trackBy: trackByIndex">
+            <td><img class="preview" [src]="image.url"></td>
+            <td>{{image.width}}x{{image.height}}</td>
+            <td>{{image.tensor.varName}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="subtitle">
+      Upload images and use the corresponding tensor variable in your code.
+    </div>
+  </div>
+
+  <div class="main-panel">
+    <ngx-codemirror #codemirror
+      class="inputs-code-editor"
+      [options]="codeMirrorOptions"
+      [(ngModel)]="codeContent"
+      [autoFocus]="true">
+    </ngx-codemirror>
+    <div class="error-msg" [class.error]="errorMsg">
+      {{errorMsg || 'No error'}}
+    </div>
+  </div>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="handleDone()">Done</button>
+  <button color="primary" mat-flat-button
+          [disabled]="executing"
+          (click)="handleExecuteCode()">
+    {{executing ? 'Executing...' : 'Execute'}}
+  </button>
+</div>

@@ -38,12 +38,12 @@ limitations under the License.
         </div>
       </div>
       <div class="threshold-input-container" *ngIf="overview!.numBadNodes>=0">
-        <div class="label">Threshold for bad nodes</div>
+        <div class="label">Threshold (percentage) for bad nodes</div>
         <mat-form-field class="threshold-input"
                         appearance="outline"
                         floatLabel="never">
           <input #minInput matInput
-                  [(ngModel)]="threshold"
+                  [(ngModel)]="thresholdPct"
                   (focus)="minInput.select()"
                   (change)="handleThresholdChanged()">
         </mat-form-field>

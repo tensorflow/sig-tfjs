@@ -163,6 +163,49 @@
       }
     }
   }
+
+  .open-post-processing-code-editor-label {
+    width: fit-content;
+    margin-top: 8px;
+    color: var.$grey-500;
+    border-bottom: 1px dotted var.$grey-800;
+    cursor: pointer;
+    opacity: 80%;
+
+    &:hover {
+      opacity: 100%;
+    }
+  }
+
+  .post-processing-container {
+    .label {
+      margin-top: 4px;
+      margin-bottom: 2px;
+      color: var.$grey-600;
+
+      &.output2 {
+        margin-top: 8px;
+      }
+    }
+
+    .output-container {
+      height: 40px;
+      padding: 2px;
+      overflow-y: auto;
+      border: 1px solid var.$grey-400;
+      border-radius: 4px;
+      line-break: anywhere;
+    }
+
+    .canvas-container {
+      height: 80px;
+    }
+
+    canvas {
+      height: 100%;
+      object-fit: contain;
+    }
+  }
 }
 
 ::ng-deep .attr-row {

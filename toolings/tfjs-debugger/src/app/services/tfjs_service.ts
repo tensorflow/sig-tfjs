@@ -1,19 +1,36 @@
+/**
+ * @license
+ * Copyright 2022 Google LLC. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =============================================================================
+ */
+
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {Store} from '@ngrx/store';
-import {combineLatest, filter, Observable, shareReplay, withLatestFrom} from 'rxjs';
+import {filter, Observable, shareReplay, withLatestFrom} from 'rxjs';
 
 import {RunTfjsModelRequest, RunTfjsModelResponse, WorkerCommand, WorkerMessage} from '../common/types';
-import {getTypedArrayFromInput, sanitizeShape} from '../common/utils';
+import {getTypedArrayFromInput} from '../common/utils';
 import {Configuration} from '../data_model/configuration';
-import {Input, InputValuesType} from '../data_model/input';
+import {Input, InputMode, InputValuesType} from '../data_model/input';
 import {RunTask, TaskStatus} from '../data_model/misc';
-import {ModelTypeId} from '../data_model/model_type';
 import {ModelGraph, ModelJson, TensorMap} from '../data_model/run_results';
 import {setErrorMessage, updateRunTaskStatus} from '../store/actions';
-import {selectCurrentConfigs, selectCurrentInputs, selectModelGraph, selectRunCurrentConfigsTrigger} from '../store/selectors';
+import {selectCurrentConfigs, selectCurrentInputMode, selectCurrentInputs, selectModelGraph} from '../store/selectors';
 import {AppState, Configs} from '../store/state';
 
+import {CustomInputsService} from './custom_inputs_service';
 import {RunResultService} from './run_result_service';
 
 const TFHUB_SEARCH_PARAM = '?tfjs-format=file';
@@ -33,6 +50,7 @@ export class TfjsService {
   constructor(
       private http: HttpClient,
       private readonly runResultService: RunResultService,
+      private readonly customInputsService: CustomInputsService,
       private readonly store: Store<AppState>,
   ) {
     // this.store.select(selectRunCurrentConfigsTrigger)
@@ -42,12 +60,14 @@ export class TfjsService {
             withLatestFrom(
                 this.store.select(selectCurrentConfigs),
                 this.store.select(selectCurrentInputs),
+                this.store.select(selectCurrentInputMode),
                 this.store.select(selectCurrentConfigs),
                 ))
         .subscribe(([
                      modelGraph,
                      curConfigs,
                      curInputs,
+                     curInputMode,
                      {config1, config2},
                    ]) => {
           // TODO(jingjin): only support setting tfjs url in config 1.
@@ -56,7 +76,8 @@ export class TfjsService {
           }
 
           this.runConfigs(
-              curConfigs, curInputs, modelGraph, config1.tfjsModelUrl);
+              curConfigs, curInputs, curInputMode, modelGraph,
+              config1.tfjsModelUrl);
         });
   }
 
@@ -74,29 +95,51 @@ export class TfjsService {
   }
 
   private runConfigs(
-      configs: Configs, inputs: Input[], modelGraph: ModelGraph,
-      modelUrl: string) {
-    // Generate input values.
+      configs: Configs, inputs: Input[], inputMode: string,
+      modelGraph: ModelGraph, modelUrl: string) {
     const inputTensorMap1: TensorMap = {};
     const inputTensorMap2: TensorMap = {};
-    for (const input of inputs) {
-      const values = this.genInputValues(input);
 
-      const values1 = getTypedArrayFromInput(input.dtype, input.shape);
-      values1.set(values);
-      inputTensorMap1[input.id] = {
-        values: values1,
-        shape: input.shape,
-        dtype: input.dtype,
-      };
+    // Generate input values in simple mode.
+    if (inputMode === InputMode.SIMPLE) {
+      for (const input of inputs) {
+        const values = this.genInputValues(input);
 
-      const values2 = getTypedArrayFromInput(input.dtype, input.shape);
-      values2.set(values);
-      inputTensorMap2[input.id] = {
-        values: values2,
-        shape: input.shape,
-        dtype: input.dtype,
-      };
+        const values1 = getTypedArrayFromInput(input.dtype, input.shape);
+        values1.set(values);
+        inputTensorMap1[input.id] = {
+          values: values1,
+          shape: input.shape,
+          dtype: input.dtype,
+        };
+
+        const values2 = getTypedArrayFromInput(input.dtype, input.shape);
+        values2.set(values);
+        inputTensorMap2[input.id] = {
+          values: values2,
+          shape: input.shape,
+          dtype: input.dtype,
+        };
+      }
+    }
+    // Get custom inputs from CustomInputsService in advanced mode.
+    else if (inputMode === InputMode.ADVANCED) {
+      const customInputs = this.customInputsService.getCurTensorResults();
+      if (customInputs) {
+        for (const input of inputs) {
+          const curCustomInput = customInputs[input.id];
+          inputTensorMap1[input.id] = {
+            values: curCustomInput.values.slice(0),
+            shape: input.shape,
+            dtype: input.dtype,
+          };
+          inputTensorMap2[input.id] = {
+            values: curCustomInput.values.slice(0),
+            shape: input.shape,
+            dtype: input.dtype,
+          };
+        }
+      }
     }
 
     // Send to runners to run two configs with the generated inputs.

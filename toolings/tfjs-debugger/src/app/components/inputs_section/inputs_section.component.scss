@@ -7,12 +7,28 @@
     z-index: 100;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     height: var.$config-header-height;
     padding: 0 var.$spacing-3x;
     color: var.$grey-800;
     font-weight: 500;
     font-size: var.$font-size-normal;
     background-color: #e7edf7;
+
+    mat-button-toggle-group {
+      height: 16px;
+      font-weight: normal;
+      font-size: 12px;
+
+      ::ng-deep .mat-button-toggle-label-content {
+        padding: 0 6px !important;
+        line-height: 16px;
+      }
+
+      ::ng-deep .mat-button-toggle:not(.mat-button-toggle-checked) {
+        color: var.$grey-400;
+      }
+    }
   }
 
   .info-msg {
@@ -126,6 +142,26 @@
       .input-type-controls {
         display: flex;
         align-items: center;
+      }
+    }
+
+    .results {
+      color: var.$red;
+
+      &.ready {
+        color: #0a0;
+      }
+    }
+
+    .open-code-editor-label {
+      width: fit-content;
+      border-bottom: 1px dotted #555;
+      cursor: pointer;
+      opacity: 80%;
+      margin-top: 6px;
+
+      &:hover {
+        opacity: 100%;
       }
     }
   }

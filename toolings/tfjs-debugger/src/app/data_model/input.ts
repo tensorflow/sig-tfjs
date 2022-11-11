@@ -21,6 +21,11 @@ export enum InputValuesType {
   SAME_VALUE = 'same value',
 }
 
+export enum InputMode {
+  SIMPLE = 'simple',
+  ADVANCED = 'advanced',
+}
+
 /** A single input. */
 export interface Input {
   id: string;
