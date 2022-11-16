@@ -112,16 +112,9 @@ async function main() {
 
     const threshold = 0.25;
 
-    // Draw a circle on each point
+    // Clear the last frame
     graphics.clear();
-    graphics.lineStyle(3, 0xff0000, OPACITY);
-    for (const point of points) {
-      if (point[2] < threshold) {
-        continue;
-      }
-      graphics.drawCircle(point[0], point[1], 1);
-    }
-    
+
     // Draw edges
     graphics.lineStyle(3, 0x00ff00, OPACITY);
     for (const edge of PoseNetEdges) {
@@ -137,6 +130,15 @@ async function main() {
 
       graphics.moveTo(a[0], a[1]);
       graphics.lineTo(b[0], b[1]);
+    }
+
+    // Draw a circle on each point
+    graphics.lineStyle(3, 0xff0000, OPACITY);
+    for (const point of points) {
+      if (point[2] < threshold) {
+        continue;
+      }
+      graphics.drawCircle(point[0], point[1], 1);
     }
   }
 
