@@ -4,7 +4,7 @@ This is an extension of the starter code from the [Coral Acceleration for TFLite
 
 The demo will display a warning if no Coral device is found, but it will still work using TFLite on CPU instead.
 
-## Running the Demo
+## Run the Demo
 
 Install dependencies
 ```sh
