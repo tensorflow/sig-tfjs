@@ -1,6 +1,6 @@
 # TFLite Node Movenet
 
-This is an extension of the starter code from the [Coral Acceleration for TFLite Node][codelab] codelab that adds support for [MoveNet pose estimation](https://coral.ai/models/pose-estimation/). There is no step in the codelab for this code. Its purpose is to show a more complex model being run.
+This is an extension of the starter code from the [Coral Acceleration for TFLite Node][codelab] codelab that adds support for [MoveNet pose estimation](https://coral.ai/models/pose-estimation/). There is no step in the codelab for this code. Its purpose is to show a more complex model.
 
 The demo will display a warning if no Coral device is found, but it will still work using TFLite on CPU instead.
 
