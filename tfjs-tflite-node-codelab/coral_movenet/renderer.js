@@ -77,9 +77,6 @@ async function main() {
   document.body.appendChild(videoDiv)
   videoDiv.appendChild(webcam);
 
-  const resultList = document.createElement('ul');
-  document.body.appendChild(resultList);
-
   const app = new PIXI.Application({
     ...MODEL_DIMS,
     backgroundAlpha: 0,
@@ -93,7 +90,7 @@ async function main() {
     const array = data.dataSync();
     if (array.length / 3 !== 17) {
       const err = `Unexpected array length ${array.length} / 3 !== 17`;
-      resultList.innerHTML = err;
+      alert(err);
       throw new Error(err);
     }
 
