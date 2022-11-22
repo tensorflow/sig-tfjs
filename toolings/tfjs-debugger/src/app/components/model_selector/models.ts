@@ -31,6 +31,7 @@ export const MODELS: ModelItem[] = [
     label: 'BlazePose landmark',
     url:
         'https://tfhub.dev/mediapipe/tfjs-model/blazeposelandmark_{}/2/default/2',
+    children: ['lite', 'full', 'heavy']
   },
   {
     label: 'Movenet single pose',
