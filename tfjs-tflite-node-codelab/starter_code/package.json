@@ -9,7 +9,7 @@
     "start": "electron ."
   },
   "devDependencies": {
-    "electron": "^17.2.0"
+    "electron": "^18.3.7"
   },
   "dependencies": {
     "@tensorflow/tfjs": "^3.15.0",
