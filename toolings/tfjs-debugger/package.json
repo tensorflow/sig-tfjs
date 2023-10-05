@@ -48,7 +48,7 @@
     "karma-coverage": "~2.0.3",
     "karma-jasmine": "~4.0.0",
     "karma-jasmine-html-reporter": "~1.7.0",
-    "postcss": "^8.3.11",
+    "postcss": "^8.4.31",
     "stylelint": "^14.0.1",
     "stylelint-order": "^5.0.0",
     "stylelint-config-standard-scss": "^2.0.1",
